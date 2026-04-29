@@ -1,30 +1,33 @@
-import type { SolicitacaoStatus, OrcamentoStatus, OSStatus } from '@/types/domain'
-
 export const Z = {
   base:      0,
   card:      10,
-  dropdown:  20,
-  bottomNav: 30,
-  backdrop:  40,
-  drawer:    50,
-  modal:     60,
-  toast:     70,
+  dropdown:  100,
+  bottomNav: 200,
+  backdrop:  290,
+  drawer:    300,
+  modal:     400,
+  toast:     500,
 } as const
 
-export const STATUS_LABELS: Record<SolicitacaoStatus | OrcamentoStatus | OSStatus, string> = {
-  // SolicitacaoStatus
-  aberta:              'Aberta',
-  aguardando_orcamento: 'Aguardando Orçamento',
-  orcamento_enviado:   'Orçamento Enviado',
-  aprovado:            'Aprovado',
-  cancelado:           'Cancelado',
-  // OrcamentoStatus
-  rascunho:            'Rascunho',
-  enviado:             'Enviado',
-  aceito:              'Aceito',
-  recusado:            'Recusado',
-  // OSStatus
-  em_andamento:        'Em Andamento',
-  concluida:           'Concluída',
-  cancelada:           'Cancelada',
+export type StatusKey =
+  | 'aguardando_orcamento'
+  | 'orcamento_enviado'
+  | 'aprovado'
+  | 'recusado'
+  | 'concluido'
+  | 'rascunho'
+  | 'enviado'
+  | 'aberta'
+  | 'em_andamento'
+
+export const STATUS_LABELS: Record<StatusKey, { label: string; className: string }> = {
+  aguardando_orcamento: { label: 'Aguardando Orçamento', className: 'bg-warning-light text-warning' },
+  orcamento_enviado:    { label: 'Orçamento Enviado',    className: 'bg-primary-light text-primary' },
+  aprovado:             { label: 'Aprovado',             className: 'bg-success-light text-success' },
+  recusado:             { label: 'Recusado',             className: 'bg-danger-light text-danger' },
+  concluido:            { label: 'Concluído',            className: 'bg-success-light text-success' },
+  rascunho:             { label: 'Rascunho',             className: 'bg-neutral-100 text-neutral-600' },
+  enviado:              { label: 'Enviado',              className: 'bg-primary-light text-primary' },
+  aberta:               { label: 'Aberta',               className: 'bg-warning-light text-warning' },
+  em_andamento:         { label: 'Em Andamento',         className: 'bg-blue-100 text-blue-700' },
 }

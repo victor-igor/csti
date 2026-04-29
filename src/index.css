@@ -2,8 +2,36 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource/inter";
 
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-primary: #2563EB;
+  --color-primary-light: #EFF6FF;
+  --color-primary-foreground: #ffffff;
+  --color-success: #16A34A;
+  --color-success-light: #F0FDF4;
+  --color-warning: #D97706;
+  --color-warning-light: #FFFBEB;
+  --color-danger: #DC2626;
+  --color-danger-light: #FEF2F2;
+  --color-neutral-50: #F9FAFB;
+  --color-neutral-100: #F3F4F6;
+  --color-neutral-200: #E5E7EB;
+  --color-neutral-300: #D1D5DB;
+  --color-neutral-400: #9CA3AF;
+  --color-neutral-500: #6B7280;
+  --color-neutral-600: #4B5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1F2937;
+  --color-neutral-900: #111827;
+  --color-neutral-950: #030712;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --radius-DEFAULT: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+}
 
 @theme inline {
     --font-heading: var(--font-sans);
