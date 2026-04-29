@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -52,6 +50,44 @@ export type Database = {
           },
         ]
       }
+      notificacoes: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          mensagem: string | null
+          tipo: string
+          titulo: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string | null
+          tipo: string
+          titulo: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string | null
+          tipo?: string
+          titulo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamentos: {
         Row: {
           created_at: string
@@ -59,10 +95,12 @@ export type Database = {
           id: string
           numero: string
           observacoes: string | null
+          prazo_estimado_dias: number | null
           prestador_id: string
           solicitacao_id: string
           status: Database["public"]["Enums"]["orcamento_status_enum"]
           updated_at: string
+          validade_ate: string | null
         }
         Insert: {
           created_at?: string
@@ -70,10 +108,12 @@ export type Database = {
           id?: string
           numero?: string
           observacoes?: string | null
+          prazo_estimado_dias?: number | null
           prestador_id: string
           solicitacao_id: string
           status?: Database["public"]["Enums"]["orcamento_status_enum"]
           updated_at?: string
+          validade_ate?: string | null
         }
         Update: {
           created_at?: string
@@ -81,10 +121,12 @@ export type Database = {
           id?: string
           numero?: string
           observacoes?: string | null
+          prazo_estimado_dias?: number | null
           prestador_id?: string
           solicitacao_id?: string
           status?: Database["public"]["Enums"]["orcamento_status_enum"]
           updated_at?: string
+          validade_ate?: string | null
         }
         Relationships: [
           {
@@ -107,8 +149,11 @@ export type Database = {
         Row: {
           cliente_id: string
           created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
           id: string
           numero: string
+          observacoes: string | null
           orcamento_id: string
           prestador_id: string
           solicitacao_id: string
@@ -118,8 +163,11 @@ export type Database = {
         Insert: {
           cliente_id: string
           created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
           id?: string
           numero?: string
+          observacoes?: string | null
           orcamento_id: string
           prestador_id: string
           solicitacao_id: string
@@ -129,8 +177,11 @@ export type Database = {
         Update: {
           cliente_id?: string
           created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
           id?: string
           numero?: string
+          observacoes?: string | null
           orcamento_id?: string
           prestador_id?: string
           solicitacao_id?: string
@@ -171,7 +222,9 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          documento: string | null
           email: string
+          especialidade: string | null
           id: string
           nome: string
           role: Database["public"]["Enums"]["role_enum"]
@@ -180,7 +233,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          documento?: string | null
           email: string
+          especialidade?: string | null
           id: string
           nome: string
           role: Database["public"]["Enums"]["role_enum"]
@@ -189,7 +244,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          documento?: string | null
           email?: string
+          especialidade?: string | null
           id?: string
           nome?: string
           role?: Database["public"]["Enums"]["role_enum"]
@@ -200,10 +257,12 @@ export type Database = {
       }
       solicitacoes_orcamento: {
         Row: {
+          categoria: string | null
           cliente_id: string
           created_at: string
           deleted_at: string | null
           descricao: string
+          equipamento: string | null
           id: string
           numero: string
           status: Database["public"]["Enums"]["solicitacao_status_enum"]
@@ -211,10 +270,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          categoria?: string | null
           cliente_id: string
           created_at?: string
           deleted_at?: string | null
           descricao: string
+          equipamento?: string | null
           id?: string
           numero?: string
           status?: Database["public"]["Enums"]["solicitacao_status_enum"]
@@ -222,10 +283,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          categoria?: string | null
           cliente_id?: string
           created_at?: string
           deleted_at?: string | null
           descricao?: string
+          equipamento?: string | null
           id?: string
           numero?: string
           status?: Database["public"]["Enums"]["solicitacao_status_enum"]
@@ -246,6 +309,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          observacao: string | null
           registro_id: string
           status_anterior: string | null
           status_novo: string
@@ -255,6 +319,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          observacao?: string | null
           registro_id: string
           status_anterior?: string | null
           status_novo: string
@@ -264,6 +329,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          observacao?: string | null
           registro_id?: string
           status_anterior?: string | null
           status_novo?: string
@@ -308,7 +374,6 @@ export type Database = {
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
@@ -321,21 +386,13 @@ export type Tables<
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends { Row: infer R }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends { Row: infer R }
       ? R
       : never
     : never
@@ -344,23 +401,15 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  TableName extends DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends { Insert: infer I }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Insert: infer I }
       ? I
       : never
     : never
@@ -369,23 +418,15 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  TableName extends DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends { Update: infer U }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Update: infer U }
       ? U
       : never
     : never
@@ -394,14 +435,10 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  EnumName extends DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
@@ -411,14 +448,10 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
