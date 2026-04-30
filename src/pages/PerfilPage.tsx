@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/store/authStore'
 import { useGetPerfil, useUpdatePerfil } from '@/features/perfil/usePerfil'
@@ -29,7 +30,7 @@ export default function PerfilPage() {
 
   const activeProfile = profile ?? storeProfile
 
-  const { control, handleSubmit } = useForm<PerfilFormData>({
+  const { control, handleSubmit, reset } = useForm<PerfilFormData>({
     resolver: zodResolver(PerfilSchema),
     defaultValues: {
       nome: storeProfile?.nome ?? '',
@@ -37,6 +38,16 @@ export default function PerfilPage() {
       especialidade: storeProfile?.especialidade ?? '',
     },
   })
+
+  useEffect(() => {
+    if (profile) {
+      reset({
+        nome: profile.nome,
+        telefone: profile.telefone ?? '',
+        especialidade: profile.especialidade ?? '',
+      })
+    }
+  }, [profile, reset])
 
   function onSubmit(data: PerfilFormData) {
     setPendingData(data)
@@ -105,8 +116,10 @@ export default function PerfilPage() {
 
         <button
           type="submit"
+          disabled={isPending}
           className="w-full flex items-center justify-center gap-2 rounded-md bg-primary py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
         >
+          {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Salvar
         </button>
       </form>
