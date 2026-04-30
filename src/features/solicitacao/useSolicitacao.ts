@@ -12,11 +12,12 @@ export function useCreateSolicitacao() {
 
   return useMutation({
     mutationFn: async (data: CreateSolicitacaoFormData) => {
+      if (!user) throw new Error('Usuário não autenticado')
       const { error } = await supabase.from('solicitacoes_orcamento').insert({
         titulo: data.titulo,
         descricao: data.descricao,
         categoria: data.categoria,
-        cliente_id: user!.id,
+        cliente_id: user.id,
       })
       if (error) throw error
     },

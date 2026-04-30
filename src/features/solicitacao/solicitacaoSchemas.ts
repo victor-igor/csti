@@ -5,7 +5,6 @@ export const CATEGORIAS = ['hardware', 'software', 'rede', 'segurança', 'suport
 export const CreateSolicitacaoSchema = z.object({
   titulo: z
     .string()
-    .min(1, 'Título obrigatório')
     .min(3, 'Mínimo 3 caracteres')
     .max(100, 'Máximo 100 caracteres'),
   descricao: z
