@@ -8,7 +8,7 @@ import { RoleGuard } from '@/components/guards/RoleGuard'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 
-const LoginPage        = lazy(() => import('@/pages/LoginPage'))
+const LoginPage        = lazy(() => import('@/features/auth/LoginPage'))
 const RegisterPage     = lazy(() => import('@/features/auth/RegisterPage'))
 const DashboardPage    = lazy(() => import('@/pages/DashboardPage'))
 const SolicitacoesPage = lazy(() => import('@/pages/SolicitacoesPage'))
