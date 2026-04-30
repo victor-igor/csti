@@ -9,7 +9,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 
 const LoginPage        = lazy(() => import('@/pages/LoginPage'))
-const RegisterPage     = lazy(() => import('@/pages/RegisterPage'))
+const RegisterPage     = lazy(() => import('@/features/auth/RegisterPage'))
 const DashboardPage    = lazy(() => import('@/pages/DashboardPage'))
 const SolicitacoesPage = lazy(() => import('@/pages/SolicitacoesPage'))
 const OrcamentosPage   = lazy(() => import('@/pages/OrcamentosPage'))
