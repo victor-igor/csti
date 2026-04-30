@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'sonner'
 import { queryClient } from '@/lib/queryClient'
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary'
 import { ProtectedRoute } from '@/components/guards/ProtectedRoute'
@@ -21,6 +22,7 @@ const Fallback = () => <LoadingSkeleton rows={4} className="m-6" />
 export default function App() {
   return (
     <GlobalErrorBoundary>
+      <Toaster richColors position="top-right" />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Suspense fallback={<Fallback />}>
