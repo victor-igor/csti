@@ -16,6 +16,7 @@ const SolicitacoesPage = lazy(() => import('@/pages/SolicitacoesPage'))
 const OrcamentosPage   = lazy(() => import('@/pages/OrcamentosPage'))
 const OrdensServicoPage = lazy(() => import('@/pages/OrdensServicoPage'))
 const PerfilPage       = lazy(() => import('@/pages/PerfilPage'))
+const SolicitacaoFormPage = lazy(() => import('@/features/solicitacao/SolicitacaoFormPage'))
 
 const Fallback = () => <LoadingSkeleton rows={4} className="m-6" />
 
@@ -39,6 +40,7 @@ export default function App() {
 
                   {/* Cliente only */}
                   <Route element={<RoleGuard allowedRoles={['cliente']} />}>
+                    <Route path="solicitacoes/nova" element={<SolicitacaoFormPage />} />
                     <Route path="solicitacoes/*" element={<SolicitacoesPage />} />
                   </Route>
 
