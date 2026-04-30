@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import type { RegisterFormData } from './authSchemas'
+import type { RegisterFormData, LoginFormData } from './authSchemas'
 
 export function useAuth() {
   const navigate = useNavigate()
@@ -28,5 +28,15 @@ export function useAuth() {
     navigate('/login', { state: { message: 'Conta criada! Faça login.' } })
   }
 
-  return { register }
+  async function login(data: LoginFormData): Promise<string | null> {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.senha,
+    })
+    if (error) return error.message
+    navigate('/dashboard')
+    return null
+  }
+
+  return { register, login }
 }
