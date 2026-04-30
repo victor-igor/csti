@@ -58,6 +58,7 @@ export function useGetSolicitacao(id: string) {
       const { data, error } = await supabase
         .from('solicitacoes_orcamento')
         .select('*')
+        .is('deleted_at', null)
         .eq('id', id)
         .single()
       if (error) throw error
