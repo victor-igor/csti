@@ -8,6 +8,69 @@ import type { CreateOrcamentoFormData } from './orcamentoSchemas'
 
 export type IOrcamentoComItens = IOrcamento & { itens_orcamento: IItemOrcamento[] }
 
+export function useAprovarOrcamento() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async (orcamentoId: string) => {
+      const { data, error } = await supabase.rpc('aprovar_orcamento', {
+        p_orcamento_id: orcamentoId,
+      })
+      if (error) throw error
+      return data as string
+    },
+    onSuccess: (osId: string) => {
+      queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      queryClient.invalidateQueries({ queryKey: ['ordens-servico'] })
+      toast.success('Orçamento aprovado! OS criada.')
+      navigate(`/ordens-servico/${osId}`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao aprovar orçamento')
+    },
+  })
+}
+
+export function useRecusarOrcamento() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async ({
+      orcamentoId,
+      solicitacaoId,
+    }: {
+      orcamentoId: string
+      solicitacaoId: string
+    }) => {
+      const { error: orcErr } = await supabase
+        .from('orcamentos')
+        .update({ status: 'recusado' })
+        .eq('id', orcamentoId)
+      if (orcErr) throw orcErr
+
+      const { error: solErr } = await supabase
+        .from('solicitacoes_orcamento')
+        .update({ status: 'cancelado' })
+        .eq('id', solicitacaoId)
+      if (solErr) throw solErr
+
+      return solicitacaoId
+    },
+    onSuccess: (solicitacaoId: string) => {
+      queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      toast.success('Orçamento recusado.')
+      navigate(`/solicitacoes/${solicitacaoId}`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao recusar orçamento')
+    },
+  })
+}
+
 export function useCreateOrcamento() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
