@@ -18,6 +18,8 @@ const OrdensServicoPage = lazy(() => import('@/pages/OrdensServicoPage'))
 const PerfilPage       = lazy(() => import('@/pages/PerfilPage'))
 const SolicitacaoFormPage = lazy(() => import('@/features/solicitacao/SolicitacaoFormPage'))
 const SolicitacaoDetailPage = lazy(() => import('@/features/solicitacao/SolicitacaoDetailPage'))
+const OrcamentoFormPage = lazy(() => import('@/features/orcamento/OrcamentoFormPage'))
+const OrcamentoDetailPage = lazy(() => import('@/features/orcamento/OrcamentoDetailPage'))
 
 const Fallback = () => <LoadingSkeleton rows={4} className="m-6" />
 
@@ -44,6 +46,12 @@ export default function App() {
                     <Route path="solicitacoes/nova" element={<SolicitacaoFormPage />} />
                     <Route path="solicitacoes/:id" element={<SolicitacaoDetailPage />} />
                     <Route path="solicitacoes/*" element={<SolicitacoesPage />} />
+                  </Route>
+
+                  {/* Prestador only */}
+                  <Route element={<RoleGuard allowedRoles={['prestador']} />}>
+                    <Route path="prestador/orcamentos/novo/:solicitacaoId" element={<OrcamentoFormPage />} />
+                    <Route path="prestador/orcamentos/:id" element={<OrcamentoDetailPage />} />
                   </Route>
 
                   {/* All authenticated */}
