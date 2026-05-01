@@ -14,7 +14,8 @@ export function useAuth() {
     if (error) throw error
 
     if (authData.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
+      // upsert: trigger may have already inserted a minimal profile row
+      const { error: profileError } = await supabase.from('profiles').upsert({
         id: authData.user.id,
         nome: data.nome,
         email: data.email,
