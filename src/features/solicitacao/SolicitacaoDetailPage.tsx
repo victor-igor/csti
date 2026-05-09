@@ -14,7 +14,7 @@ export default function SolicitacaoDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data: solicitacao, isLoading, isError, refetch } = useGetSolicitacao(id ?? '')
 
-  const { data: orcamentoVinculado } = useQuery({
+  const { data: orcamentoVinculado, isLoading: isLoadingOrcamento } = useQuery({
     queryKey: ['orcamento-por-solicitacao', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -58,14 +58,18 @@ export default function SolicitacaoDetailPage() {
         <p className="text-sm text-neutral-600 whitespace-pre-wrap">{solicitacao.descricao}</p>
       </div>
 
-      {solicitacao.status === 'orcamento_enviado' && orcamentoVinculado && (
+      {solicitacao.status === 'orcamento_enviado' && (
         <div className="mt-6">
-          <Link
-            to={`/orcamentos/${orcamentoVinculado.id}/revisar`}
-            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Ver Orçamento
-          </Link>
+          {isLoadingOrcamento ? (
+            <div className="h-9 w-32 animate-pulse rounded-md bg-neutral-200" />
+          ) : orcamentoVinculado ? (
+            <Link
+              to={`/orcamentos/${orcamentoVinculado.id}/revisar`}
+              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Ver Orçamento
+            </Link>
+          ) : null}
         </div>
       )}
     </div>
