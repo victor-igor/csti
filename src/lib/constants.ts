@@ -1,3 +1,5 @@
+import type { SolicitacaoStatus } from '@/types/domain'
+
 export const Z = {
   base:      0,
   card:      10,
@@ -30,4 +32,12 @@ export const STATUS_LABELS: Record<StatusKey, { label: string; className: string
   enviado:              { label: 'Enviado',              className: 'bg-primary-light text-primary' },
   aberta:               { label: 'Aberta',               className: 'bg-warning-light text-warning' },
   em_andamento:         { label: 'Em Andamento',         className: 'bg-blue-100 text-blue-700' },
+}
+
+export const STATUS_BORDER_CLASS: Record<SolicitacaoStatus, string> = {
+  aberta:               'border-l-amber-400',
+  aguardando_orcamento: 'border-l-amber-400',
+  orcamento_enviado:    'border-l-blue-500',
+  aprovado:             'border-l-green-500',
+  cancelado:            'border-l-neutral-300',
 }
