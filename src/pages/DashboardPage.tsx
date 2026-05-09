@@ -247,13 +247,13 @@ function PrestadorDashboard() {
   return (
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Disponíveis p/ Orçar" value={data?.solicitacoesDisponiveis} icon={ClipboardList} to="/solicitacoes" color="bg-blue-500" urgent />
+        <StatCard label="Disponíveis p/ Orçar" value={data?.solicitacoesDisponiveis} icon={ClipboardList} to="/prestador/solicitacoes" color="bg-blue-500" urgent />
         <StatCard label="Meus Orçamentos" value={data?.meusOrcamentos} icon={FileText} to="/orcamentos" color="bg-primary" />
         <StatCard label="OS em Andamento" value={data?.osAtivas} icon={Wrench} to="/ordens-servico" color="bg-green-500" />
       </div>
 
       <Link
-        to="/solicitacoes"
+        to="/prestador/solicitacoes"
         className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
       >
         <Search className="h-4 w-4" />
@@ -268,7 +268,7 @@ function PrestadorDashboard() {
       <DashboardSection
         title="Precisa de atenção"
         icon={<Zap className="h-4 w-4 text-amber-500" />}
-        viewAllTo="/solicitacoes"
+        viewAllTo="/prestador/solicitacoes"
         viewAllLabel="Ver todas as solicitações"
       >
         {(data?.disponiveisLista.length ?? 0) === 0 ? (
@@ -280,7 +280,7 @@ function PrestadorDashboard() {
               numero={sol.numero}
               titulo={sol.titulo}
               subtexto={sol.categoria ? `Categoria: ${sol.categoria}` : undefined}
-              to={`/solicitacoes/${sol.id}`}
+              to={`/prestador/solicitacoes/${sol.id}`}
               ctaLabel="Orçar"
             />
           ))
