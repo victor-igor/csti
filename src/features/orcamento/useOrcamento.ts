@@ -53,7 +53,7 @@ export function useRecusarOrcamento() {
 
       const { error: solErr } = await supabase
         .from('solicitacoes_orcamento')
-        .update({ status: 'cancelado' })
+        .update({ status: 'aguardando_orcamento' })
         .eq('id', solicitacaoId)
       if (solErr) throw solErr
 
