@@ -10,7 +10,7 @@ interface SidebarState {
 
 export const useSidebar = create<SidebarState>((set) => ({
   isDrawerOpen: false,
-  isExpanded: false,
+  isExpanded: true,
   openDrawer: () => set({ isDrawerOpen: true }),
   closeDrawer: () => set({ isDrawerOpen: false }),
   toggleExpanded: () => set((state) => ({ isExpanded: !state.isExpanded })),
