@@ -1,6 +1,8 @@
 import { useParams, Link } from 'react-router-dom'
 import { Calendar, Tag } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { useGetSolicitacao } from './useSolicitacao'
+import { supabase } from '@/lib/supabase'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { InfoCard } from '@/components/molecules/InfoCard'
@@ -11,6 +13,21 @@ import { ErrorState } from '@/components/atoms/ErrorState'
 export default function SolicitacaoDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data: solicitacao, isLoading, isError, refetch } = useGetSolicitacao(id ?? '')
+
+  const { data: orcamentoVinculado } = useQuery({
+    queryKey: ['orcamento-por-solicitacao', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .select('id, status')
+        .eq('solicitacao_id', id ?? '')
+        .is('deleted_at', null)
+        .single()
+      if (error) return null
+      return data
+    },
+    enabled: !!id && solicitacao?.status === 'orcamento_enviado',
+  })
 
   if (isLoading) return <div className="p-6"><LoadingSkeleton rows={6} /></div>
   if (isError || !solicitacao) return (
@@ -41,10 +58,10 @@ export default function SolicitacaoDetailPage() {
         <p className="text-sm text-neutral-600 whitespace-pre-wrap">{solicitacao.descricao}</p>
       </div>
 
-      {solicitacao.status === 'orcamento_enviado' && (
+      {solicitacao.status === 'orcamento_enviado' && orcamentoVinculado && (
         <div className="mt-6">
           <Link
-            to={`/orcamentos`}
+            to={`/orcamentos/${orcamentoVinculado.id}/revisar`}
             className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
           >
             Ver Orçamento
