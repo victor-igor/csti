@@ -179,3 +179,20 @@ export function useListOrcamentosPrestador() {
     },
   })
 }
+
+export function useListOrcamentosCliente() {
+  return useQuery({
+    queryKey: ['orcamentos', 'cliente'],
+    queryFn: async () => {
+      // join com solicitacoes_orcamento via FK orcamentos_solicitacao_id_fkey
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .select('*, solicitacoes_orcamento(numero, titulo)')
+        .is('deleted_at', null)
+        .in('status', ['enviado', 'aceito', 'recusado'])
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data as (IOrcamento & { solicitacoes_orcamento: { numero: string; titulo: string } | null })[]
+    },
+  })
+}
