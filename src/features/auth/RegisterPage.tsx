@@ -19,7 +19,7 @@ export default function RegisterPage() {
 
   const { control, handleSubmit, watch, formState: { isSubmitting } } = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterSchema),
-    defaultValues: { role: 'cliente' },
+    defaultValues: { nome: '', email: '', senha: '', confirmar_senha: '', telefone: '', especialidade: '', role: 'cliente' },
   })
 
   const role = watch('role')
