@@ -42,7 +42,7 @@ export default function PerfilPage() {
   useEffect(() => {
     if (profile) {
       reset({
-        nome: profile.nome,
+        nome: profile.nome ?? '',
         telefone: profile.telefone ?? '',
         especialidade: profile.especialidade ?? '',
       })

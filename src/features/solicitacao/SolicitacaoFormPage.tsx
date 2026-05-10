@@ -22,6 +22,7 @@ export default function SolicitacaoFormPage() {
   const { mutate, isPending } = useCreateSolicitacao()
   const { control, handleSubmit, formState: { isSubmitting } } = useForm<CreateSolicitacaoFormData>({
     resolver: zodResolver(CreateSolicitacaoSchema),
+    defaultValues: { titulo: '', descricao: '', categoria: '' as CreateSolicitacaoFormData['categoria'] },
   })
 
   function onSubmit(data: CreateSolicitacaoFormData) {
