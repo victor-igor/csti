@@ -1,26 +1,27 @@
 import { Link } from 'react-router-dom'
+import { useBreadcrumb } from '@/hooks/useBreadcrumb'
 
-export interface BreadcrumbItem {
-  label: string
-  href?: string
-}
+export function Breadcrumb() {
+  const items = useBreadcrumb()
 
-interface BreadcrumbProps {
-  items: BreadcrumbItem[]
-}
+  if (items.length <= 1) return null
 
-export function Breadcrumb({ items }: BreadcrumbProps) {
   return (
-    <nav aria-label="breadcrumb" className="flex items-center gap-1 text-sm text-neutral-500">
-      {items.map((item, idx) => (
-        <span key={idx} className="flex items-center gap-1">
-          {idx > 0 && <span className="text-neutral-300">/</span>}
-          {item.href && idx < items.length - 1 ? (
-            <Link to={item.href} className="hover:text-primary transition-colors">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
+      {items.map((item, i) => (
+        <span key={i} className="flex items-center gap-1">
+          {i > 0 && (
+            <span className="text-neutral-300 select-none" aria-hidden>/</span>
+          )}
+          {item.href ? (
+            <Link
+              to={item.href}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               {item.label}
             </Link>
           ) : (
-            <span className="text-neutral-700 font-medium">{item.label}</span>
+            <span className="text-foreground font-medium">{item.label}</span>
           )}
         </span>
       ))}
