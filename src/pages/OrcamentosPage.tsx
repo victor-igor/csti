@@ -1,15 +1,71 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { useListOrcamentosPrestador, useListOrcamentosCliente } from '@/features/orcamento/useOrcamento'
+import {
+  useListOrcamentosPrestador,
+  useListOrcamentosCliente,
+} from '@/features/orcamento/useOrcamento'
 import { PageHeader } from '@/components/molecules/PageHeader'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { FilterBar } from '@/components/molecules/FilterBar'
+import { OrcamentoCard } from '@/components/organisms/OrcamentoCard'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { EmptyState } from '@/components/atoms/EmptyState'
 import { ErrorState } from '@/components/atoms/ErrorState'
-import { relativeDate } from '@/lib/dateUtils'
 import type { IOrcamento } from '@/types/domain'
 
-interface OrcamentosListProps {
+const CLIENTE_STATUS_FILTERS = [
+  { label: 'Todos',    value: '' },
+  { label: 'Enviado',  value: 'enviado' },
+  { label: 'Aceito',   value: 'aceito' },
+  { label: 'Recusado', value: 'recusado' },
+]
+
+const PRESTADOR_STATUS_FILTERS = [
+  { label: 'Todos',     value: '' },
+  { label: 'Rascunho',  value: 'rascunho' },
+  { label: 'Enviado',   value: 'enviado' },
+  { label: 'Aceito',    value: 'aceito' },
+  { label: 'Recusado',  value: 'recusado' },
+]
+
+function StatusChips({
+  filters,
+  active,
+  onSelect,
+}: {
+  filters: { label: string; value: string }[]
+  active: string
+  onSelect: (v: string) => void
+}) {
+  return (
+    <>
+      {filters.map(f => (
+        <button
+          key={f.value}
+          onClick={() => onSelect(f.value)}
+          className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+            active === f.value
+              ? 'bg-primary text-white border-primary'
+              : 'bg-neutral-25 border-border text-neutral-500 hover:text-foreground hover:border-neutral-300'
+          }`}
+        >
+          {f.label}
+        </button>
+      ))}
+    </>
+  )
+}
+
+function OrcamentosList({
+  data,
+  isLoading,
+  isError,
+  refetch,
+  getPath,
+  emptyTitle,
+  emptyDescription,
+  statusFilters,
+}: {
   data: IOrcamento[]
   isLoading: boolean
   isError: boolean
@@ -17,44 +73,48 @@ interface OrcamentosListProps {
   getPath: (id: string) => string
   emptyTitle: string
   emptyDescription: string
-}
-
-function OrcamentosList({ data, isLoading, isError, refetch, getPath, emptyTitle, emptyDescription }: OrcamentosListProps) {
+  statusFilters: { label: string; value: string }[]
+}) {
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [activeStatus, setActiveStatus] = useState('')
 
-  if (isLoading) return <LoadingSkeleton rows={4} />
-  if (isError) return <ErrorState message="Erro ao carregar orçamentos" onRetry={refetch} />
-  if (data.length === 0) return (
-    <EmptyState title={emptyTitle} description={emptyDescription} />
-  )
+  const filtered = data
+    .filter(o => !activeStatus || o.status === activeStatus)
+    .filter(o =>
+      !search ||
+      o.numero.toLowerCase().includes(search.toLowerCase())
+    )
 
   return (
-    <div className="space-y-3">
-      {data.map((orc) => (
-        <div
-          key={orc.id}
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate(getPath(orc.id))}
-          onKeyDown={(e) => e.key === 'Enter' && navigate(getPath(orc.id))}
-          className="flex items-center gap-4 rounded-xl border border-neutral-100 bg-white px-4 py-3 shadow-sm cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <div className="min-w-0 flex-1">
-            <p className="font-mono text-[10px] text-neutral-400 uppercase tracking-wider">{orc.numero}</p>
-            {'solicitacoes_orcamento' in orc && (orc as any).solicitacoes_orcamento?.titulo ? (
-              <p className="text-sm font-medium text-neutral-800 truncate mt-0.5">
-                {(orc as any).solicitacoes_orcamento.titulo}
-              </p>
-            ) : orc.prazo_estimado_dias != null ? (
-              <p className="text-xs text-neutral-500 mt-0.5">Prazo: {orc.prazo_estimado_dias} dia(s)</p>
-            ) : null}
-          </div>
-          <div className="shrink-0 flex flex-col items-end gap-1">
-            <StatusBadge status={orc.status} />
-            <span className="text-[11px] text-neutral-400">{relativeDate(orc.created_at)}</span>
-          </div>
+    <div className="space-y-6">
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        placeholder="Buscar por número..."
+        filters={<StatusChips filters={statusFilters} active={activeStatus} onSelect={setActiveStatus} />}
+        resultCount={filtered.length}
+        totalCount={data.length}
+      />
+
+      {isLoading && <LoadingSkeleton rows={4} />}
+      {isError && <ErrorState message="Erro ao carregar orçamentos" onRetry={refetch} />}
+
+      {!isLoading && !isError && filtered.length === 0 && (
+        <EmptyState title={emptyTitle} description={emptyDescription} />
+      )}
+
+      {!isLoading && !isError && filtered.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {filtered.map(orc => (
+            <OrcamentoCard
+              key={orc.id}
+              orcamento={orc}
+              onClick={() => navigate(getPath(orc.id))}
+            />
+          ))}
         </div>
-      ))}
+      )}
     </div>
   )
 }
@@ -69,7 +129,8 @@ function OrcamentosCliente() {
       refetch={refetch}
       getPath={(id) => `/orcamentos/${id}/revisar`}
       emptyTitle="Nenhum orçamento recebido"
-      emptyDescription="Quando prestadores enviarem orçamentos para suas solicitações, eles aparecerão aqui."
+      emptyDescription="Os orçamentos enviados pelos prestadores aparecerão aqui"
+      statusFilters={CLIENTE_STATUS_FILTERS}
     />
   )
 }
@@ -84,21 +145,19 @@ function OrcamentosPrestador() {
       refetch={refetch}
       getPath={(id) => `/prestador/orcamentos/${id}`}
       emptyTitle="Nenhum orçamento criado"
-      emptyDescription="Acesse as solicitações disponíveis para começar a enviar orçamentos."
+      emptyDescription="Crie orçamentos a partir das solicitações disponíveis"
+      statusFilters={PRESTADOR_STATUS_FILTERS}
     />
   )
 }
 
 export default function OrcamentosPage() {
-  const profile = useAuthStore((s) => s.profile)
-  const isPrestador = profile?.role === 'prestador'
+  const role = useAuthStore((s) => s.profile?.role)
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       <PageHeader title="Orçamentos" />
-      <div className="mt-6">
-        {isPrestador ? <OrcamentosPrestador /> : <OrcamentosCliente />}
-      </div>
+      {role === 'cliente' ? <OrcamentosCliente /> : <OrcamentosPrestador />}
     </div>
   )
 }
