@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
@@ -15,6 +15,7 @@ import { useGetOrcamento, useEnviarOrcamento } from './useOrcamento'
 
 export default function OrcamentoDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
   const { data, isLoading, isError, refetch } = useGetOrcamento(id ?? '')
   const { mutate: enviar, isPending } = useEnviarOrcamento()
@@ -62,6 +63,19 @@ export default function OrcamentoDetailPage() {
           label="Criado em"
           value={new Date(data.created_at).toLocaleDateString('pt-BR')}
         />
+        {(data as any).ordens_servico?.id && (
+          <InfoCard
+            label="Ordem de Serviço"
+            value={
+              <button
+                className="text-primary hover:underline font-medium text-sm"
+                onClick={() => navigate(`/ordens-servico/${(data as any).ordens_servico.id}`)}
+              >
+                {(data as any).ordens_servico.numero}
+              </button>
+            }
+          />
+        )}
       </div>
 
       {data.observacoes && (

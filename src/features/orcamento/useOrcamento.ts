@@ -154,7 +154,7 @@ export function useGetOrcamento(id: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orcamentos')
-        .select('*, itens_orcamento(*)')
+        .select('*, itens_orcamento(*), ordens_servico(id, numero)')
         .is('deleted_at', null)
         .eq('id', id)
         .single()
