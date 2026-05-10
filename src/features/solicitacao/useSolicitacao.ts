@@ -57,12 +57,19 @@ export function useGetSolicitacao(id: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('solicitacoes_orcamento')
-        .select('*')
+        .select('*, status_historico(status_novo, created_at, observacao)')
         .is('deleted_at', null)
         .eq('id', id)
+        .order('created_at', { ascending: true, referencedTable: 'status_historico' })
         .single()
       if (error) throw error
-      return data as ISolicitacao
+      return data as unknown as ISolicitacao & {
+        status_historico: Array<{
+          status_novo: string
+          created_at: string
+          observacao: string | null
+        }>
+      }
     },
     enabled: !!id,
   })
