@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom'
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string
   href: string | null
 }
@@ -36,10 +36,20 @@ export function useBreadcrumb(): BreadcrumbItem[] {
 
   const items: BreadcrumbItem[] = [{ label: 'Dashboard', href: segments.length === 0 ? null : '/' }]
 
-  visible.forEach((seg, i) => {
-    const href = i === visible.length - 1
+  // Build items with correct href using segment position tracking
+  let segIdx = 0
+  const visibleWithPos: Array<{ seg: string; pos: number }> = []
+  for (const seg of segments) {
+    if (SEGMENT_LABELS[seg] !== '') {
+      visibleWithPos.push({ seg, pos: segIdx })
+    }
+    segIdx++
+  }
+
+  visibleWithPos.forEach(({ seg, pos }, i) => {
+    const href = i === visibleWithPos.length - 1
       ? null
-      : '/' + segments.slice(0, segments.indexOf(seg) + 1).join('/')
+      : '/' + segments.slice(0, pos + 1).join('/')
     items.push({ label: segmentLabel(seg), href })
   })
 

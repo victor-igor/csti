@@ -44,6 +44,7 @@ describe('useBreadcrumb', () => {
     const { result } = renderHook(() => useBreadcrumb(), { wrapper: wrapper('/prestador/orcamentos') })
     const labels = result.current.map(b => b.label)
     expect(labels).not.toContain('prestador')
+    expect(labels).not.toContain('')
     expect(labels).toContain('Orçamentos')
   })
 
