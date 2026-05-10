@@ -111,27 +111,25 @@ export function Sidebar() {
 
       {/* User section */}
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className={cn(
-              'flex items-center gap-3 p-4 border-t border-border w-full hover:bg-neutral-25 transition-colors text-left shrink-0',
-              !isExpanded && 'justify-center px-2',
-            )}
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
-              {initials}
+        <DropdownMenuTrigger
+          className={cn(
+            'flex items-center gap-3 p-4 border-t border-border w-full hover:bg-neutral-25 transition-colors text-left shrink-0',
+            !isExpanded && 'justify-center px-2',
+          )}
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
+            {initials}
+          </div>
+          {isExpanded && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{profile?.nome}</p>
+              <p className="text-[11px] text-muted-foreground">{roleLabel}</p>
             </div>
-            {isExpanded && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{profile?.nome}</p>
-                <p className="text-[11px] text-muted-foreground">{roleLabel}</p>
-              </div>
-            )}
-          </button>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-48">
-          <DropdownMenuItem asChild>
-            <Link to="/perfil">Meu Perfil</Link>
+          <DropdownMenuItem onClick={() => navigate('/perfil')}>
+            Meu Perfil
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} className="text-danger focus:text-danger">

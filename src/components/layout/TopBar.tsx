@@ -64,20 +64,18 @@ export function TopBar() {
 
         {/* Avatar dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-neutral-25 transition-colors">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
-                {initials}
-              </div>
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground leading-tight">{firstName}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">{roleLabel}</p>
-              </div>
-            </button>
+          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-neutral-25 transition-colors">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
+              {initials}
+            </div>
+            <div className="hidden md:block text-left">
+              <p className="text-sm font-medium text-foreground leading-tight">{firstName}</p>
+              <p className="text-[11px] text-muted-foreground leading-tight">{roleLabel}</p>
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem asChild>
-              <Link to="/perfil">Meu Perfil</Link>
+            <DropdownMenuItem onClick={() => navigate('/perfil')}>
+              Meu Perfil
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-danger focus:text-danger">
