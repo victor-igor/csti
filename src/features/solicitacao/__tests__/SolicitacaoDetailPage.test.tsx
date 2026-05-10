@@ -13,6 +13,7 @@ const mockSupabase = vi.hoisted(() => ({
   select: vi.fn(),
   is: vi.fn(),
   eq: vi.fn(),
+  order: vi.fn(),
   single: vi.fn(),
 }))
 
@@ -56,6 +57,7 @@ describe('SolicitacaoDetailPage', () => {
     mockSupabase.select.mockReturnThis()
     mockSupabase.eq.mockReturnThis()
     mockSupabase.is.mockReturnThis()
+    mockSupabase.order.mockReturnThis()
     // First call: fetch solicitacao; second call: fetch orcamento
     mockSupabase.single
       .mockResolvedValueOnce({ data: mockSolicitacao, error: null })
