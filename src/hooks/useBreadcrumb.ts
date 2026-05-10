@@ -31,9 +31,6 @@ export function useBreadcrumb(): BreadcrumbItem[] {
 
   const segments = pathname.split('/').filter(Boolean)
 
-  // Filtrar segmentos invisíveis
-  const visible = segments.filter(s => SEGMENT_LABELS[s] !== '')
-
   const items: BreadcrumbItem[] = [{ label: 'Dashboard', href: segments.length === 0 ? null : '/' }]
 
   // Build items with correct href using segment position tracking

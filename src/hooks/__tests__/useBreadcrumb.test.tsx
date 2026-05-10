@@ -54,4 +54,18 @@ describe('useBreadcrumb', () => {
     })
     expect(result.current.length).toBeLessThanOrEqual(3)
   })
+
+  it('calcula href corretamente com segmento prestador invisível', () => {
+    const { result } = renderHook(() => useBreadcrumb(), {
+      wrapper: wrapper('/prestador/solicitacoes/nova'),
+    })
+    // prestador é invisível, solicitacoes deve ter href=/prestador/solicitacoes
+    // nova é o último item → href: null
+    const solicitacoesItem = result.current.find(b => b.label === 'Solicitações')
+    expect(solicitacoesItem).toBeDefined()
+    expect(solicitacoesItem?.href).toBe('/prestador/solicitacoes')
+    const ultimoItem = result.current[result.current.length - 1]
+    expect(ultimoItem.label).toBe('Nova Solicitação')
+    expect(ultimoItem.href).toBeNull()
+  })
 })
