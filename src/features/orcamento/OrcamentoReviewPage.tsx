@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { InfoCard } from '@/components/molecules/InfoCard'
-import { TotalSummary } from '@/components/molecules/TotalSummary'
 import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { UserCard } from '@/components/molecules/UserCard'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
@@ -60,7 +59,7 @@ export default function OrcamentoReviewPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-5xl">
       <div className="mb-4"><BackButton to="/solicitacoes" /></div>
 
       <div className="flex items-start justify-between gap-4">
@@ -69,72 +68,90 @@ export default function OrcamentoReviewPage() {
           <PdfDownloadButton orcamento={data} itens={itens} prestador={prestadorPdf} />
         )}
       </div>
-
-      {/* Prestador */}
-      {prestador && (
-        <div className="mt-4 rounded-lg border border-border bg-card p-4">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Prestador</p>
-          <UserCard
-            name={prestador.nome}
-            role={prestador.especialidade ?? 'Prestador'}
-          />
-        </div>
-      )}
-
-      {/* InfoCards */}
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <InfoCard label="Status" value={<StatusBadge status={data.status} />} />
-        {data.prazo_estimado_dias != null && (
-          <InfoCard label="Prazo" value={`${data.prazo_estimado_dias} dia(s)`} />
-        )}
-        <InfoCard
-          label="Valor total"
-          value={<CurrencyDisplay value={total} className="font-semibold" />}
-        />
+      <div className="mb-1">
+        <StatusBadge status={data.status} />
       </div>
 
-      {/* Itens */}
-      <div className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold text-foreground">Itens ({itens.length})</h2>
-        <div className="space-y-2">
-          {itens.map((item) => (
-            <ItemOrcamentoRow key={item.id} item={item} />
-          ))}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 items-start">
+
+        {/* Coluna principal: tabela de itens + observações */}
+        <div className="space-y-4">
+          <div className="rounded-md border border-border overflow-hidden">
+            {/* Header de colunas */}
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2 bg-muted/40 px-4 py-2">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Descrição</span>
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground text-right">Qtd</span>
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground text-right">Unit.</span>
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground text-right">Subtotal</span>
+            </div>
+            {/* Linhas de itens */}
+            <div className="divide-y divide-border">
+              {itens.map((item) => (
+                <ItemOrcamentoRow key={item.id} item={item} />
+              ))}
+              {itens.length === 0 && (
+                <p className="px-4 py-6 text-center text-sm text-muted-foreground">Nenhum item.</p>
+              )}
+            </div>
+          </div>
+
+          {data.observacoes && (
+            <div className="rounded-md border border-border p-4">
+              <h3 className="mb-1 text-sm font-semibold text-foreground">Observações</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{data.observacoes}</p>
+            </div>
+          )}
+
+          {data.prazo_estimado_dias != null && (
+            <InfoCard label="Prazo estimado" value={`${data.prazo_estimado_dias} dia(s)`} />
+          )}
+        </div>
+
+        {/* Coluna direita sticky */}
+        <div className="lg:sticky lg:top-20 space-y-4">
+          {/* Box total destaque */}
+          <div className="rounded-md border border-border bg-neutral-25 p-4">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Total do Orçamento
+            </p>
+            <CurrencyDisplay value={total} className="mt-1 text-2xl font-bold text-foreground" />
+          </div>
+
+          {/* UserCard prestador */}
+          {prestador && (
+            <div className="rounded-md border border-border p-4">
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Prestador</p>
+              <UserCard
+                name={prestador.nome}
+                role={prestador.especialidade ?? 'Prestador'}
+              />
+            </div>
+          )}
+
+          {/* CTAs Aprovar / Recusar */}
+          {canAct && (
+            <div className="space-y-2">
+              <Button
+                className="w-full bg-green-600 text-white hover:bg-green-700"
+                disabled={isProcessing}
+                onClick={() => setConfirmAprovar(true)}
+              >
+                {aprovando && <Loader2 className="size-4 animate-spin" />}
+                Aprovar
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-destructive text-destructive hover:bg-destructive/10"
+                disabled={isProcessing}
+                onClick={() => setConfirmRecusar(true)}
+              >
+                {recusando && <Loader2 className="size-4 animate-spin" />}
+                Recusar
+              </Button>
+            </div>
+          )}
         </div>
       </div>
-
-      {data.observacoes && (
-        <div className="mt-6">
-          <h2 className="mb-1 text-sm font-semibold text-foreground">Observações</h2>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{data.observacoes}</p>
-        </div>
-      )}
-
-      <div className="mt-6">
-        <TotalSummary subtotal={total} total={total} />
-      </div>
-
-      {canAct && (
-        <div className="mt-6 flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
-            disabled={isProcessing}
-            onClick={() => setConfirmRecusar(true)}
-          >
-            {recusando && <Loader2 className="size-4 animate-spin" />}
-            Recusar
-          </Button>
-          <Button
-            className="flex-1 bg-green-600 text-white hover:bg-green-700"
-            disabled={isProcessing}
-            onClick={() => setConfirmAprovar(true)}
-          >
-            {aprovando && <Loader2 className="size-4 animate-spin" />}
-            Aprovar
-          </Button>
-        </div>
-      )}
 
       <ConfirmDialog
         open={confirmAprovar}
