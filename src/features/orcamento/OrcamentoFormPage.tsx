@@ -32,7 +32,7 @@ export default function OrcamentoFormPage() {
     resolver: zodResolver(CreateOrcamentoSchema),
     defaultValues: {
       solicitacao_id: solicitacaoId ?? '',
-      prazo_dias: undefined,
+      prazo_dias: '' as unknown as number,
       observacoes: '',
       itens: [{ descricao: '', quantidade: 1, valor_unitario: 0 }],
     },
