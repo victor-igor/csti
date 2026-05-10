@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plus, Loader2 } from 'lucide-react'
+import { Plus, Loader2, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { FormField } from '@/components/molecules/FormField'
@@ -51,7 +51,6 @@ export default function OrcamentoFormPage() {
   }
 
   async function enviar(data: CreateOrcamentoFormData) {
-    // create as rascunho first, then send
     await new Promise<void>((resolve, reject) => {
       criarOrcamento(data, {
         onSuccess: async (id) => {
@@ -77,11 +76,11 @@ export default function OrcamentoFormPage() {
   const isProcessing = criando || enviando
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6 max-w-5xl">
       <div className="mb-4">
         <BackButton to="/solicitacoes" />
       </div>
-      <PageHeader title="Novo Orçamento" />
+      <PageHeader title={`Orçamento para ${solicitacao.numero}`} />
 
       {/* Solicitação readonly */}
       <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4">
@@ -93,104 +92,119 @@ export default function OrcamentoFormPage() {
         )}
       </div>
 
-      <form className="mt-6 space-y-6" noValidate>
+      <form className="mt-6 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 items-start" noValidate>
         {/* Hidden solicitacao_id */}
         <input type="hidden" {...register('solicitacao_id')} />
 
-        <FormField<CreateOrcamentoFormData>
-          name="prazo_dias"
-          control={control}
-          label="Prazo estimado (dias)"
-          type="number"
-          min={1}
-          max={365}
-          placeholder="Ex: 7"
-        />
+        {/* Coluna principal */}
+        <div className="space-y-6">
+          {/* Detalhes */}
+          <div className="rounded-md border border-border p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">Detalhes</h3>
 
-        <TextareaField<CreateOrcamentoFormData>
-          name="observacoes"
-          control={control}
-          label="Observações (opcional)"
-          rows={3}
-        />
+            <FormField<CreateOrcamentoFormData>
+              name="prazo_dias"
+              control={control}
+              label="Prazo estimado (dias)"
+              type="number"
+              min={1}
+              max={365}
+              placeholder="Ex: 7"
+            />
 
-        {/* Itens */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-foreground">Itens do Orçamento</h2>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => append({ descricao: '', quantidade: 1, valor_unitario: 0 })}
-            >
-              <Plus className="size-4" />
-              Adicionar Item
-            </Button>
+            <TextareaField<CreateOrcamentoFormData>
+              name="observacoes"
+              control={control}
+              label="Observações (opcional)"
+              rows={3}
+            />
           </div>
 
-          {errors.itens?.root && (
-            <p className="mb-2 text-xs text-destructive">{errors.itens.root.message}</p>
-          )}
-          {errors.itens?.message && (
-            <p className="mb-2 text-xs text-destructive">{errors.itens.message}</p>
-          )}
+          {/* Itens */}
+          <div className="rounded-md border border-border p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Itens do Orçamento</h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => append({ descricao: '', quantidade: 1, valor_unitario: 0 })}
+              >
+                <Plus className="size-4" />
+                Adicionar Item
+              </Button>
+            </div>
 
-          {fields.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              Nenhum item adicionado.
-            </p>
-          )}
+            {errors.itens?.root && (
+              <p className="text-xs text-destructive">{errors.itens.root.message}</p>
+            )}
+            {errors.itens?.message && (
+              <p className="text-xs text-destructive">{errors.itens.message}</p>
+            )}
 
-          <div className="space-y-3">
-            {fields.map((field, index) => (
-              <div key={field.id} className="rounded-lg border border-border p-3 space-y-2">
-                <FormField<CreateOrcamentoFormData>
-                  name={`itens.${index}.descricao`}
-                  control={control}
-                  label="Descrição"
-                  placeholder="Ex: Troca de HD"
-                />
-                <div className="grid grid-cols-2 gap-3">
+            {/* Header de colunas */}
+            {fields.length > 0 && (
+              <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 px-1">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Descrição</span>
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Qtd</span>
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Unit. (R$)</span>
+                <span />
+              </div>
+            )}
+
+            {fields.length === 0 && (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Nenhum item adicionado.
+              </p>
+            )}
+
+            <div className="space-y-2">
+              {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-start rounded-md border border-border p-2">
+                  <FormField<CreateOrcamentoFormData>
+                    name={`itens.${index}.descricao`}
+                    control={control}
+                    label=""
+                    placeholder="Ex: Troca de HD"
+                  />
                   <FormField<CreateOrcamentoFormData>
                     name={`itens.${index}.quantidade`}
                     control={control}
-                    label="Quantidade"
+                    label=""
                     type="number"
                     min={1}
                   />
                   <FormField<CreateOrcamentoFormData>
                     name={`itens.${index}.valor_unitario`}
                     control={control}
-                    label="Valor unitário (R$)"
+                    label=""
                     type="number"
                     min={0.01}
                     step="0.01"
                   />
-                </div>
-                {fields.length > 1 && (
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
+                    className="mt-1 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30"
+                    disabled={fields.length <= 1}
                     onClick={() => remove(index)}
+                    aria-label="Remover item"
                   >
-                    Remover item
-                  </Button>
-                )}
-              </div>
-            ))}
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <TotalSummary subtotal={total} total={total} />
+        {/* Coluna direita sticky */}
+        <div className="lg:sticky lg:top-20 space-y-3">
+          <TotalSummary subtotal={total} total={total} />
 
-        <div className="flex gap-3">
           <Button
             type="button"
             variant="outline"
-            className="flex-1"
+            className="w-full"
             disabled={isProcessing}
             onClick={handleSubmit(salvarRascunho)}
           >
@@ -199,7 +213,7 @@ export default function OrcamentoFormPage() {
           </Button>
           <Button
             type="button"
-            className="flex-1"
+            className="w-full"
             disabled={isProcessing}
             onClick={handleSubmit(enviar)}
           >
