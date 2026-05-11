@@ -8,6 +8,7 @@ import { ProtectedRoute } from '@/components/guards/ProtectedRoute'
 import { RoleGuard } from '@/components/guards/RoleGuard'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
+import { OnboardingWelcome } from '@/pages/OnboardingWelcome'
 
 const LoginPage        = lazy(() => import('@/features/auth/LoginPage'))
 const RegisterPage     = lazy(() => import('@/features/auth/RegisterPage'))
@@ -41,7 +42,7 @@ export default function App() {
 
               {/* Protected */}
               <Route element={<ProtectedRoute />}>
-                <Route element={<AppShell />}>
+                <Route element={<><OnboardingWelcome /><AppShell /></>}>
                   <Route index element={<Navigate to="/dashboard" replace />} />
                   <Route path="dashboard" element={<DashboardPage />} />
 
