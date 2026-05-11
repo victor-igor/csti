@@ -11,6 +11,8 @@ interface StatusHistoricoEntry {
 
 export interface IOrdemServicoDetalhada extends IOrdemServico {
   historico: StatusHistoricoEntry[]
+  prestador: { id: string; nome: string; telefone: string | null; especialidade: string | null } | null
+  cliente: { id: string; nome: string; telefone: string | null } | null
 }
 
 const TRANSICOES: Partial<Record<OSStatus, OSStatus>> = {
@@ -47,7 +49,11 @@ export function useGetOrdemServico(id: string) {
       const [osResult, historicoResult] = await Promise.all([
         supabase
           .from('ordens_servico')
-          .select('*')
+          .select(`
+            *,
+            prestador:profiles!ordens_servico_prestador_id_fkey(id, nome, telefone, especialidade),
+            cliente:profiles!ordens_servico_cliente_id_fkey(id, nome, telefone)
+          `)
           .eq('id', id)
           .single(),
         supabase
@@ -58,8 +64,12 @@ export function useGetOrdemServico(id: string) {
           .order('created_at', { ascending: true }),
       ])
       if (osResult.error) throw osResult.error
+      const os = osResult.data as typeof osResult.data & {
+        prestador: { id: string; nome: string; telefone: string | null; especialidade: string | null } | null
+        cliente: { id: string; nome: string; telefone: string | null } | null
+      }
       return {
-        ...osResult.data,
+        ...os,
         historico: (historicoResult.data ?? []) as StatusHistoricoEntry[],
       } as IOrdemServicoDetalhada
     },
