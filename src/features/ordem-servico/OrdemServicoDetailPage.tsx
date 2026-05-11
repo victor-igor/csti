@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { useParams, Link } from 'react-router-dom'
+import { Loader2, Phone, ArrowRight } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { InfoCard } from '@/components/molecules/InfoCard'
@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { StatusTimeline } from '@/components/organisms/StatusTimeline'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
+import { UserCard } from '@/components/molecules/UserCard'
 import { useGetOrdemServico, useUpdateStatusOS, getProximoStatus } from './useOrdemServico'
 import type { OSStatus } from '@/types/domain'
 
@@ -47,17 +48,56 @@ export default function OrdemServicoDetailPage() {
   const isPrestador = profile?.role === 'prestador'
   const proximoStatus = getProximoStatus(data.status as OSStatus)
   const labelTransicao = LABELS_TRANSICAO[data.status as OSStatus]
+  const contraparte = isPrestador ? data.cliente : data.prestador
+  const contraparteRole = isPrestador ? 'Cliente' : (data.prestador?.especialidade ?? 'Prestador')
 
   return (
     <div className="p-6 max-w-5xl">
       <div className="mb-4"><BackButton to="/ordens-servico" /></div>
       <PageHeader title={data.numero} />
 
+      <div className="mt-2 flex flex-wrap gap-2">
+        {data.solicitacao_id && (
+          <Link
+            to={isPrestador ? `/prestador/solicitacoes/${data.solicitacao_id}` : `/solicitacoes/${data.solicitacao_id}`}
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            Ver Solicitação <ArrowRight className="h-3 w-3" />
+          </Link>
+        )}
+        {data.orcamento_id && (
+          <Link
+            to={isPrestador ? `/prestador/orcamentos/${data.orcamento_id}` : `/orcamentos/${data.orcamento_id}/revisar`}
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            Ver Orçamento <ArrowRight className="h-3 w-3" />
+          </Link>
+        )}
+      </div>
+
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <InfoCard label="Status" value={<StatusBadge status={data.status} />} />
         <InfoCard label="Início" value={formatDate(data.data_inicio)} />
         <InfoCard label="Conclusão" value={formatDate(data.data_conclusao)} />
       </div>
+
+      {contraparte && (
+        <div className="mt-6 rounded-md border border-border p-4">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {isPrestador ? 'Cliente' : 'Prestador'}
+          </p>
+          <UserCard name={contraparte.nome ?? ''} role={contraparteRole} />
+          {contraparte.telefone && (
+            <a
+              href={`tel:${contraparte.telefone}`}
+              className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <Phone className="h-4 w-4" />
+              {contraparte.telefone}
+            </a>
+          )}
+        </div>
+      )}
 
       {data.historico.length > 0 && (
         <div className="mt-6">
