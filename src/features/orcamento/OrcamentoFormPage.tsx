@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,28 +11,38 @@ import { TotalSummary } from '@/components/molecules/TotalSummary'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
+import { CurrencyDisplay } from '@/components/atoms/CurrencyDisplay'
 import { useGetSolicitacao } from '@/features/solicitacao/useSolicitacao'
 import {
   CreateOrcamentoSchema,
   type CreateOrcamentoFormData,
 } from './orcamentoSchemas'
-import { useCreateOrcamento, useEnviarOrcamento } from './useOrcamento'
+import { useCreateOrcamento, useEnviarOrcamento, useUpdateOrcamento, useGetOrcamento } from './useOrcamento'
 
 export default function OrcamentoFormPage() {
-  const { solicitacaoId } = useParams<{ solicitacaoId: string }>()
-  const { data: solicitacao, isLoading, isError, refetch } = useGetSolicitacao(solicitacaoId ?? '')
-  const { mutate: criarOrcamento, isPending: criando } = useCreateOrcamento()
+  const params = useParams<{ solicitacaoId?: string; id?: string }>()
+  const isEditMode = !!params.id
+  const orcamentoId = params.id ?? ''
+  const solicitacaoId = params.solicitacaoId ?? ''
+
+  const { data: solicitacao, isLoading: loadingSol, isError: errorSol, refetch: refetchSol } = useGetSolicitacao(solicitacaoId)
+  const { data: orcamentoExistente, isLoading: loadingOrc, isError: errorOrc, refetch: refetchOrc } = useGetOrcamento(orcamentoId)
+
+  const createMutation = useCreateOrcamento()
+  const updateMutation = useUpdateOrcamento(orcamentoId)
+  const { mutate: criarOuAtualizar, isPending: criando } = isEditMode ? updateMutation : createMutation
   const { mutateAsync: enviarOrcamento, isPending: enviando } = useEnviarOrcamento()
 
   const {
     control,
     handleSubmit,
     register,
+    reset,
     formState: { errors },
   } = useForm<CreateOrcamentoFormData>({
     resolver: zodResolver(CreateOrcamentoSchema),
     defaultValues: {
-      solicitacao_id: solicitacaoId ?? '',
+      solicitacao_id: solicitacaoId,
       prazo_dias: '' as unknown as number,
       observacoes: '',
       itens: [{ descricao: '', quantidade: 1, valor_unitario: 0 }],
@@ -46,13 +57,28 @@ export default function OrcamentoFormPage() {
     0,
   )
 
+  useEffect(() => {
+    if (isEditMode && orcamentoExistente) {
+      reset({
+        solicitacao_id: orcamentoExistente.solicitacao_id,
+        prazo_dias: orcamentoExistente.prazo_estimado_dias ?? ('' as unknown as number),
+        observacoes: orcamentoExistente.observacoes ?? '',
+        itens: (orcamentoExistente.itens_orcamento ?? []).map((i) => ({
+          descricao: i.descricao,
+          quantidade: i.quantidade,
+          valor_unitario: i.valor_unitario,
+        })),
+      })
+    }
+  }, [isEditMode, orcamentoExistente, reset])
+
   function salvarRascunho(data: CreateOrcamentoFormData) {
-    criarOrcamento(data)
+    criarOuAtualizar(data)
   }
 
   async function enviar(data: CreateOrcamentoFormData) {
     await new Promise<void>((resolve, reject) => {
-      criarOrcamento(data, {
+      createMutation.mutate(data, {
         onSuccess: async (id) => {
           try {
             await enviarOrcamento({ orcamentoId: id as string, solicitacaoId: data.solicitacao_id })
@@ -66,10 +92,14 @@ export default function OrcamentoFormPage() {
     })
   }
 
+  const isLoading = isEditMode ? loadingOrc : loadingSol
+  const isError = isEditMode ? errorOrc : errorSol
+  const refetch = isEditMode ? refetchOrc : refetchSol
+
   if (isLoading) return <div className="p-6"><LoadingSkeleton rows={6} /></div>
-  if (isError || !solicitacao) return (
+  if (isError || (!isEditMode && !solicitacao) || (isEditMode && !orcamentoExistente)) return (
     <div className="p-6">
-      <ErrorState message="Solicitação não encontrada" onRetry={refetch} />
+      <ErrorState message={isEditMode ? 'Orçamento não encontrado' : 'Solicitação não encontrada'} onRetry={refetch} />
     </div>
   )
 
@@ -78,19 +108,21 @@ export default function OrcamentoFormPage() {
   return (
     <div className="p-6 max-w-5xl">
       <div className="mb-4">
-        <BackButton to="/solicitacoes" />
+        <BackButton to={isEditMode ? `/prestador/orcamentos/${orcamentoId}` : '/solicitacoes'} />
       </div>
-      <PageHeader title={`Orçamento para ${solicitacao.numero}`} />
+      <PageHeader title={isEditMode ? 'Editar Rascunho' : `Orçamento para ${solicitacao!.numero}`} />
 
-      {/* Solicitação readonly */}
-      <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4">
-        <p className="text-xs font-medium text-muted-foreground">Solicitação</p>
-        <p className="mt-0.5 font-mono text-xs text-muted-foreground">{solicitacao.numero}</p>
-        <p className="mt-1 text-sm font-medium text-foreground">{solicitacao.titulo}</p>
-        {solicitacao.descricao && (
-          <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{solicitacao.descricao}</p>
-        )}
-      </div>
+      {/* Solicitação readonly — só em modo criação */}
+      {!isEditMode && solicitacao && (
+        <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4">
+          <p className="text-xs font-medium text-muted-foreground">Solicitação</p>
+          <p className="mt-0.5 font-mono text-xs text-muted-foreground">{solicitacao.numero}</p>
+          <p className="mt-1 text-sm font-medium text-foreground">{solicitacao.titulo}</p>
+          {solicitacao.descricao && (
+            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{solicitacao.descricao}</p>
+          )}
+        </div>
+      )}
 
       <form className="mt-6 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 items-start" noValidate>
         {/* Hidden solicitacao_id */}
@@ -136,15 +168,15 @@ export default function OrcamentoFormPage() {
             </div>
 
             {errors.itens?.root && (
-              <p className="text-xs text-destructive">{errors.itens.root.message}</p>
+              <p className="text-xs text-danger">{errors.itens.root.message}</p>
             )}
             {errors.itens?.message && (
-              <p className="text-xs text-destructive">{errors.itens.message}</p>
+              <p className="text-xs text-danger">{errors.itens.message}</p>
             )}
 
-            {/* Header de colunas */}
+            {/* Header de colunas — só em desktop */}
             {fields.length > 0 && (
-              <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 px-1">
+              <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_auto] gap-2 px-1">
                 <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Descrição</span>
                 <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Qtd</span>
                 <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Unit. (R$)</span>
@@ -160,7 +192,10 @@ export default function OrcamentoFormPage() {
 
             <div className="space-y-2">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-start rounded-md border border-border p-2">
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-2 items-start rounded-md border border-border p-2">
+                  <span className="md:hidden text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Item #{index + 1}
+                  </span>
                   <FormField<CreateOrcamentoFormData>
                     name={`itens.${index}.descricao`}
                     control={control}
@@ -184,7 +219,7 @@ export default function OrcamentoFormPage() {
                   />
                   <button
                     type="button"
-                    className="mt-1 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30"
+                    className="mt-1 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-30"
                     disabled={fields.length <= 1}
                     onClick={() => remove(index)}
                     aria-label="Remover item"
@@ -209,19 +244,27 @@ export default function OrcamentoFormPage() {
             onClick={handleSubmit(salvarRascunho)}
           >
             {criando && <Loader2 className="size-4 animate-spin" />}
-            Salvar Rascunho
+            {isEditMode ? 'Salvar Alterações' : 'Salvar Rascunho'}
           </Button>
-          <Button
-            type="button"
-            className="w-full"
-            disabled={isProcessing}
-            onClick={handleSubmit(enviar)}
-          >
-            {enviando && <Loader2 className="size-4 animate-spin" />}
-            Enviar Orçamento
-          </Button>
+          {!isEditMode && (
+            <Button
+              type="button"
+              className="w-full"
+              disabled={isProcessing}
+              onClick={handleSubmit(enviar)}
+            >
+              {enviando && <Loader2 className="size-4 animate-spin" />}
+              Enviar Orçamento
+            </Button>
+          )}
         </div>
       </form>
+
+      {/* F-08 — Barra fixa em mobile (acima do BottomNav) */}
+      <div className="fixed bottom-16 left-0 right-0 lg:hidden bg-background border-t border-border p-3 flex justify-between items-center z-10">
+        <span className="text-sm text-muted-foreground">Total</span>
+        <CurrencyDisplay value={total} className="text-base font-bold" />
+      </div>
     </div>
   )
 }
