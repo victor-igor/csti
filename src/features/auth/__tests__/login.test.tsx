@@ -24,7 +24,9 @@ vi.mock('react-router-dom', async () => {
 })
 
 vi.mock('@/store/authStore', () => ({
-  useAuthStore: vi.fn(() => null),
+  useAuthStore: Object.assign(vi.fn(() => null), {
+    getState: vi.fn(() => ({ setLoading: vi.fn() })),
+  }),
 }))
 
 import { supabase } from '@/lib/supabase'

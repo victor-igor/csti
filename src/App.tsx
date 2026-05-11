@@ -24,6 +24,7 @@ const OrcamentoReviewPage = lazy(() => import('@/features/orcamento/OrcamentoRev
 const OrdemServicoListPage = lazy(() => import('@/features/ordem-servico/OrdemServicoListPage'))
 const OrdemServicoDetailPage = lazy(() => import('@/features/ordem-servico/OrdemServicoDetailPage'))
 const SolicitacaoListPrestadorPage = lazy(() => import('@/features/solicitacao/SolicitacaoListPrestadorPage'))
+const NotificacoesPage = lazy(() => import('@/pages/NotificacoesPage'))
 
 const Fallback = () => <LoadingSkeleton rows={4} className="m-6" />
 
@@ -71,6 +72,7 @@ export default function App() {
                   <Route path="ordens-servico/:id" element={<OrdemServicoDetailPage />} />
                   <Route path="ordens-servico/*" element={<OrdensServicoPage />} />
                   <Route path="perfil"           element={<PerfilPage />} />
+                  <Route path="notificacoes"    element={<NotificacoesPage />} />
                 </Route>
               </Route>
 

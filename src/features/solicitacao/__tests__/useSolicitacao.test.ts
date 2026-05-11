@@ -95,15 +95,19 @@ describe('useGetSolicitacao', () => {
 
   it('retorna solicitação quando id é válido', async () => {
     const mockSolicitacao = { id: 'abc-123', titulo: 'Solicitacao Teste', status: 'aberta' }
+    const mockHistorico: never[] = []
 
+    // useGetSolicitacao uses Promise.all: first call resolves via .single(),
+    // second call (status_historico) resolves via .order()
     mockSupabase.single.mockResolvedValueOnce({ data: mockSolicitacao, error: null })
+    mockSupabase.order.mockResolvedValueOnce({ data: mockHistorico, error: null })
 
     const { result } = renderHook(() => useGetSolicitacao('abc-123'), {
       wrapper: createWrapper(),
     })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual(mockSolicitacao)
+    expect(result.current.data).toMatchObject(mockSolicitacao)
   })
 
   it('não executa query quando id está vazio', () => {
