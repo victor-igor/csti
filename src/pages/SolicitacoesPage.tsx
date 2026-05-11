@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useListSolicitacoes } from '@/features/solicitacao/useSolicitacao'
-import { SolicitacaoCard } from '@/features/solicitacao/components/SolicitacaoCard'
-import { PageHeader } from '@/components/molecules/PageHeader'
-import { FilterBar } from '@/components/molecules/FilterBar'
+import { ListPageShell } from '@/components/molecules/ListPageShell'
+import { StatusFilterChips } from '@/components/molecules/StatusFilterChips'
+import { SolicitacaoCard } from '@/components/organisms/SolicitacaoCard'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { EmptyState } from '@/components/atoms/EmptyState'
 import { ErrorState } from '@/components/atoms/ErrorState'
+import { useListSolicitacoes } from '@/features/solicitacao/useSolicitacao'
 import type { SolicitacaoStatus } from '@/types/domain'
 
 const STATUS_FILTERS: { label: string; value: SolicitacaoStatus | 'todos' }[] = [
@@ -32,68 +32,55 @@ export default function SolicitacoesPage() {
       )
     : data
 
-  const statusChips = (
-    <>
-      {STATUS_FILTERS.map(f => (
-        <button
-          key={f.value}
-          onClick={() => setActiveFilter(f.value)}
-          className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
-            activeFilter === f.value
-              ? 'bg-primary text-white border-primary'
-              : 'bg-neutral-25 border-border text-neutral-500 hover:text-foreground hover:border-neutral-300'
-          }`}
-        >
-          {f.label}
-        </button>
-      ))}
-    </>
-  )
+  const abertas = data.filter(s => s.status !== 'cancelado').length
+  const subtitle = abertas > 0
+    ? `${abertas} solicitaç${abertas === 1 ? 'ão aberta' : 'ões abertas'}`
+    : undefined
+
+  if (isLoading) return <div className="p-4 sm:p-6"><LoadingSkeleton rows={4} /></div>
+  if (isError) return <div className="p-4 sm:p-6"><ErrorState message="Erro ao carregar solicitações" onRetry={refetch} /></div>
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader
-        title="Minhas Solicitações"
-        actions={
-          <button
-            onClick={() => navigate('/solicitacoes/nova')}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Nova Solicitação
-          </button>
-        }
-      />
-
-      <FilterBar
-        search={search}
-        onSearchChange={setSearch}
-        placeholder="Buscar por número ou título..."
-        filters={statusChips}
-        resultCount={filtered.length}
-        totalCount={data.length}
-      />
-
-      {isLoading && <LoadingSkeleton rows={4} />}
-      {isError && <ErrorState message="Erro ao carregar solicitações" onRetry={refetch} />}
-
-      {!isLoading && !isError && filtered.length === 0 && (
-        <EmptyState
-          title="Nenhuma solicitação encontrada"
-          description={search ? 'Tente outros termos de busca' : 'Crie sua primeira solicitação de orçamento'}
+    <ListPageShell
+      title="Minhas Solicitações"
+      subtitle={subtitle}
+      actions={
+        <button
+          onClick={() => navigate('/solicitacoes/nova')}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          Nova Solicitação
+        </button>
+      }
+      filters={
+        <StatusFilterChips
+          filters={STATUS_FILTERS}
+          active={activeFilter}
+          onSelect={setActiveFilter}
         />
-      )}
-
-      {!isLoading && !isError && filtered.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtered.map(s => (
-            <SolicitacaoCard
-              key={s.id}
-              solicitacao={s}
-              onClick={() => navigate(`/solicitacoes/${s.id}`)}
-            />
-          ))}
+      }
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Buscar por número ou título..."
+      resultCount={filtered.length}
+      totalCount={data.length}
+    >
+      {filtered.length === 0 ? (
+        <div className="col-span-full">
+          <EmptyState
+            title="Nenhuma solicitação encontrada"
+            description={search ? 'Tente outros termos de busca' : 'Crie sua primeira solicitação de orçamento'}
+          />
         </div>
+      ) : (
+        filtered.map(s => (
+          <SolicitacaoCard
+            key={s.id}
+            solicitacao={s}
+            onClick={() => navigate(`/solicitacoes/${s.id}`)}
+          />
+        ))
       )}
-    </div>
+    </ListPageShell>
   )
 }
