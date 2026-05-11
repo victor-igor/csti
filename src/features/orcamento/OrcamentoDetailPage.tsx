@@ -79,6 +79,21 @@ export default function OrcamentoDetailPage() {
         </div>
       )}
 
+      {data.status === 'recusado' && (() => {
+        const motivoDireto = (data as { motivo_recusa?: string | null }).motivo_recusa
+        const motivoFallback = data.observacoes?.startsWith('[Motivo da recusa:')
+          ? data.observacoes.replace(/^\[Motivo da recusa:\s*/, '').replace(/\]$/, '')
+          : null
+        const motivo = motivoDireto ?? motivoFallback
+        if (!motivo) return null
+        return (
+          <div className="mt-6 rounded-md border border-danger/30 bg-danger/5 p-4">
+            <h2 className="text-sm font-semibold text-danger mb-1">Motivo da Recusa</h2>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{motivo}</p>
+          </div>
+        )
+      })()}
+
       <div className="mt-6">
         <h2 className="text-sm font-semibold text-foreground mb-3">
           Itens ({itens.length})

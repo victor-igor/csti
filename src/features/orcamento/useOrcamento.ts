@@ -47,13 +47,12 @@ export function useRecusarOrcamento() {
       solicitacaoId: string
       motivo?: string
     }) => {
-      const updates: Record<string, unknown> = { status: 'recusado' }
-      if (motivo?.trim()) {
-        updates.observacoes = `[Motivo da recusa: ${motivo.trim()}]`
-      }
       const { error: orcErr } = await supabase
         .from('orcamentos')
-        .update(updates)
+        .update({
+          status: 'recusado',
+          ...(motivo?.trim() ? { observacoes: `[Motivo da recusa: ${motivo.trim()}]` } : {}),
+        })
         .eq('id', orcamentoId)
       if (orcErr) throw orcErr
 
