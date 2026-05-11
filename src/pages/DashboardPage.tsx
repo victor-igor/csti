@@ -31,10 +31,10 @@ function StatCard({
   return (
     <Link
       to={to}
-      className="flex items-center gap-4 rounded-2xl border border-neutral-100 bg-white p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 group"
+      className="flex items-center gap-4 rounded-lg border border-border bg-card p-5 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group"
     >
       <div className="relative shrink-0">
-        <div className={`${color} flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-300`}>
+        <div className={`${color} flex h-12 w-12 items-center justify-center rounded-lg text-white shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-300`}>
           <Icon className="h-5 w-5" />
         </div>
         {urgent && (value ?? 0) > 0 && (
@@ -56,9 +56,9 @@ function StatCard({
 
 function AllClearBanner() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-green-100 bg-green-50 px-4 py-3">
-      <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-      <p className="text-sm text-green-700 font-medium">Tudo em dia! Nenhum item aguarda sua ação.</p>
+    <div className="flex items-center gap-3 rounded-lg border border-success/20 bg-success-light px-4 py-3">
+      <div className="h-2 w-2 rounded-full bg-success shrink-0" />
+      <p className="text-sm text-success font-medium">Tudo em dia! Nenhum item aguarda sua ação.</p>
     </div>
   )
 }
@@ -169,7 +169,7 @@ function ClienteDashboard() {
           title="Atividade Recente"
           icon={<Clock className="h-4 w-4 text-neutral-400" />}
         >
-          <div className="rounded-xl border border-neutral-100 bg-white px-4 py-1 shadow-sm">
+          <div className="rounded-lg border border-border bg-card px-4 py-1 shadow-card">
             {data?.recente.map((item) => (
               <ActivityItem
                 key={item.id}
@@ -203,7 +203,8 @@ function PrestadorDashboard() {
         supabase
           .from('orcamentos')
           .select('id', { count: 'exact', head: false })
-          .is('deleted_at', null),
+          .is('deleted_at', null)
+          .in('status', ['enviado', 'aceito', 'recusado']),
         supabase
           .from('ordens_servico')
           .select('id', { count: 'exact', head: false })
@@ -248,7 +249,7 @@ function PrestadorDashboard() {
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Disponíveis p/ Orçar" value={data?.solicitacoesDisponiveis} icon={ClipboardList} to="/prestador/solicitacoes" color="bg-blue-500" urgent />
-        <StatCard label="Meus Orçamentos" value={data?.meusOrcamentos} icon={FileText} to="/orcamentos" color="bg-primary" />
+        <StatCard label="Orç. Enviados" value={data?.meusOrcamentos} icon={FileText} to="/orcamentos" color="bg-primary" />
         <StatCard label="OS em Andamento" value={data?.osAtivas} icon={Wrench} to="/ordens-servico" color="bg-green-500" />
       </div>
 
@@ -292,7 +293,7 @@ function PrestadorDashboard() {
           title="Atividade Recente"
           icon={<Clock className="h-4 w-4 text-neutral-400" />}
         >
-          <div className="rounded-xl border border-neutral-100 bg-white px-4 py-1 shadow-sm">
+          <div className="rounded-lg border border-border bg-card px-4 py-1 shadow-card">
             {data?.recente.map((item) => (
               <ActivityItem
                 key={item.id}

@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/store/authStore'
 import { useGetPerfil, useUpdatePerfil } from '@/features/perfil/usePerfil'
+import { PageHeader } from '@/components/molecules/PageHeader'
 import { UserCard } from '@/components/molecules/UserCard'
 import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { FormField } from '@/components/molecules/FormField'
@@ -21,6 +22,7 @@ type PerfilFormData = z.infer<typeof PerfilSchema>
 
 export default function PerfilPage() {
   const { user, profile: storeProfile } = useAuthStore()
+  const email = useAuthStore((s) => s.session?.user?.email) ?? ''
   const userId = user?.id ?? ''
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingData, setPendingData] = useState<PerfilFormData | null>(null)
@@ -82,7 +84,8 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="p-6 max-w-lg">
+    <div className="p-6 max-w-2xl">
+      <PageHeader title="Meu Perfil" />
       {activeProfile && (
         <div className="mb-6">
           <UserCard name={activeProfile.nome} role={activeProfile.role} />
@@ -90,6 +93,18 @@ export default function PerfilPage() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1">
+            E-mail <span className="text-xs text-muted-foreground font-normal">(não pode ser alterado)</span>
+          </label>
+          <input
+            type="email"
+            value={email}
+            readOnly
+            disabled
+            className="w-full rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
+          />
+        </div>
         <FormField<PerfilFormData>
           name="nome"
           control={control}
@@ -117,7 +132,7 @@ export default function PerfilPage() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full flex items-center justify-center gap-2 rounded-md bg-primary py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
         >
           {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Salvar

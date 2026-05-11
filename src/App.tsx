@@ -14,7 +14,6 @@ const RegisterPage     = lazy(() => import('@/features/auth/RegisterPage'))
 const DashboardPage    = lazy(() => import('@/pages/DashboardPage'))
 const SolicitacoesPage = lazy(() => import('@/pages/SolicitacoesPage'))
 const OrcamentosPage   = lazy(() => import('@/pages/OrcamentosPage'))
-const OrdensServicoPage = lazy(() => import('@/pages/OrdensServicoPage'))
 const PerfilPage       = lazy(() => import('@/pages/PerfilPage'))
 const SolicitacaoFormPage = lazy(() => import('@/features/solicitacao/SolicitacaoFormPage'))
 const SolicitacaoDetailPage = lazy(() => import('@/features/solicitacao/SolicitacaoDetailPage'))
@@ -70,7 +69,6 @@ export default function App() {
                   <Route path="orcamentos/*"    element={<OrcamentosPage />} />
                   <Route path="ordens-servico" element={<OrdemServicoListPage />} />
                   <Route path="ordens-servico/:id" element={<OrdemServicoDetailPage />} />
-                  <Route path="ordens-servico/*" element={<OrdensServicoPage />} />
                   <Route path="perfil"           element={<PerfilPage />} />
                   <Route path="notificacoes"    element={<NotificacoesPage />} />
                 </Route>
