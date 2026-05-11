@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Calendar, Tag, Wrench } from 'lucide-react'
+import { Calendar, Tag, Wrench, Loader2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useGetSolicitacao } from './useSolicitacao'
+import { useGetSolicitacao, useCancelSolicitacao } from './useSolicitacao'
+import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { PageHeader } from '@/components/molecules/PageHeader'
@@ -19,6 +21,8 @@ export default function SolicitacaoDetailPage() {
   const role = useAuthStore((s) => s.profile?.role)
 
   const { data: solicitacao, isLoading, isError, refetch } = useGetSolicitacao(id ?? '')
+  const { mutate: cancelar, isPending: cancelando } = useCancelSolicitacao()
+  const [confirmCancel, setConfirmCancel] = useState(false)
 
   const { data: orcamentoVinculado } = useQuery({
     queryKey: ['orcamento-por-solicitacao', id],
@@ -47,6 +51,9 @@ export default function SolicitacaoDetailPage() {
   // Mostra link de orçamento para clientes e para usuários sem role definido (ex: testes)
   const podeVerOrcamento = !isPrestador && solicitacao.status === 'orcamento_enviado' && orcamentoVinculado
   const podeCriarOrcamento = isPrestador &&
+    (solicitacao.status === 'aberta' || solicitacao.status === 'aguardando_orcamento')
+  const podeCancelar =
+    !isPrestador &&
     (solicitacao.status === 'aberta' || solicitacao.status === 'aguardando_orcamento')
 
   return (
@@ -140,8 +147,34 @@ export default function SolicitacaoDetailPage() {
               Criar Orçamento
             </Button>
           )}
+
+          {podeCancelar && (
+            <Button
+              variant="destructive"
+              className="w-full"
+              disabled={cancelando}
+              onClick={() => setConfirmCancel(true)}
+            >
+              {cancelando && <Loader2 className="size-4 animate-spin" />}
+              Cancelar Solicitação
+            </Button>
+          )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmCancel}
+        onOpenChange={setConfirmCancel}
+        title="Cancelar Solicitação"
+        description="Tem certeza que deseja cancelar esta solicitação? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, cancelar"
+        cancelLabel="Voltar"
+        loading={cancelando}
+        onConfirm={() => {
+          setConfirmCancel(false)
+          cancelar(solicitacao.id)
+        }}
+      />
     </div>
   )
 }
