@@ -42,7 +42,7 @@ export default function SolicitacaoDetailPage() {
     </div>
   )
 
-  const historico = (solicitacao as any).status_historico ?? []
+  const historico = solicitacao.status_historico ?? []
   const isPrestador = role === 'prestador'
   // Mostra link de orçamento para clientes e para usuários sem role definido (ex: testes)
   const podeVerOrcamento = !isPrestador && solicitacao.status === 'orcamento_enviado' && orcamentoVinculado
@@ -66,10 +66,10 @@ export default function SolicitacaoDetailPage() {
             <p className="mt-2 text-sm text-muted-foreground whitespace-pre-wrap">
               {solicitacao.descricao}
             </p>
-            {(solicitacao as any).equipamento && (
+            {solicitacao.equipamento && (
               <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <Wrench className="h-4 w-4 shrink-0" />
-                <span>{(solicitacao as any).equipamento}</span>
+                <span>{solicitacao.equipamento}</span>
               </div>
             )}
           </div>
@@ -96,6 +96,31 @@ export default function SolicitacaoDetailPage() {
               value={new Date(solicitacao.created_at).toLocaleDateString('pt-BR')}
               icon={Calendar}
             />
+            {solicitacao.urgencia && (
+              <InfoCard
+                label="Urgência"
+                value={
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                      solicitacao.urgencia === 'urgente'
+                        ? 'bg-red-100 text-red-700'
+                        : solicitacao.urgencia === 'media'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {solicitacao.urgencia === 'baixa' ? 'Baixa' : solicitacao.urgencia === 'media' ? 'Média' : 'Urgente'}
+                  </span>
+                }
+              />
+            )}
+            {solicitacao.prazo_desejado && (
+              <InfoCard
+                label="Prazo Desejado"
+                value={new Date(solicitacao.prazo_desejado).toLocaleDateString('pt-BR')}
+                icon={Calendar}
+              />
+            )}
           </div>
 
           {podeVerOrcamento && (
