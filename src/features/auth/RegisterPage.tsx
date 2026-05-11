@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
@@ -7,6 +7,7 @@ import { RegisterSchema, type RegisterFormData } from './authSchemas'
 import { useAuth } from './useAuth'
 import { FormField } from '@/components/molecules/FormField'
 import { SelectField } from '@/components/molecules/SelectField'
+import { formatPhone } from '@/lib/utils'
 
 const ROLE_OPTIONS = [
   { value: 'cliente', label: 'Cliente' },
@@ -19,7 +20,7 @@ export default function RegisterPage() {
 
   const { control, handleSubmit, watch, formState: { isSubmitting } } = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterSchema),
-    defaultValues: { nome: '', email: '', senha: '', confirmar_senha: '', telefone: '', especialidade: '', role: 'cliente' },
+    defaultValues: { nome: '', email: '', senha: '', confirmar_senha: '', telefone: '', especialidade: '', role: 'cliente', aceita_termos: false as unknown as true },
   })
 
   const role = watch('role')
@@ -71,12 +72,27 @@ export default function RegisterPage() {
             />
           )}
 
-          <FormField<RegisterFormData>
+          <Controller
             name="telefone"
             control={control}
-            label="Telefone (opcional)"
-            type="tel"
-            placeholder="(11) 99999-9999"
+            render={({ field, fieldState }) => (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Telefone <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="(11) 99999-9999"
+                  value={field.value ?? ''}
+                  onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                {fieldState.error && (
+                  <p className="mt-1 text-xs text-danger">{fieldState.error.message}</p>
+                )}
+              </div>
+            )}
           />
 
           <FormField<RegisterFormData>
@@ -93,6 +109,32 @@ export default function RegisterPage() {
             label="Confirmar senha"
             type="password"
             placeholder="Repita a senha"
+          />
+
+          <Controller
+            name="aceita_termos"
+            control={control}
+            render={({ field, fieldState }) => (
+              <div>
+                <label className="flex items-start gap-2 text-sm text-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={field.value === true}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Li e aceito os{' '}
+                    <Link to="/termos" className="text-primary hover:underline" target="_blank" rel="noopener">
+                      Termos de Uso e Política de Privacidade
+                    </Link>
+                  </span>
+                </label>
+                {fieldState.error && (
+                  <p className="mt-1 text-xs text-danger">{fieldState.error.message}</p>
+                )}
+              </div>
+            )}
           />
 
           {serverError && (
