@@ -41,13 +41,19 @@ export function useRecusarOrcamento() {
     mutationFn: async ({
       orcamentoId,
       solicitacaoId,
+      motivo,
     }: {
       orcamentoId: string
       solicitacaoId: string
+      motivo?: string
     }) => {
+      const updates: Record<string, unknown> = { status: 'recusado' }
+      if (motivo?.trim()) {
+        updates.observacoes = `[Motivo da recusa: ${motivo.trim()}]`
+      }
       const { error: orcErr } = await supabase
         .from('orcamentos')
-        .update({ status: 'recusado' })
+        .update(updates)
         .eq('id', orcamentoId)
       if (orcErr) throw orcErr
 
