@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Calendar, Tag, Wrench, Loader2 } from 'lucide-react'
+import { Calendar, Tag, Wrench } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useGetSolicitacao, useCancelSolicitacao } from './useSolicitacao'
 import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { Button } from '@/components/ui/button'
+import { StickyActionBar } from '@/components/atoms/StickyActionBar'
 
 export default function SolicitacaoDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -57,7 +58,7 @@ export default function SolicitacaoDetailPage() {
     (solicitacao.status === 'aberta' || solicitacao.status === 'aguardando_orcamento')
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-4 sm:p-6 pb-20 md:pb-0 space-y-6 max-w-2xl mx-auto">
       <div className="mb-4">
         <BackButton to={isPrestador ? '/prestador/solicitacoes' : '/solicitacoes'} />
       </div>
@@ -130,37 +131,62 @@ export default function SolicitacaoDetailPage() {
             )}
           </div>
 
-          {podeVerOrcamento && (
-            <Link
-              to={`/orcamentos/${orcamentoVinculado.id}/revisar`}
-              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
-            >
-              Ver Orçamento
-            </Link>
-          )}
-
-          {podeCriarOrcamento && (
-            <Button
-              className="w-full"
-              onClick={() => navigate(`/prestador/orcamentos/novo/${id}`)}
-            >
-              Criar Orçamento
-            </Button>
-          )}
-
-          {podeCancelar && (
-            <Button
-              variant="destructive"
-              className="w-full"
-              disabled={cancelando}
-              onClick={() => setConfirmCancel(true)}
-            >
-              {cancelando && <Loader2 className="size-4 animate-spin" />}
-              Cancelar Solicitação
-            </Button>
-          )}
+          {/* Ações — desktop (inline) */}
+          <div className="hidden md:flex gap-3 flex-wrap">
+            {podeVerOrcamento && (
+              <Link
+                to={`/orcamentos/${orcamentoVinculado.id}/revisar`}
+                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                Ver Orçamento
+              </Link>
+            )}
+            {podeCriarOrcamento && (
+              <Button
+                onClick={() => navigate(`/prestador/orcamentos/novo/${id}`)}
+              >
+                Criar Orçamento
+              </Button>
+            )}
+            {podeCancelar && (
+              <button
+                onClick={() => setConfirmCancel(true)}
+                className="rounded-md border border-danger px-4 py-2 text-sm font-medium text-danger hover:bg-danger/5 transition-colors"
+              >
+                Cancelar Solicitação
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Ações — mobile (sticky) */}
+      <StickyActionBar>
+        {podeVerOrcamento && (
+          <Link
+            to={`/orcamentos/${orcamentoVinculado.id}/revisar`}
+            className="flex-1 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+          >
+            Ver Orçamento
+          </Link>
+        )}
+        {podeCriarOrcamento && (
+          <Button
+            className="flex-1"
+            onClick={() => navigate(`/prestador/orcamentos/novo/${id}`)}
+          >
+            Criar Orçamento
+          </Button>
+        )}
+        {podeCancelar && (
+          <button
+            onClick={() => setConfirmCancel(true)}
+            className="flex-1 rounded-md border border-danger px-4 py-2 text-sm font-medium text-danger hover:bg-danger/5 transition-colors"
+          >
+            Cancelar
+          </button>
+        )}
+      </StickyActionBar>
 
       <ConfirmDialog
         open={confirmCancel}
