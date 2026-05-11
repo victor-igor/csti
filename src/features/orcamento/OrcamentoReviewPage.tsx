@@ -185,13 +185,11 @@ export default function OrcamentoReviewPage() {
               className="mt-4 w-full rounded-md border bg-background px-3 py-2 text-sm"
             />
             <div className="mt-6 flex justify-end gap-2">
-              <Dialog.Close
-                className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-                disabled={recusando}
-              >
+              <Button variant="outline" type="button" disabled={recusando} onClick={() => setConfirmRecusar(false)}>
                 Cancelar
-              </Dialog.Close>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
                 disabled={recusando}
                 onClick={() => {
                   setConfirmRecusar(false)
@@ -202,10 +200,9 @@ export default function OrcamentoReviewPage() {
                   })
                   setMotivoRecusa('')
                 }}
-                className="rounded-md bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
               >
                 Confirmar Recusa
-              </button>
+              </Button>
             </div>
           </Dialog.Popup>
         </Dialog.Portal>

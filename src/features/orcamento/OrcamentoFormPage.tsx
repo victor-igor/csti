@@ -217,15 +217,17 @@ export default function OrcamentoFormPage() {
                     min={0.01}
                     step="0.01"
                   />
-                  <button
+                  <Button
                     type="button"
-                    className="mt-1 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-30"
+                    variant="ghost"
+                    size="icon-sm"
                     disabled={fields.length <= 1}
                     onClick={() => remove(index)}
                     aria-label="Remover item"
+                    className="mt-1 text-muted-foreground hover:text-danger"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>

@@ -1,4 +1,5 @@
 import { Dialog } from '@base-ui/react'
+import { Button } from '@/components/ui/button'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -35,13 +36,9 @@ export function ConfirmDialog({
             >
               {cancelLabel}
             </Dialog.Close>
-            <button
-              onClick={onConfirm}
-              disabled={loading}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
-            >
+            <Button onClick={onConfirm} disabled={loading}>
               {confirmLabel}
-            </button>
+            </Button>
           </div>
         </Dialog.Popup>
       </Dialog.Portal>

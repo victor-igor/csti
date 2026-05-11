@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { LoginSchema, type LoginFormData } from './authSchemas'
 import { useAuth } from './useAuth'
 import { useAuthStore } from '@/store/authStore'
@@ -66,14 +67,10 @@ export default function LoginPage() {
             <p className="text-sm text-danger">{serverError}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
-          >
+          <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Entrar
-          </button>
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">

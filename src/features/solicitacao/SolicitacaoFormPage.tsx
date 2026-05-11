@@ -1,6 +1,7 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/molecules/FormField'
 import { TextareaField } from '@/components/molecules/TextareaField'
 import { SelectField } from '@/components/molecules/SelectField'
@@ -115,14 +116,14 @@ export default function SolicitacaoFormPage() {
           rows={5}
           maxLength={2000}
         />
-        <button
+        <Button
           type="submit"
           disabled={isPending || isSubmitting}
-          className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60 transition-opacity"
+          className="w-full"
         >
           {(isPending || isSubmitting) && <Loader2 className="h-4 w-4 animate-spin" />}
           Enviar Solicitação
-        </button>
+        </Button>
       </form>
     </div>
   )

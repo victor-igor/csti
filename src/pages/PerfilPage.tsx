@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { Dialog } from '@base-ui/react'
 import { useAuthStore } from '@/store/authStore'
 import { useGetPerfil, useUpdatePerfil } from '@/features/perfil/usePerfil'
@@ -176,25 +177,17 @@ export default function PerfilPage() {
           />
         )}
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
-        >
+        <Button type="submit" disabled={isPending} className="w-full">
           {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Salvar
-        </button>
+        </Button>
       </form>
 
       <div className="mt-8 border-t border-border pt-6">
         <h2 className="text-sm font-semibold text-foreground mb-3">Segurança</h2>
-        <button
-          type="button"
-          onClick={() => setSenhaOpen(true)}
-          className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
-        >
+        <Button variant="outline" type="button" onClick={() => setSenhaOpen(true)}>
           Alterar senha
-        </button>
+        </Button>
       </div>
 
       <ConfirmDialog
@@ -243,19 +236,12 @@ export default function PerfilPage() {
               {senhaError && <p className="text-sm text-danger">{senhaError}</p>}
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <Dialog.Close
-                className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-                disabled={trocandoSenha}
-              >
+              <Button variant="outline" type="button" disabled={trocandoSenha} onClick={() => setSenhaOpen(false)}>
                 Cancelar
-              </Dialog.Close>
-              <button
-                onClick={handleTrocarSenha}
-                disabled={trocandoSenha}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
-              >
+              </Button>
+              <Button onClick={handleTrocarSenha} disabled={trocandoSenha}>
                 {trocandoSenha ? 'Atualizando...' : 'Atualizar senha'}
-              </button>
+              </Button>
             </div>
           </Dialog.Popup>
         </Dialog.Portal>
