@@ -24,6 +24,13 @@ const LABELS_TRANSICAO: Partial<Record<OSStatus, string>> = {
   em_andamento: 'Marcar como Concluída',
 }
 
+const OS_STATUS_LABEL: Partial<Record<OSStatus, string>> = {
+  aberta: 'Aberta',
+  em_andamento: 'Em Andamento',
+  concluida: 'Concluída',
+  cancelada: 'Cancelada',
+}
+
 export default function OrdemServicoDetailPage() {
   const { id } = useParams<{ id: string }>()
   const profile = useAuthStore((s) => s.profile)
@@ -42,11 +49,11 @@ export default function OrdemServicoDetailPage() {
   const labelTransicao = LABELS_TRANSICAO[data.status as OSStatus]
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-5xl">
       <div className="mb-4"><BackButton to="/ordens-servico" /></div>
       <PageHeader title={data.numero} />
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <InfoCard label="Status" value={<StatusBadge status={data.status} />} />
         <InfoCard label="Início" value={formatDate(data.data_inicio)} />
         <InfoCard label="Conclusão" value={formatDate(data.data_conclusao)} />
@@ -75,7 +82,7 @@ export default function OrdemServicoDetailPage() {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={labelTransicao ?? 'Confirmar'}
-        description={`Alterar status para "${proximoStatus}"?`}
+        description={`Alterar status para "${OS_STATUS_LABEL[proximoStatus as OSStatus] ?? proximoStatus}"?`}
         confirmLabel="Confirmar"
         loading={isPending}
         onConfirm={() => {
