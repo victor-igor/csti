@@ -14,6 +14,9 @@ export const RegisterSchema = z
     }),
     telefone: z.string().optional(),
     especialidade: z.string().optional(),
+    aceita_termos: z.literal(true, {
+      errorMap: () => ({ message: 'Você precisa aceitar os Termos de Uso' }),
+    }),
   })
   .refine((data) => data.senha === data.confirmar_senha, {
     message: 'Senhas não conferem',
