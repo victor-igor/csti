@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Dialog } from '@base-ui/react'
 import { useAuthStore } from '@/store/authStore'
 import { useGetPerfil, useUpdatePerfil } from '@/features/perfil/usePerfil'
 import { PageHeader } from '@/components/molecules/PageHeader'
@@ -11,6 +12,8 @@ import { UserCard } from '@/components/molecules/UserCard'
 import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { FormField } from '@/components/molecules/FormField'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
+import { formatPhone } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 const PerfilSchema = z.object({
   nome: z.string().min(2, 'Mínimo 2 caracteres'),
@@ -26,6 +29,11 @@ export default function PerfilPage() {
   const userId = user?.id ?? ''
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingData, setPendingData] = useState<PerfilFormData | null>(null)
+  const [senhaOpen, setSenhaOpen] = useState(false)
+  const [novaSenha, setNovaSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [senhaError, setSenhaError] = useState<string | null>(null)
+  const [trocandoSenha, setTrocandoSenha] = useState(false)
 
   const { data: profile, isLoading } = useGetPerfil(userId)
   const { mutate, isPending } = useUpdatePerfil(userId)
@@ -75,6 +83,30 @@ export default function PerfilPage() {
     })
   }
 
+  async function handleTrocarSenha() {
+    setSenhaError(null)
+    if (novaSenha.length < 8) {
+      setSenhaError('Senha deve ter pelo menos 8 caracteres')
+      return
+    }
+    if (novaSenha !== confirmarSenha) {
+      setSenhaError('As senhas não coincidem')
+      return
+    }
+    setTrocandoSenha(true)
+    const { error } = await supabase.auth.updateUser({ password: novaSenha })
+    setTrocandoSenha(false)
+    if (error) {
+      setSenhaError(error.message)
+      toast.error('Erro ao atualizar senha')
+      return
+    }
+    toast.success('Senha atualizada')
+    setSenhaOpen(false)
+    setNovaSenha('')
+    setConfirmarSenha('')
+  }
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -112,12 +144,27 @@ export default function PerfilPage() {
           placeholder="Seu nome completo"
         />
 
-        <FormField<PerfilFormData>
+        <Controller
           name="telefone"
           control={control}
-          label="Telefone (opcional)"
-          type="tel"
-          placeholder="(11) 99999-9999"
+          render={({ field, fieldState }) => (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Telefone <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+              </label>
+              <input
+                type="tel"
+                inputMode="tel"
+                placeholder="(11) 99999-9999"
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              />
+              {fieldState.error && (
+                <p className="mt-1 text-xs text-danger">{fieldState.error.message}</p>
+              )}
+            </div>
+          )}
         />
 
         {activeProfile?.role === 'prestador' && (
@@ -139,6 +186,17 @@ export default function PerfilPage() {
         </button>
       </form>
 
+      <div className="mt-8 border-t border-border pt-6">
+        <h2 className="text-sm font-semibold text-foreground mb-3">Segurança</h2>
+        <button
+          type="button"
+          onClick={() => setSenhaOpen(true)}
+          className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+        >
+          Alterar senha
+        </button>
+      </div>
+
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -148,6 +206,60 @@ export default function PerfilPage() {
         confirmLabel="Salvar"
         loading={isPending}
       />
+
+      <Dialog.Root open={senhaOpen} onOpenChange={setSenhaOpen}>
+        <Dialog.Portal>
+          <Dialog.Backdrop className="fixed inset-0 bg-black/40 z-[290]" />
+          <Dialog.Popup className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <Dialog.Title className="text-base font-semibold text-neutral-800">
+              Alterar senha
+            </Dialog.Title>
+            <Dialog.Description className="mt-2 text-sm text-neutral-600">
+              Defina uma nova senha (mínimo 8 caracteres).
+            </Dialog.Description>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Nova senha</label>
+                <input
+                  type="password"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  placeholder="Mínimo 8 caracteres"
+                  autoComplete="new-password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Confirmar nova senha</label>
+                <input
+                  type="password"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  placeholder="Repita a senha"
+                  autoComplete="new-password"
+                />
+              </div>
+              {senhaError && <p className="text-sm text-danger">{senhaError}</p>}
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <Dialog.Close
+                className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                disabled={trocandoSenha}
+              >
+                Cancelar
+              </Dialog.Close>
+              <button
+                onClick={handleTrocarSenha}
+                disabled={trocandoSenha}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+              >
+                {trocandoSenha ? 'Atualizando...' : 'Atualizar senha'}
+              </button>
+            </div>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   )
 }
