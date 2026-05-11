@@ -42,7 +42,7 @@ export default function OrdemServicoDetailPage() {
 
   if (isLoading) return <div className="p-6"><LoadingSkeleton rows={6} /></div>
   if (isError || !data) return (
-    <div className="p-6"><ErrorState message="OS não encontrada" onRetry={refetch} /></div>
+    <div className="p-6"><ErrorState message="Não foi possível carregar a ordem de serviço. Verifique sua conexão e tente novamente." onRetry={refetch} /></div>
   )
 
   const isPrestador = profile?.role === 'prestador'

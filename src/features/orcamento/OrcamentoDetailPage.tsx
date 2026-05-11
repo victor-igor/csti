@@ -23,7 +23,7 @@ export default function OrcamentoDetailPage() {
   if (isLoading) return <div className="p-6"><LoadingSkeleton rows={6} /></div>
   if (isError || !data) return (
     <div className="p-6">
-      <ErrorState message="Orçamento não encontrado" onRetry={refetch} />
+      <ErrorState message="Não foi possível carregar o orçamento. Verifique sua conexão e tente novamente." onRetry={refetch} />
     </div>
   )
 

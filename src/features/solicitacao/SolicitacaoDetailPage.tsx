@@ -43,7 +43,7 @@ export default function SolicitacaoDetailPage() {
   if (isLoading) return <div className="p-6"><LoadingSkeleton rows={6} /></div>
   if (isError || !solicitacao) return (
     <div className="p-6">
-      <ErrorState message="Erro ao carregar solicitação" onRetry={refetch} />
+      <ErrorState message="Não foi possível carregar a solicitação. Verifique sua conexão e tente novamente." onRetry={refetch} />
     </div>
   )
 
