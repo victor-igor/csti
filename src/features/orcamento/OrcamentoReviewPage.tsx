@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Dialog } from '@base-ui/react'
 import { useParams } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -22,6 +23,7 @@ export default function OrcamentoReviewPage() {
   const { id } = useParams<{ id: string }>()
   const [confirmAprovar, setConfirmAprovar] = useState(false)
   const [confirmRecusar, setConfirmRecusar] = useState(false)
+  const [motivoRecusa, setMotivoRecusa] = useState('')
 
   const { data, isLoading, isError, refetch } = useGetOrcamento(id ?? '')
   const { mutate: aprovar, isPending: aprovando } = useAprovarOrcamento()
@@ -62,12 +64,10 @@ export default function OrcamentoReviewPage() {
     <div className="p-6 max-w-5xl">
       <div className="mb-4"><BackButton to="/solicitacoes" /></div>
 
-      <div className="flex items-start justify-between gap-4">
-        <PageHeader title={`Orçamento ${data.numero}`} />
-        {canDownload && (
-          <PdfDownloadButton orcamento={data} itens={itens} prestador={prestadorPdf} />
-        )}
-      </div>
+      <PageHeader
+        title={`Orçamento ${data.numero}`}
+        actions={canDownload ? <PdfDownloadButton orcamento={data} itens={itens} prestador={prestadorPdf} /> : null}
+      />
       <div className="mb-1">
         <StatusBadge status={data.status} />
       </div>
@@ -141,7 +141,7 @@ export default function OrcamentoReviewPage() {
               </Button>
               <Button
                 variant="outline"
-                className="w-full border-destructive text-destructive hover:bg-destructive/10"
+                className="w-full border-danger text-danger hover:bg-danger/10"
                 disabled={isProcessing}
                 onClick={() => setConfirmRecusar(true)}
               >
@@ -166,18 +166,50 @@ export default function OrcamentoReviewPage() {
         }}
       />
 
-      <ConfirmDialog
-        open={confirmRecusar}
-        onOpenChange={setConfirmRecusar}
-        title="Recusar Orçamento"
-        description="Tem certeza que deseja recusar este orçamento?"
-        confirmLabel="Recusar"
-        loading={recusando}
-        onConfirm={() => {
-          setConfirmRecusar(false)
-          recusar({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })
-        }}
-      />
+      <Dialog.Root open={confirmRecusar} onOpenChange={setConfirmRecusar}>
+        <Dialog.Portal>
+          <Dialog.Backdrop className="fixed inset-0 bg-black/40 z-[290]" />
+          <Dialog.Popup className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <Dialog.Title className="text-base font-semibold text-neutral-800">
+              Recusar Orçamento
+            </Dialog.Title>
+            <Dialog.Description className="mt-2 text-sm text-neutral-600">
+              Deixe um motivo (opcional) para ajudar o prestador.
+            </Dialog.Description>
+            <textarea
+              value={motivoRecusa}
+              onChange={(e) => setMotivoRecusa(e.target.value)}
+              maxLength={500}
+              rows={4}
+              placeholder="Motivo da recusa (opcional)"
+              className="mt-4 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+            <div className="mt-6 flex justify-end gap-2">
+              <Dialog.Close
+                className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                disabled={recusando}
+              >
+                Cancelar
+              </Dialog.Close>
+              <button
+                disabled={recusando}
+                onClick={() => {
+                  setConfirmRecusar(false)
+                  recusar({
+                    orcamentoId: data.id,
+                    solicitacaoId: data.solicitacao_id,
+                    motivo: motivoRecusa,
+                  })
+                  setMotivoRecusa('')
+                }}
+                className="rounded-md bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+              >
+                Confirmar Recusa
+              </button>
+            </div>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   )
 }
