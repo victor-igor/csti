@@ -108,3 +108,27 @@ export function useListSolicitacoesParaPrestador() {
     },
   })
 }
+
+export function useCancelSolicitacao() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async (solicitacaoId: string) => {
+      const { error } = await supabase
+        .from('solicitacoes_orcamento')
+        .update({ status: 'cancelado' })
+        .eq('id', solicitacaoId)
+      if (error) throw error
+    },
+    onSuccess: (_data, solicitacaoId) => {
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', solicitacaoId] })
+      toast.success('Solicitação cancelada')
+      navigate('/solicitacoes')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao cancelar solicitação')
+    },
+  })
+}
