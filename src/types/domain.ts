@@ -21,6 +21,7 @@ export type ISolicitacao = Tables<'solicitacoes_orcamento'> & {
   equipamento?: string | null
   urgencia?: Urgencia | null
   prazo_desejado?: string | null
+  cliente_nome?: string | null
   status_historico?: Array<{
     status_novo: string
     created_at: string

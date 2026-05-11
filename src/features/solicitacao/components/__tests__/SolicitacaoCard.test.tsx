@@ -71,3 +71,23 @@ describe('SolicitacaoCard', () => {
     expect(screen.getByTestId('badge-novo')).toBeInTheDocument()
   })
 })
+
+describe('SolicitacaoCard — variant prestador', () => {
+  it('exibe nome do cliente quando variant="prestador" e cliente_nome fornecido', () => {
+    const comCliente = { ...mockSolicitacao, cliente_nome: 'João Silva' }
+    render(<SolicitacaoCard solicitacao={comCliente} onClick={vi.fn()} variant="prestador" />)
+    expect(screen.getByText('João Silva')).toBeInTheDocument()
+  })
+
+  it('não exibe nome do cliente quando variant="cliente"', () => {
+    const comCliente = { ...mockSolicitacao, cliente_nome: 'João Silva' }
+    render(<SolicitacaoCard solicitacao={comCliente} onClick={vi.fn()} variant="cliente" />)
+    expect(screen.queryByText('João Silva')).not.toBeInTheDocument()
+  })
+
+  it('não exibe data-testid cliente-nome quando cliente_nome é null', () => {
+    const semCliente = { ...mockSolicitacao, cliente_nome: null }
+    render(<SolicitacaoCard solicitacao={semCliente} onClick={vi.fn()} variant="prestador" />)
+    expect(screen.queryByTestId('cliente-nome')).not.toBeInTheDocument()
+  })
+})

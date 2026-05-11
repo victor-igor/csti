@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, User } from 'lucide-react'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { STATUS_BORDER_CLASS } from '@/lib/constants'
 import { relativeDate, isNew } from '@/lib/dateUtils'
@@ -10,7 +10,7 @@ interface SolicitacaoCardProps {
   variant?: 'cliente' | 'prestador'
 }
 
-export function SolicitacaoCard({ solicitacao, onClick, variant: _variant = 'cliente' }: SolicitacaoCardProps) {
+export function SolicitacaoCard({ solicitacao, onClick, variant = 'cliente' }: SolicitacaoCardProps) {
   const borderClass = STATUS_BORDER_CLASS[solicitacao.status as keyof typeof STATUS_BORDER_CLASS] ?? 'border-l-neutral-200'
   const novo = isNew(solicitacao.created_at)
 
@@ -53,6 +53,13 @@ export function SolicitacaoCard({ solicitacao, onClick, variant: _variant = 'cli
               {solicitacao.equipamento}
             </span>
           )}
+        </div>
+      )}
+
+      {variant === 'prestador' && solicitacao.cliente_nome && (
+        <div data-testid="cliente-nome" className="mt-1.5 flex items-center gap-1.5">
+          <User className="h-3 w-3 text-neutral-400 shrink-0" />
+          <span className="text-xs text-muted-foreground">{solicitacao.cliente_nome}</span>
         </div>
       )}
 

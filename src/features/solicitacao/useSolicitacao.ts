@@ -99,12 +99,15 @@ export function useListSolicitacoesParaPrestador() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('solicitacoes_orcamento')
-        .select('*')
+        .select('*, profiles!cliente_id(nome)')
         .eq('status', 'aguardando_orcamento')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
       if (error) throw error
-      return data as ISolicitacao[]
+      return (data ?? []).map((row) => {
+        const { profiles, ...rest } = row as typeof row & { profiles: { nome: string } | null }
+        return { ...rest, cliente_nome: profiles?.nome ?? null } as ISolicitacao
+      })
     },
   })
 }
