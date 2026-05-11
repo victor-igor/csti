@@ -35,7 +35,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl border border-neutral-200 p-8 shadow-sm">
+      <div className="w-full max-w-md bg-card rounded-lg border border-border p-8 shadow-card">
         <h1 className="text-xl font-semibold text-neutral-800 mb-6">Criar Conta</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
@@ -102,17 +102,17 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 rounded-md bg-primary py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Criar Conta
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-neutral-500">
-          Já tenho conta{' '}
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Já tem uma conta?{' '}
           <Link to="/login" className="text-primary font-medium hover:underline">
-            → Login
+            Entrar
           </Link>
         </p>
       </div>

@@ -38,7 +38,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl border border-neutral-200 p-8 shadow-sm">
+      <div className="w-full max-w-md bg-card rounded-lg border border-border p-8 shadow-card">
         <h1 className="text-xl font-semibold text-neutral-800 mb-6">Login</h1>
 
         {successMessage && (
@@ -69,17 +69,17 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 rounded-md bg-primary py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Entrar
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-neutral-500">
-          Não tenho conta{' '}
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Não tem conta ainda?{' '}
           <Link to="/cadastro" className="text-primary font-medium hover:underline">
-            → Cadastro
+            Cadastre-se
           </Link>
         </p>
       </div>
