@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/molecules/FormField'
 import { TextareaField } from '@/components/molecules/TextareaField'
 import { SelectField } from '@/components/molecules/SelectField'
+import { DatePickerField } from '@/components/molecules/DatePickerField'
 import { CreateSolicitacaoSchema, type CreateSolicitacaoFormData } from './solicitacaoSchemas'
 import { useCreateSolicitacao } from './useSolicitacao'
 
@@ -120,23 +121,12 @@ export default function SolicitacaoFormDialog() {
               </div>
             </div>
 
-            <Controller
+            <DatePickerField<CreateSolicitacaoFormData>
               name="prazo_desejado"
               control={control}
-              render={({ field }) => (
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    Prazo Desejado{' '}
-                    <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={field.value ?? ''}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-              )}
+              label="Prazo Desejado"
+              placeholder="Selecione uma data"
+              optional
             />
 
             <TextareaField<CreateSolicitacaoFormData>
