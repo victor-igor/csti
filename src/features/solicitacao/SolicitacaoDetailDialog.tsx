@@ -78,7 +78,7 @@ export default function SolicitacaoDetailDialog() {
               {isLoading && <LoadingSkeleton rows={6} />}
 
               {(isError || (!isLoading && !solicitacao)) && (
-                <ErrorState message="Erro ao carregar solicitação" onRetry={refetch} />
+                <ErrorState message="Não foi possível carregar a solicitação. Verifique sua conexão e tente novamente." onRetry={refetch} />
               )}
 
               {solicitacao && (
