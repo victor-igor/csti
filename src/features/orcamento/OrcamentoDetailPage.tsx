@@ -38,21 +38,15 @@ export default function OrcamentoDetailPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-5xl">
       <div className="mb-4">
         <BackButton to="/orcamentos" />
       </div>
 
-      <div className="flex items-start justify-between gap-4">
-        <PageHeader title={data.numero} />
-        {canDownload && (
-          <PdfDownloadButton
-            orcamento={data}
-            itens={itens}
-            prestador={prestador}
-          />
-        )}
-      </div>
+      <PageHeader
+        title={data.numero}
+        actions={canDownload ? <PdfDownloadButton orcamento={data} itens={itens} prestador={prestador} /> : null}
+      />
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <InfoCard label="Status" value={<StatusBadge status={data.status} />} />
@@ -105,7 +99,13 @@ export default function OrcamentoDetailPage() {
       </div>
 
       {data.status === 'rascunho' && (
-        <div className="mt-6">
+        <div className="mt-6 flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/prestador/orcamentos/${data.id}/editar`)}
+          >
+            Editar Rascunho
+          </Button>
           <Button
             disabled={isPending}
             onClick={() =>
