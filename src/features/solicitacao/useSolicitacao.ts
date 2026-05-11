@@ -14,16 +14,22 @@ export function useCreateSolicitacao() {
   return useMutation({
     mutationFn: async (data: CreateSolicitacaoFormData) => {
       if (!user) throw new Error('Usuário não autenticado')
-      const { error } = await supabase.from('solicitacoes_orcamento').insert({
+      // urgencia e prazo_desejado existem na DB mas ainda não foram regenerados nos tipos gerados pelo Supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from('solicitacoes_orcamento') as any).insert({
         titulo: data.titulo,
         descricao: data.descricao,
         categoria: data.categoria,
+        equipamento: data.equipamento || null,
+        urgencia: data.urgencia,
+        prazo_desejado: data.prazo_desejado || null,
         cliente_id: user.id,
       })
       if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      toast.success('Solicitação enviada com sucesso!')
       navigate('/solicitacoes')
     },
     onError: (error: Error) => {
@@ -55,15 +61,27 @@ export function useGetSolicitacao(id: string) {
   return useQuery({
     queryKey: ['solicitacoes', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('solicitacoes_orcamento')
-        .select('*, status_historico(status_novo, created_at, observacao)')
-        .is('deleted_at', null)
-        .eq('id', id)
-        .order('created_at', { ascending: true, referencedTable: 'status_historico' })
-        .single()
+      const [{ data: solicitacao, error }, { data: historico, error: historicoError }] =
+        await Promise.all([
+          supabase
+            .from('solicitacoes_orcamento')
+            .select('*')
+            .is('deleted_at', null)
+            .eq('id', id)
+            .single(),
+          supabase
+            .from('status_historico')
+            .select('status_novo, created_at, observacao')
+            .eq('registro_id', id)
+            .eq('tabela_nome', 'solicitacoes_orcamento')
+            .order('created_at', { ascending: true }),
+        ])
       if (error) throw error
-      return data as unknown as ISolicitacao & {
+      if (historicoError) throw historicoError
+      return {
+        ...solicitacao,
+        status_historico: historico ?? [],
+      } as ISolicitacao & {
         status_historico: Array<{
           status_novo: string
           created_at: string

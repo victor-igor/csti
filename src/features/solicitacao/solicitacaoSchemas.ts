@@ -15,7 +15,7 @@ export const CreateSolicitacaoSchema = z.object({
     .max(2000, 'Máximo 2000 caracteres'),
   categoria: z.enum(CATEGORIAS, { error: 'Categoria inválida' }),
   equipamento: z.string().max(200, 'Máximo 200 caracteres').optional(),
-  urgencia: z.enum(URGENCIAS).default('media'),
+  urgencia: z.enum(URGENCIAS),
   prazo_desejado: z.string().optional(),
 })
 
