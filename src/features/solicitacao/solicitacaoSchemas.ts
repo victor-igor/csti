@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
 export const CATEGORIAS = ['hardware', 'software', 'rede', 'segurança', 'suporte', 'outro'] as const
+export const URGENCIAS = ['baixa', 'media', 'urgente'] as const
+export type Urgencia = (typeof URGENCIAS)[number]
 
 export const CreateSolicitacaoSchema = z.object({
   titulo: z
@@ -12,6 +14,9 @@ export const CreateSolicitacaoSchema = z.object({
     .min(10, 'Descreva o problema com pelo menos 10 caracteres')
     .max(2000, 'Máximo 2000 caracteres'),
   categoria: z.enum(CATEGORIAS, { error: 'Categoria inválida' }),
+  equipamento: z.string().max(200, 'Máximo 200 caracteres').optional(),
+  urgencia: z.enum(URGENCIAS).default('media'),
+  prazo_desejado: z.string().optional(),
 })
 
 export type CreateSolicitacaoFormData = z.infer<typeof CreateSolicitacaoSchema>

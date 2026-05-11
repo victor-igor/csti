@@ -15,7 +15,18 @@ export type OSStatus = 'aberta' | 'em_andamento' | 'concluida' | 'cancelada'
 
 export type IProfile = Tables<'profiles'>
 
-export type ISolicitacao = Tables<'solicitacoes_orcamento'>
+export type Urgencia = 'baixa' | 'media' | 'urgente'
+
+export type ISolicitacao = Tables<'solicitacoes_orcamento'> & {
+  equipamento?: string | null
+  urgencia?: Urgencia | null
+  prazo_desejado?: string | null
+  status_historico?: Array<{
+    status_novo: string
+    created_at: string
+    observacao: string | null
+  }>
+}
 
 export type IOrcamento = Tables<'orcamentos'>
 
