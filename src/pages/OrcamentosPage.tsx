@@ -7,6 +7,7 @@ import {
 } from '@/features/orcamento/useOrcamento'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { FilterBar } from '@/components/molecules/FilterBar'
+import { StatusFilterChips } from '@/components/molecules/StatusFilterChips'
 import { OrcamentoCard } from '@/components/organisms/OrcamentoCard'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { EmptyState } from '@/components/atoms/EmptyState'
@@ -28,33 +29,6 @@ const PRESTADOR_STATUS_FILTERS = [
   { label: 'Recusado',  value: 'recusado' },
 ]
 
-function StatusChips({
-  filters,
-  active,
-  onSelect,
-}: {
-  filters: { label: string; value: string }[]
-  active: string
-  onSelect: (v: string) => void
-}) {
-  return (
-    <>
-      {filters.map(f => (
-        <button
-          key={f.value}
-          onClick={() => onSelect(f.value)}
-          className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
-            active === f.value
-              ? 'bg-primary text-white border-primary'
-              : 'bg-neutral-25 border-border text-neutral-500 hover:text-foreground hover:border-neutral-300'
-          }`}
-        >
-          {f.label}
-        </button>
-      ))}
-    </>
-  )
-}
 
 function OrcamentosList({
   data,
@@ -92,13 +66,13 @@ function OrcamentosList({
         search={search}
         onSearchChange={setSearch}
         placeholder="Buscar por número..."
-        filters={<StatusChips filters={statusFilters} active={activeStatus} onSelect={setActiveStatus} />}
+        filters={<StatusFilterChips filters={statusFilters} active={activeStatus} onSelect={setActiveStatus} />}
         resultCount={filtered.length}
         totalCount={data.length}
       />
 
       {isLoading && <LoadingSkeleton rows={4} />}
-      {isError && <ErrorState message="Erro ao carregar orçamentos" onRetry={refetch} />}
+      {isError && <ErrorState message="Não foi possível carregar os orçamentos. Verifique sua conexão e tente novamente." onRetry={refetch} />}
 
       {!isLoading && !isError && filtered.length === 0 && (
         <EmptyState title={emptyTitle} description={emptyDescription} />
