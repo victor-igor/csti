@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { Toaster } from 'sonner'
-import { queryClient } from '@/lib/queryClient'
+import { queryClient, persister } from '@/lib/queryClient'
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary'
 import { ProtectedRoute } from '@/components/guards/ProtectedRoute'
 import { RoleGuard } from '@/components/guards/RoleGuard'
@@ -16,8 +16,8 @@ const DashboardPage    = lazy(() => import('@/pages/DashboardPage'))
 const SolicitacoesPage = lazy(() => import('@/pages/SolicitacoesPage'))
 const OrcamentosPage   = lazy(() => import('@/pages/OrcamentosPage'))
 const PerfilPage       = lazy(() => import('@/pages/PerfilPage'))
-const SolicitacaoFormPage = lazy(() => import('@/features/solicitacao/SolicitacaoFormPage'))
-const SolicitacaoDetailPage = lazy(() => import('@/features/solicitacao/SolicitacaoDetailPage'))
+const SolicitacaoFormDialog = lazy(() => import('@/features/solicitacao/SolicitacaoFormDialog'))
+const SolicitacaoDetailDialog = lazy(() => import('@/features/solicitacao/SolicitacaoDetailDialog'))
 const OrcamentoFormPage = lazy(() => import('@/features/orcamento/OrcamentoFormPage'))
 const OrcamentoDetailPage = lazy(() => import('@/features/orcamento/OrcamentoDetailPage'))
 const OrcamentoReviewPage = lazy(() => import('@/features/orcamento/OrcamentoReviewPage'))
@@ -32,7 +32,7 @@ export default function App() {
   return (
     <GlobalErrorBoundary>
       <Toaster richColors position="top-right" />
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
         <BrowserRouter>
           <Suspense fallback={<Fallback />}>
             <Routes>
@@ -48,15 +48,17 @@ export default function App() {
 
                   {/* Cliente only */}
                   <Route element={<RoleGuard allowedRoles={['cliente']} />}>
-                    <Route path="solicitacoes/nova" element={<SolicitacaoFormPage />} />
-                    <Route path="solicitacoes/:id" element={<SolicitacaoDetailPage />} />
-                    <Route path="solicitacoes/*" element={<SolicitacoesPage />} />
+                    <Route path="solicitacoes" element={<SolicitacoesPage />}>
+                      <Route path="nova" element={<SolicitacaoFormDialog />} />
+                      <Route path=":id" element={<SolicitacaoDetailDialog />} />
+                    </Route>
                   </Route>
 
                   {/* Prestador only */}
                   <Route element={<RoleGuard allowedRoles={['prestador']} />}>
-                    <Route path="prestador/solicitacoes" element={<SolicitacaoListPrestadorPage />} />
-                    <Route path="prestador/solicitacoes/:id" element={<SolicitacaoDetailPage />} />
+                    <Route path="prestador/solicitacoes" element={<SolicitacaoListPrestadorPage />}>
+                      <Route path=":id" element={<SolicitacaoDetailDialog />} />
+                    </Route>
                     <Route path="prestador/orcamentos/novo/:solicitacaoId" element={<OrcamentoFormPage />} />
                     <Route path="prestador/orcamentos/:id" element={<OrcamentoDetailPage />} />
                     <Route path="prestador/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
@@ -80,7 +82,7 @@ export default function App() {
             </Routes>
           </Suspense>
         </BrowserRouter>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </GlobalErrorBoundary>
   )
 }

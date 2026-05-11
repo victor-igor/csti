@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Outlet } from 'react-router-dom'
 import { ListPageShell } from '@/components/molecules/ListPageShell'
 import { StatusFilterChips } from '@/components/molecules/StatusFilterChips'
 import { SolicitacaoCard } from '@/components/organisms/SolicitacaoCard'
@@ -41,6 +41,8 @@ export default function SolicitacoesPage() {
   if (isError) return <div className="p-4 sm:p-6"><ErrorState message="Erro ao carregar solicitações" onRetry={refetch} /></div>
 
   return (
+    <>
+    <Outlet />
     <ListPageShell
       title="Minhas Solicitações"
       subtitle={subtitle}
@@ -82,5 +84,6 @@ export default function SolicitacoesPage() {
         ))
       )}
     </ListPageShell>
+    </>
   )
 }
