@@ -1,3 +1,4 @@
+import { StickyActionBar } from '@/components/atoms/StickyActionBar'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
@@ -38,7 +39,7 @@ export default function SolicitacaoFormPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-4 sm:p-6 pb-20 md:pb-0 max-w-lg mx-auto space-y-6">
       <div className="mb-4">
         <BackButton to="/solicitacoes" />
       </div>
@@ -116,14 +117,21 @@ export default function SolicitacaoFormPage() {
           rows={5}
           maxLength={2000}
         />
-        <Button
-          type="submit"
-          disabled={isPending || isSubmitting}
-          className="w-full"
-        >
-          {(isPending || isSubmitting) && <Loader2 className="h-4 w-4 animate-spin" />}
-          Enviar Solicitação
-        </Button>
+        {/* Submit — desktop */}
+        <div className="hidden md:flex justify-end pt-2">
+          <Button type="submit" disabled={isSubmitting || isPending} className="min-w-[160px]">
+            {(isSubmitting || isPending) && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+            Enviar Solicitação
+          </Button>
+        </div>
+
+        {/* Submit — mobile (sticky, dentro do <form> para funcionar com type="submit") */}
+        <StickyActionBar>
+          <Button type="submit" disabled={isSubmitting || isPending} className="flex-1">
+            {(isSubmitting || isPending) && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+            Enviar Solicitação
+          </Button>
+        </StickyActionBar>
       </form>
     </div>
   )
