@@ -106,10 +106,57 @@ export function useCreateOrcamento() {
     },
     onSuccess: (id: string) => {
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
+      toast.success('Rascunho salvo')
       navigate(`/prestador/orcamentos/${id}`)
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erro ao criar orçamento')
+    },
+  })
+}
+
+export function useUpdateOrcamento(orcamentoId: string) {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async (data: CreateOrcamentoFormData) => {
+      // Atualiza campos do orçamento
+      const { error: errOrc } = await supabase
+        .from('orcamentos')
+        .update({
+          prazo_estimado_dias: data.prazo_dias ?? null,
+          observacoes: data.observacoes ?? null,
+        })
+        .eq('id', orcamentoId)
+      if (errOrc) throw errOrc
+
+      // Substitui itens: delete antigos + insert novos
+      const { error: errDel } = await supabase
+        .from('itens_orcamento')
+        .delete()
+        .eq('orcamento_id', orcamentoId)
+      if (errDel) throw errDel
+
+      const itens = data.itens.map((i) => ({
+        orcamento_id: orcamentoId,
+        descricao: i.descricao,
+        quantidade: i.quantidade,
+        valor_unitario: i.valor_unitario,
+      }))
+      const { error: errIns } = await supabase
+        .from('itens_orcamento')
+        .insert(itens)
+      if (errIns) throw errIns
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
+      queryClient.invalidateQueries({ queryKey: ['orcamentos', orcamentoId] })
+      toast.success('Rascunho atualizado')
+      navigate(`/prestador/orcamentos/${orcamentoId}`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao atualizar rascunho')
     },
   })
 }

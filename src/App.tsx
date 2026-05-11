@@ -58,6 +58,7 @@ export default function App() {
                     <Route path="prestador/solicitacoes/:id" element={<SolicitacaoDetailPage />} />
                     <Route path="prestador/orcamentos/novo/:solicitacaoId" element={<OrcamentoFormPage />} />
                     <Route path="prestador/orcamentos/:id" element={<OrcamentoDetailPage />} />
+                    <Route path="prestador/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
                   </Route>
 
                   {/* Cliente only — review orcamento */}
