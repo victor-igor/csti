@@ -16,8 +16,8 @@ export function AppShell() {
 
       <main
         className={cn(
-          'pt-16 pb-20 md:pb-6 min-h-screen transition-all duration-200',
-          isExpanded ? 'md:ml-[240px]' : 'md:ml-[64px]',
+          'pt-20 md:pt-16 pb-20 md:pb-6 min-h-screen transition-all duration-200',
+          isExpanded ? 'md:ml-[256px]' : 'md:ml-[72px]',
         )}
       >
         <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">

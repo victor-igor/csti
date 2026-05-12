@@ -11,6 +11,11 @@ export interface NavLink {
   badge?: number
 }
 
+export interface NavGroup {
+  label: string | null
+  items: NavLink[]
+}
+
 function useSolicitacoesBadge() {
   const profile = useAuthStore((s) => s.profile)
   const role = profile?.role as Role | undefined
@@ -50,13 +55,28 @@ function useOrcamentosBadge() {
 }
 
 export function useNavLinks(): NavLink[] {
+  const groups = useNavGroups()
+  return groups.flatMap((g) => g.items)
+}
+
+export function useNavGroups(): NavGroup[] {
   const { data: solBadge = 0 } = useSolicitacoesBadge()
   const { data: orcBadge = 0 } = useOrcamentosBadge()
 
   return [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { label: 'Solicitações', href: '/solicitacoes', icon: ClipboardList, badge: solBadge || undefined },
-    { label: 'Orçamentos', href: '/orcamentos', icon: FileText, badge: orcBadge || undefined },
-    { label: 'OS', href: '/ordens-servico', icon: Wrench },
+    {
+      label: null,
+      items: [
+        { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+      ],
+    },
+    {
+      label: 'Gestão',
+      items: [
+        { label: 'Solicitações', href: '/solicitacoes', icon: ClipboardList, badge: solBadge || undefined },
+        { label: 'Orçamentos', href: '/orcamentos', icon: FileText, badge: orcBadge || undefined },
+        { label: 'OS', href: '/ordens-servico', icon: Wrench },
+      ],
+    },
   ]
 }

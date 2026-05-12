@@ -1,7 +1,9 @@
 // src/components/layout/TopBar.tsx
 import { HelpCircle, Search, Settings } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { usePerfilModal } from '@/store/perfilModalStore'
+import { useSidebar } from '@/hooks/useSidebar'
 import { NotificacoesBell } from '@/features/notificacoes/NotificacoesBell'
 import { UserMenuItems } from './UserMenuItems'
 import {
@@ -19,24 +21,31 @@ const ROLE_LABEL: Record<Role, string> = {
 export function TopBar() {
   const profile = useAuthStore((s) => s.profile)
   const openPerfilModal = usePerfilModal((s) => s.open)
+  const isExpanded = useSidebar((s) => s.isExpanded)
 
   const initials = profile?.nome?.charAt(0).toUpperCase() ?? '?'
   const firstName = profile?.nome?.split(' ')[0] ?? ''
   const roleLabel = profile?.role ? ROLE_LABEL[profile.role as Role] : ''
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-white flex items-center px-4 gap-4">
-      {/* Logo (mobile) / spacer (desktop, já que Sidebar cobre a logo) */}
-      <div className="flex-1 md:flex-none md:w-[200px] flex items-center">
+    <header
+      className={cn(
+        'fixed top-0 right-0 z-[100] h-20 md:h-14 bg-white flex items-center px-4 gap-4 transition-all duration-200',
+        'left-0',
+        isExpanded ? 'md:left-[256px]' : 'md:left-[72px]',
+      )}
+    >
+      {/* Logo mobile (só aparece no mobile, no desktop a logo fica na sidebar) */}
+      <div className="flex items-center md:hidden">
         <img
           src="/logo+texto.png"
           alt="OrçaFácil"
-          className="md:hidden h-9 object-contain"
+          className="h-20 object-contain"
         />
       </div>
 
-      {/* Search bar — centralizada, oculta no mobile */}
-      <div className="hidden md:flex flex-1 justify-center">
+      {/* Search bar — alinhada à esquerda no desktop, oculta no mobile */}
+      <div className="hidden md:flex flex-1">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
