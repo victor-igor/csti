@@ -16,6 +16,7 @@ export default function SolicitacaoListPrestadorPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [activeCategoria, setActiveCategoria] = useState<string>('')
+  const [activeUrgencia, setActiveUrgencia] = useState<string>('')
   const [page, setPage] = useState(1)
   const { data = [], isLoading, isError, refetch } = useListSolicitacoesParaPrestador()
 
@@ -27,13 +28,21 @@ export default function SolicitacaoListPrestadorPage() {
     })),
   ]
 
+  const URGENCIA_FILTERS = [
+    { label: 'Qualquer urgência', value: '' as const },
+    { label: 'Urgente',           value: 'urgente' as const },
+    { label: 'Normal',            value: 'media' as const },
+    { label: 'Baixa',             value: 'baixa' as const },
+  ]
+
   const filtered = data.filter((s) => {
     const matchesSearch =
       !search ||
       s.titulo.toLowerCase().includes(search.toLowerCase()) ||
       s.numero.toLowerCase().includes(search.toLowerCase())
     const matchesCategoria = !activeCategoria || s.categoria === activeCategoria
-    return matchesSearch && matchesCategoria
+    const matchesUrgencia  = !activeUrgencia  || s.urgencia  === activeUrgencia
+    return matchesSearch && matchesCategoria && matchesUrgencia
   })
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -42,6 +51,11 @@ export default function SolicitacaoListPrestadorPage() {
 
   const handleCategoriaChange = (v: string) => {
     setActiveCategoria(v)
+    setPage(1)
+  }
+
+  const handleUrgenciaChange = (v: string) => {
+    setActiveUrgencia(v)
     setPage(1)
   }
 
@@ -58,14 +72,22 @@ export default function SolicitacaoListPrestadorPage() {
       <Outlet />
       <ListPageShell
         title="Solicitações Disponíveis"
-        subtitle="Aguardando orçamento"
+        subtitle="Explore e avalie oportunidades disponíveis"
         columns={1}
         filters={
-          <StatusFilterChips
-            filters={CATEGORIA_FILTERS}
-            active={activeCategoria}
-            onSelect={handleCategoriaChange}
-          />
+          <div className="flex items-center gap-4 flex-wrap">
+            <StatusFilterChips
+              filters={CATEGORIA_FILTERS}
+              active={activeCategoria}
+              onSelect={handleCategoriaChange}
+            />
+            <span className="h-4 border-l border-border" aria-hidden />
+            <StatusFilterChips
+              filters={URGENCIA_FILTERS}
+              active={activeUrgencia}
+              onSelect={handleUrgenciaChange}
+            />
+          </div>
         }
         search={search}
         onSearchChange={handleSearchChange}
