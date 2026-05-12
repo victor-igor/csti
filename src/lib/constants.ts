@@ -60,3 +60,9 @@ export const STATUS_BORDER_CLASS: Record<SolicitacaoStatus, string> = {
   aprovado:             'border-l-success',
   cancelado:            'border-l-neutral-200',
 }
+
+export const URGENCIA_CONFIG: Record<string, { label: string; className: string }> = {
+  urgente: { label: 'Urgente', className: 'bg-danger-light text-danger' },
+  media:   { label: 'Normal',  className: 'bg-warning-light text-warning' },
+  baixa:   { label: 'Baixa',   className: 'bg-neutral-25 text-neutral-500' },
+}
