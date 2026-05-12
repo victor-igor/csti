@@ -1,15 +1,12 @@
 // src/components/layout/TopBar.tsx
-import { Bell } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { HelpCircle, Search, Settings } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
-import { useNotificacoesNaoLidas } from '@/features/notificacoes/useNotificacoes'
-import { Breadcrumb } from '@/components/molecules/Breadcrumb'
+import { usePerfilModal } from '@/store/perfilModalStore'
+import { NotificacoesBell } from '@/features/notificacoes/NotificacoesBell'
+import { UserMenuItems } from './UserMenuItems'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Role } from '@/types/domain'
@@ -20,47 +17,53 @@ const ROLE_LABEL: Record<Role, string> = {
 }
 
 export function TopBar() {
-  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
-  const { data: notifCount = 0 } = useNotificacoesNaoLidas()
-
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/login')
-  }
+  const openPerfilModal = usePerfilModal((s) => s.open)
 
   const initials = profile?.nome?.charAt(0).toUpperCase() ?? '?'
   const firstName = profile?.nome?.split(' ')[0] ?? ''
   const roleLabel = profile?.role ? ROLE_LABEL[profile.role as Role] : ''
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-white border-b border-border flex items-center justify-between px-4 gap-4">
-      {/* Breadcrumb (desktop only) */}
-      <div className="hidden md:flex flex-1 min-w-0">
-        <Breadcrumb />
+    <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-white border-b border-border flex items-center px-4 gap-4">
+      {/* Spacer left (mobile) / left side (desktop) */}
+      <div className="flex-1 md:flex-none md:w-[200px]" />
+
+      {/* Search bar — centralizada, oculta no mobile */}
+      <div className="hidden md:flex flex-1 justify-center">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="search"
+            placeholder="Buscar..."
+            className="w-full rounded-md border border-border bg-neutral-25 pl-9 pr-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
+          />
+        </div>
       </div>
 
-      {/* Spacer mobile */}
-      <div className="flex-1 md:hidden" />
-
       {/* Ações direita */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Bell — aponta para /notificacoes (P2; cai no redirect caso não exista) */}
-        <Link
-          to="/notificacoes"
-          className="relative p-2 rounded-lg transition-colors hover:bg-neutral-25"
-          aria-label="Notificações"
-          title="Notificações (em breve)"
+      <div className="flex items-center gap-1 shrink-0 ml-auto">
+        {/* Help — oculto no mobile */}
+        <button
+          className="hidden md:flex items-center justify-center p-2 rounded-lg text-neutral-500 hover:bg-neutral-25 transition-colors"
+          aria-label="Ajuda"
+          title="Ajuda"
         >
-          <Bell
-            className={notifCount > 0 ? 'h-5 w-5 text-foreground' : 'h-5 w-5 text-neutral-500'}
-          />
-          {notifCount > 0 && (
-            <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-0.5 text-[10px] font-bold text-white">
-              {notifCount > 9 ? '9+' : notifCount}
-            </span>
-          )}
-        </Link>
+          <HelpCircle className="h-5 w-5" />
+        </button>
+
+        {/* Bell — popover de notificações */}
+        <NotificacoesBell />
+
+        {/* Settings — oculto no mobile */}
+        <button
+          className="hidden md:flex items-center justify-center p-2 rounded-lg text-neutral-500 hover:bg-neutral-25 transition-colors"
+          aria-label="Configurações"
+          title="Configurações"
+          onClick={openPerfilModal}
+        >
+          <Settings className="h-5 w-5" />
+        </button>
 
         {/* Avatar dropdown */}
         <DropdownMenu>
@@ -74,13 +77,7 @@ export function TopBar() {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => navigate('/perfil')}>
-              Meu Perfil
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-danger focus:text-danger">
-              Sair
-            </DropdownMenuItem>
+            <UserMenuItems />
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

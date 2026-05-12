@@ -3,13 +3,14 @@ import { cn } from '@/lib/utils'
 import { TopBar } from './TopBar'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
+import { PerfilModal } from '@/features/perfil/PerfilModal'
 import { useSidebar } from '@/hooks/useSidebar'
 
 export function AppShell() {
   const isExpanded = useSidebar((s) => s.isExpanded)
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-25">
       <Sidebar />
       <TopBar />
 
@@ -25,6 +26,7 @@ export function AppShell() {
       </main>
 
       <BottomNav />
+      <PerfilModal />
     </div>
   )
 }

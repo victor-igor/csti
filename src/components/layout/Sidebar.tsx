@@ -1,16 +1,14 @@
 // src/components/layout/Sidebar.tsx
 import { ChevronRight, ChevronLeft } from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/hooks/useSidebar'
 import { useNavLinks } from './useNavLinks'
 import { useAuthStore } from '@/store/authStore'
-import { supabase } from '@/lib/supabase'
+import { UserMenuItems } from './UserMenuItems'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Role } from '@/types/domain'
@@ -23,17 +21,11 @@ const ROLE_LABEL: Record<Role, string> = {
 export function Sidebar() {
   const { isExpanded, toggleExpanded } = useSidebar()
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
   const navLinks = useNavLinks()
 
   function isActive(href: string) {
     return href === '/' ? pathname === '/' : pathname.startsWith(href)
-  }
-
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/login')
   }
 
   const initials = profile?.nome?.charAt(0).toUpperCase() ?? '?'
@@ -46,18 +38,18 @@ export function Sidebar() {
         isExpanded ? 'w-[240px]' : 'w-[64px]',
       )}
     >
-      {/* Branding section — fundo primary */}
+      {/* Branding section */}
       <div
         className={cn(
-          'flex items-center gap-3 bg-primary px-4 py-3 shrink-0',
+          'flex items-center gap-3 px-4 py-3 border-b border-border shrink-0',
           !isExpanded && 'justify-center px-2',
         )}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/10 text-white font-bold text-sm select-none">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-white font-bold text-sm select-none">
           OF
         </div>
         {isExpanded && (
-          <span className="font-semibold text-white text-base truncate">OrçaFácil</span>
+          <span className="font-semibold text-foreground text-base truncate">OrçaFácil</span>
         )}
       </div>
 
@@ -73,12 +65,12 @@ export function Sidebar() {
               className={cn(
                 'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
                 active
-                  ? 'bg-primary-light text-primary font-medium border-l-2 border-primary'
+                  ? 'text-primary font-semibold'
                   : 'text-neutral-500 hover:bg-neutral-25 hover:text-foreground',
                 !isExpanded && 'justify-center px-2',
               )}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className="h-4 w-4 shrink-0" />
               {isExpanded && <span className="truncate">{label}</span>}
               {badge ? (
                 <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-0.5 text-[10px] font-bold text-white">
@@ -128,13 +120,7 @@ export function Sidebar() {
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-48">
-          <DropdownMenuItem onClick={() => navigate('/perfil')}>
-            Meu Perfil
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout} className="text-danger focus:text-danger">
-            Sair
-          </DropdownMenuItem>
+          <UserMenuItems />
         </DropdownMenuContent>
       </DropdownMenu>
     </aside>
