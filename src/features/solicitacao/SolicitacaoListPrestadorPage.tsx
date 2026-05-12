@@ -12,6 +12,13 @@ import { CATEGORIAS } from './solicitacaoSchemas'
 
 const PAGE_SIZE = 10
 
+const URGENCIA_FILTERS = [
+  { label: 'Qualquer urgência', value: '' as const },
+  { label: 'Urgente',           value: 'urgente' as const },
+  { label: 'Normal',            value: 'media' as const },
+  { label: 'Baixa',             value: 'baixa' as const },
+]
+
 export default function SolicitacaoListPrestadorPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -26,13 +33,6 @@ export default function SolicitacaoListPrestadorPage() {
       label: c.charAt(0).toUpperCase() + c.slice(1),
       value: c as string,
     })),
-  ]
-
-  const URGENCIA_FILTERS = [
-    { label: 'Qualquer urgência', value: '' as const },
-    { label: 'Urgente',           value: 'urgente' as const },
-    { label: 'Normal',            value: 'media' as const },
-    { label: 'Baixa',             value: 'baixa' as const },
   ]
 
   const filtered = data.filter((s) => {
