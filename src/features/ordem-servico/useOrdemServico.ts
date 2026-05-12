@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
+import { parseApiError } from '@/lib/errorUtils'
 import type { IOrdemServico, OSStatus } from '@/types/domain'
 
 interface StatusHistoricoEntry {
@@ -94,7 +95,7 @@ export function useUpdateStatusOS() {
       toast.success('Status atualizado com sucesso')
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao atualizar status')
+      toast.error(parseApiError(error) || 'Erro ao atualizar status da OS')
     },
   })
 }
