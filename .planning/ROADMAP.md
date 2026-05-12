@@ -26,3 +26,16 @@ Plans:
 - [ ] 01-09-PLAN.md — Troca de senha no perfil (F-15) + máscara de telefone no perfil (F-14)
 - [ ] 01-10-PLAN.md — Termos de uso + onboarding (F-11) + máscara de telefone no cadastro (F-14)
 - [ ] 01-11-PLAN.md — Unificar sistema de botões para shadcn (F-24)
+
+### Phase 2: Padronizar mensagens de erro para o usuario
+
+**Goal:** Substituir todas as mensagens de erro técnicas (Zod cru, error.message do Supabase, ErrorState genérico) por mensagens amigáveis em PT-BR. Inclui: centralização via parseApiError, schemas Zod com mensagens completas + fix do bug "Invalid input: expected number, received string" no orçamento, ErrorState contextual em 6 páginas.
+**Requirements**: [D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10]
+**Depends on:** Phase 1
+**Plans:** 4 plans
+
+Plans:
+- [x] 02-01-PLAN.md — Criar src/lib/errorUtils.ts com parseApiError (D-04, D-05, D-06)
+- [x] 02-02-PLAN.md — Schemas Zod com mensagens PT-BR + fix bug coerce.number (D-01, D-02, D-03)
+- [x] 02-03-PLAN.md — Wire parseApiError em 5 hooks (useSolicitacao, useOrcamento, useOrdemServico, useAuth, PerfilModal)
+- [x] 02-04-PLAN.md — ErrorState contextual em 6 páginas com isError (D-09, D-10)
