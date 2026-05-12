@@ -35,26 +35,33 @@ export function Sidebar() {
     <aside
       className={cn(
         'hidden md:flex flex-col fixed top-14 left-0 bottom-0 bg-white border-r border-border transition-all duration-200 z-10 overflow-hidden',
-        isExpanded ? 'w-[240px]' : 'w-[64px]',
+        isExpanded ? 'w-[256px]' : 'w-[72px]',
       )}
     >
       {/* Branding section */}
       <div
         className={cn(
-          'flex items-center gap-3 px-4 py-3 border-b border-border shrink-0',
+          'flex items-center px-4 py-3 shrink-0',
           !isExpanded && 'justify-center px-2',
         )}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-white font-bold text-sm select-none">
-          OF
-        </div>
-        {isExpanded && (
-          <span className="font-semibold text-foreground text-base truncate">OrçaFácil</span>
+        {isExpanded ? (
+          <img
+            src="/logo+texto.png"
+            alt="OrçaFácil"
+            className="h-12 w-full max-w-[200px] object-cover object-center"
+          />
+        ) : (
+          <img
+            src="/logoiconroxo.png"
+            alt="OrçaFácil"
+            className="h-10 w-10 object-cover rounded-md"
+          />
         )}
       </div>
 
       {/* Nav links */}
-      <nav className="flex-1 py-3 space-y-0.5 px-2 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 py-2 space-y-1 px-3 overflow-y-auto overflow-x-hidden">
         {navLinks.map(({ label, href, icon: Icon, badge }) => {
           const active = isActive(href)
           return (
@@ -63,14 +70,19 @@ export function Sidebar() {
               to={href}
               title={!isExpanded ? label : undefined}
               className={cn(
-                'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                'relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[15px] transition-colors',
                 active
                   ? 'text-primary font-semibold'
-                  : 'text-neutral-500 hover:bg-neutral-25 hover:text-foreground',
+                  : 'text-neutral-700 hover:bg-neutral-50 hover:text-foreground',
                 !isExpanded && 'justify-center px-2',
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon
+                className={cn(
+                  'h-5 w-5 shrink-0',
+                  active ? 'text-primary' : 'text-neutral-500',
+                )}
+              />
               {isExpanded && <span className="truncate">{label}</span>}
               {badge ? (
                 <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-0.5 text-[10px] font-bold text-white">
@@ -105,7 +117,7 @@ export function Sidebar() {
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            'flex items-center gap-3 p-4 border-t border-border w-full hover:bg-neutral-25 transition-colors text-left shrink-0',
+            'flex items-center gap-3 p-4 w-full hover:bg-neutral-50 transition-colors text-left shrink-0',
             !isExpanded && 'justify-center px-2',
           )}
         >

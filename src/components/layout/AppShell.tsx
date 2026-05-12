@@ -10,7 +10,7 @@ export function AppShell() {
   const isExpanded = useSidebar((s) => s.isExpanded)
 
   return (
-    <div className="min-h-screen bg-neutral-25">
+    <div className="min-h-screen bg-white">
       <Sidebar />
       <TopBar />
 

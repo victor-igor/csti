@@ -25,7 +25,7 @@ export function TopBar() {
   const roleLabel = profile?.role ? ROLE_LABEL[profile.role as Role] : ''
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-white border-b border-border flex items-center px-4 gap-4">
+    <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-white flex items-center px-4 gap-4">
       {/* Spacer left (mobile) / left side (desktop) */}
       <div className="flex-1 md:flex-none md:w-[200px]" />
 
