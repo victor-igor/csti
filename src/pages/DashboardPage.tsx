@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Plus, Search, Zap, Clock, BarChart2 } from 'lucide-react'
+import { Plus, Zap, Clock, BarChart2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
@@ -277,47 +277,90 @@ function PrestadorDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Disponíveis p/ Orçar" value={data?.solicitacoesDisponiveis} to="/prestador/solicitacoes" />
-        <StatCard label="Orç. Enviados" value={data?.meusOrcamentos} to="/orcamentos" />
-        <StatCard label="OS em Andamento" value={data?.osAtivas} to="/ordens-servico" />
+      {/* 4 StatCards — pipeline */}
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+        <StatCard label="Disponíveis p/ Orçar"  value={data?.solicitacoesDisponiveis} to="/prestador/solicitacoes" />
+        <StatCard label="Aguardando Resposta"    value={data?.aguardandoResposta}       to="/orcamentos" />
+        <StatCard label="Aceitos este mês"       value={data?.aceitosEsteMes}           to="/orcamentos" />
+        <StatCard label="OS Ativas"              value={data?.osAtivas}                 to="/ordens-servico" />
       </div>
 
-      <Link
-        to="/prestador/solicitacoes"
-        className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
-      >
-        <Search className="h-4 w-4" />
-        Ver Disponíveis para Orçar
-        {(data?.solicitacoesDisponiveis ?? 0) > 0 && (
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
-            {data?.solicitacoesDisponiveis}
-          </span>
-        )}
-      </Link>
+      {/* Gráfico de desempenho */}
+      {data && (
+        <DashboardSection
+          title="Desempenho dos últimos 6 meses"
+          icon={<BarChart2 className="h-4 w-4 text-neutral-400" />}
+        >
+          <OrcamentosMetricsChart data={data.metricsData} />
+        </DashboardSection>
+      )}
 
+      {/* Ação necessária — dois grupos por prioridade */}
       <DashboardSection
-        title="Precisa de atenção"
+        title="Ação necessária"
         icon={<Zap className="h-4 w-4 text-amber-500" />}
         viewAllTo="/prestador/solicitacoes"
         viewAllLabel="Ver todas as solicitações"
       >
-        {(data?.disponiveisLista.length ?? 0) === 0 ? (
-          <AllClearBanner />
-        ) : (
-          data?.disponiveisLista.map((sol) => (
-            <ActionItem
-              key={sol.id}
-              numero={sol.numero}
-              titulo={sol.titulo}
-              subtexto={sol.categoria ? `Categoria: ${sol.categoria}` : undefined}
-              to={`/prestador/solicitacoes/${sol.id}`}
-              ctaLabel="Orçar"
-            />
-          ))
+        {/* Grupo 1: Orçamentos aprovados (só aparece quando existem) */}
+        {(data?.aceitosLista.length ?? 0) > 0 && (
+          <div className="space-y-1">
+            <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Orçamentos aprovados
+            </p>
+            {data?.aceitosLista.map((orc) => (
+              <ActionItem
+                key={orc.id}
+                numero={orc.numero}
+                titulo="Orçamento aprovado"
+                subtexto={`aprovado ${relativeDate(orc.created_at)}`}
+                to={`/prestador/orcamentos/${orc.id}`}
+                ctaLabel="Criar OS"
+              />
+            ))}
+          </div>
         )}
+
+        {/* Grupo 2: Novas oportunidades */}
+        {(data?.disponiveisLista.length ?? 0) > 0 && (
+          <div className="space-y-1">
+            {(data?.aceitosLista.length ?? 0) > 0 && (
+              <p className="mt-3 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Novas oportunidades
+              </p>
+            )}
+            {data?.disponiveisLista.map((sol) => {
+              const urgLabel =
+                sol.urgencia && sol.urgencia !== 'baixa'
+                  ? sol.urgencia.charAt(0).toUpperCase() + sol.urgencia.slice(1)
+                  : null
+              const subtexto = [
+                urgLabel,
+                sol.categoria ? `Categoria: ${sol.categoria}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || undefined
+
+              return (
+                <ActionItem
+                  key={sol.id}
+                  numero={sol.numero}
+                  titulo={sol.titulo}
+                  subtexto={subtexto}
+                  to={`/prestador/solicitacoes/${sol.id}`}
+                  ctaLabel="Orçar"
+                />
+              )
+            })}
+          </div>
+        )}
+
+        {/* Tudo em dia */}
+        {(data?.aceitosLista.length ?? 0) === 0 &&
+          (data?.disponiveisLista.length ?? 0) === 0 && <AllClearBanner />}
       </DashboardSection>
 
+      {/* Atividade recente */}
       {(data?.recente.length ?? 0) > 0 && (
         <DashboardSection
           title="Atividade Recente"
