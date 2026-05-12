@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { parseApiError } from '@/lib/errorUtils'
 import type { RegisterFormData, LoginFormData } from './authSchemas'
 
 export function useAuth() {
@@ -30,13 +31,19 @@ export function useAuth() {
   }
 
   async function login(data: LoginFormData): Promise<string | null> {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.senha,
-    })
-    if (error) return error.message
-    navigate('/dashboard')
-    return null
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.senha,
+      })
+      if (error) return parseApiError(error) || 'E-mail ou senha incorretos'
+      navigate('/dashboard')
+      return null
+    } catch (err) {
+      return err instanceof Error
+        ? (parseApiError(err) || 'Erro de conexão. Tente novamente.')
+        : 'Erro de conexão. Tente novamente.'
+    }
   }
 
   return { register, login }

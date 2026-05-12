@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
+import { parseApiError } from '@/lib/errorUtils'
 import type { IOrcamento, IItemOrcamento } from '@/types/domain'
 import type { CreateOrcamentoFormData } from './orcamentoSchemas'
 
@@ -28,7 +29,7 @@ export function useAprovarOrcamento() {
       navigate(`/ordens-servico/${osId}`)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao aprovar orçamento')
+      toast.error(parseApiError(error) || 'Erro ao aprovar orçamento')
     },
   })
 }
@@ -71,7 +72,7 @@ export function useRecusarOrcamento() {
       navigate(`/solicitacoes/${solicitacaoId}`)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao recusar orçamento')
+      toast.error(parseApiError(error) || 'Erro ao recusar orçamento')
     },
   })
 }
@@ -115,7 +116,7 @@ export function useCreateOrcamento() {
       navigate(`/prestador/orcamentos/${id}`)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao criar orçamento')
+      toast.error(parseApiError(error) || 'Erro ao criar orçamento')
     },
   })
 }
@@ -161,7 +162,7 @@ export function useUpdateOrcamento(orcamentoId: string) {
       navigate(`/prestador/orcamentos/${orcamentoId}`)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao atualizar rascunho')
+      toast.error(parseApiError(error) || 'Erro ao atualizar rascunho')
     },
   })
 }
@@ -195,7 +196,7 @@ export function useEnviarOrcamento() {
       toast.success('Orçamento enviado ao cliente')
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao enviar orçamento')
+      toast.error(parseApiError(error) || 'Erro ao enviar orçamento')
     },
   })
 }

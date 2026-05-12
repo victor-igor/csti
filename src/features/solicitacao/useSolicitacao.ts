@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
+import { parseApiError } from '@/lib/errorUtils'
 import type { ISolicitacao, SolicitacaoStatus } from '@/types/domain'
 import type { CreateSolicitacaoFormData } from './solicitacaoSchemas'
 
@@ -33,7 +34,7 @@ export function useCreateSolicitacao() {
       navigate('/solicitacoes')
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao criar solicitação')
+      toast.error(parseApiError(error) || 'Erro ao criar solicitação')
     },
   })
 }
@@ -131,7 +132,7 @@ export function useCancelSolicitacao() {
       navigate('/solicitacoes')
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao cancelar solicitação')
+      toast.error(parseApiError(error) || 'Erro ao cancelar solicitação')
     },
   })
 }
