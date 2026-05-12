@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { UrgenciaBadge } from '@/components/atoms/UrgenciaBadge'
 import { STATUS_BORDER_CLASS } from '@/lib/constants'
 import { relativeDate, isNew } from '@/lib/dateUtils'
 import type { ISolicitacao } from '@/types/domain'
@@ -10,7 +11,7 @@ interface SolicitacaoCardProps {
   variant?: 'cliente' | 'prestador'
 }
 
-export function SolicitacaoCard({ solicitacao, onClick, variant: _variant = 'cliente' }: SolicitacaoCardProps) {
+export function SolicitacaoCard({ solicitacao, onClick, variant = 'cliente' }: SolicitacaoCardProps) {
   const borderClass = STATUS_BORDER_CLASS[solicitacao.status as keyof typeof STATUS_BORDER_CLASS] ?? 'border-l-neutral-200'
   const novo = isNew(solicitacao.created_at)
 
@@ -51,6 +52,25 @@ export function SolicitacaoCard({ solicitacao, onClick, variant: _variant = 'cli
           {solicitacao.equipamento && (
             <span className="text-xs text-muted-foreground truncate max-w-[180px]">
               {solicitacao.equipamento}
+            </span>
+          )}
+        </div>
+      )}
+
+      {variant === 'prestador' && solicitacao.cliente_nome && (
+        <p data-testid="cliente-nome" className="mt-1 text-xs text-muted-foreground">
+          {solicitacao.cliente_nome}
+        </p>
+      )}
+
+      {variant === 'prestador' && (solicitacao.urgencia || solicitacao.prazo_desejado) && (
+        <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+          {solicitacao.urgencia && (
+            <UrgenciaBadge urgencia={solicitacao.urgencia} />
+          )}
+          {solicitacao.prazo_desejado && (
+            <span className="text-xs text-muted-foreground">
+              Prazo: {new Date(solicitacao.prazo_desejado).toLocaleDateString('pt-BR')}
             </span>
           )}
         </div>
