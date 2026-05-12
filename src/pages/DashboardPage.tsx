@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Plus, Search, Zap, Clock } from 'lucide-react'
+import { Plus, Search, Zap, Clock, BarChart2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
@@ -10,6 +10,8 @@ import { DashboardEmptyState } from '@/components/molecules/DashboardEmptyState'
 import { ActionItem } from '@/components/molecules/ActionItem'
 import { ActivityItem } from '@/components/molecules/ActivityItem'
 import { greetingByHour, relativeDate } from '@/lib/dateUtils'
+import { groupOrcamentosByMonth } from '@/lib/metricsUtils'
+import { OrcamentosMetricsChart } from '@/components/molecules/OrcamentosMetricsChart'
 
 // ─── StatCard ────────────────────────────────────────────────────────────────
 
@@ -25,7 +27,7 @@ function StatCard({
   return (
     <Link
       to={to}
-      className="rounded-lg border border-border bg-card p-5 shadow-card hover:shadow-card-hover transition-shadow"
+      className="rounded-lg border border-border bg-card p-5 shadow-card hover:shadow-card-hover hover:border-primary transition-all"
     >
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="mt-1 text-3xl font-semibold text-foreground">
@@ -177,7 +179,25 @@ function PrestadorDashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard', 'prestador', profile?.id],
     queryFn: async () => {
-      const [disponiveis, meusOrc, osAtivas, disponiveisLista, recente] = await Promise.all([
+      const startOfMonth = new Date()
+      startOfMonth.setDate(1)
+      startOfMonth.setHours(0, 0, 0, 0)
+
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setDate(1)
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+      sixMonthsAgo.setHours(0, 0, 0, 0)
+
+      const [
+        disponiveis,
+        aguardando,
+        aceitosEsteMes,
+        osAtivas,
+        disponiveisLista,
+        aceitosLista,
+        metricsRaw,
+        recente,
+      ] = await Promise.all([
         supabase
           .from('solicitacoes_orcamento')
           .select('id', { count: 'exact', head: false })
@@ -186,8 +206,16 @@ function PrestadorDashboard() {
         supabase
           .from('orcamentos')
           .select('id', { count: 'exact', head: false })
+          .eq('status', 'enviado')
+          .eq('prestador_id', profile?.id ?? '')
+          .is('deleted_at', null),
+        supabase
+          .from('orcamentos')
+          .select('id', { count: 'exact', head: false })
+          .eq('status', 'aceito')
+          .eq('prestador_id', profile?.id ?? '')
           .is('deleted_at', null)
-          .in('status', ['enviado', 'aceito', 'recusado']),
+          .gte('created_at', startOfMonth.toISOString()),
         supabase
           .from('ordens_servico')
           .select('id', { count: 'exact', head: false })
@@ -195,11 +223,26 @@ function PrestadorDashboard() {
           .neq('status', 'cancelada'),
         supabase
           .from('solicitacoes_orcamento')
-          .select('id, numero, titulo, categoria, created_at')
+          .select('id, numero, titulo, categoria, urgencia')
           .eq('status', 'aguardando_orcamento')
           .is('deleted_at', null)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: false })
           .limit(5),
+        supabase
+          .from('orcamentos')
+          .select('id, numero, created_at')
+          .eq('status', 'aceito')
+          .eq('prestador_id', profile?.id ?? '')
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('orcamentos')
+          .select('created_at, status')
+          .eq('prestador_id', profile?.id ?? '')
+          .is('deleted_at', null)
+          .in('status', ['enviado', 'aceito', 'recusado'])
+          .gte('created_at', sixMonthsAgo.toISOString()),
         supabase
           .from('status_historico')
           .select('id, tabela_nome, status_anterior, status_novo, created_at')
@@ -210,10 +253,13 @@ function PrestadorDashboard() {
 
       return {
         solicitacoesDisponiveis: disponiveis.data?.length ?? 0,
-        meusOrcamentos: meusOrc.data?.length ?? 0,
-        osAtivas: osAtivas.data?.length ?? 0,
-        disponiveisLista: disponiveisLista.data ?? [],
-        recente: recente.data ?? [],
+        aguardandoResposta:      aguardando.data?.length ?? 0,
+        aceitosEsteMes:          aceitosEsteMes.data?.length ?? 0,
+        osAtivas:                osAtivas.data?.length ?? 0,
+        disponiveisLista:        disponiveisLista.data ?? [],
+        aceitosLista:            aceitosLista.data ?? [],
+        metricsData:             groupOrcamentosByMonth(metricsRaw.data ?? []),
+        recente:                 recente.data ?? [],
       }
     },
     enabled: !!profile?.id,
@@ -222,7 +268,8 @@ function PrestadorDashboard() {
   const isEmpty =
     data &&
     data.solicitacoesDisponiveis === 0 &&
-    data.meusOrcamentos === 0 &&
+    data.aguardandoResposta === 0 &&
+    data.aceitosEsteMes === 0 &&
     data.osAtivas === 0
 
   if (isLoading) return <LoadingSkeleton rows={5} />
