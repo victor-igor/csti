@@ -34,7 +34,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col fixed top-0 left-0 bottom-0 bg-white border-r border-border transition-all duration-200 z-[110] overflow-hidden',
+        'hidden md:flex flex-col fixed top-0 left-0 bottom-0 bg-white border-r border-border transition-all duration-200 z-30 overflow-hidden',
         isExpanded ? 'w-[256px]' : 'w-[72px]',
       )}
     >

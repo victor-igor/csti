@@ -51,7 +51,7 @@ export default function LoginPage() {
 
       {/* Logo no canto superior esquerdo */}
       <div className="absolute top-6 left-8 z-20">
-        <img src="/logo+texto.png" alt="OrçaFácil" className="h-40 object-contain" />
+        <img src="/logo+texto.png" alt="OrçaFácil" className="h-40 object-contain brightness-0" />
       </div>
 
       {/* Card de login centralizado */}
