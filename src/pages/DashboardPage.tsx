@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ClipboardList, FileText, Wrench, Plus, Search, Zap, Clock, ArrowRight } from 'lucide-react'
+import { Plus, Search, Zap, Clock } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
@@ -16,38 +16,21 @@ import { greetingByHour, relativeDate } from '@/lib/dateUtils'
 function StatCard({
   label,
   value,
-  icon: Icon,
   to,
-  color = 'bg-primary',
-  urgent = false,
 }: {
   label: string
   value: number | undefined
-  icon: React.ElementType
   to: string
-  color?: string
-  urgent?: boolean
 }) {
   return (
     <Link
       to={to}
-      className="flex items-center gap-4 rounded-lg border border-border bg-card p-5 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group"
+      className="rounded-lg border border-border bg-card p-5 shadow-card hover:shadow-card-hover transition-shadow"
     >
-      <div className="relative shrink-0">
-        <div className={`${color} flex h-12 w-12 items-center justify-center rounded-lg text-white shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-300`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        {urgent && (value ?? 0) > 0 && (
-          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-white" />
-        )}
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] text-neutral-500 uppercase tracking-wider font-semibold truncate mb-0.5">{label}</p>
-        <p className="text-2xl font-bold text-neutral-900 tracking-tight">
-          {value === undefined ? '—' : value}
-        </p>
-      </div>
-      <ArrowRight className="ml-auto h-4 w-4 text-neutral-300 shrink-0 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="mt-1 text-3xl font-semibold text-foreground">
+        {value === undefined ? '—' : value}
+      </p>
     </Link>
   )
 }
@@ -124,9 +107,9 @@ function ClienteDashboard() {
   return (
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Minhas Solicitações" value={data?.totalSolicitacoes} icon={ClipboardList} to="/solicitacoes" color="bg-blue-500" />
-        <StatCard label="Orçamentos p/ Revisar" value={data?.orcamentosPendentes} icon={FileText} to="/orcamentos" color="bg-amber-500" urgent />
-        <StatCard label="OS em Andamento" value={data?.osAtivas} icon={Wrench} to="/ordens-servico" color="bg-green-500" />
+        <StatCard label="Minhas Solicitações" value={data?.totalSolicitacoes} to="/solicitacoes" />
+        <StatCard label="Orçamentos p/ Revisar" value={data?.orcamentosPendentes} to="/orcamentos" />
+        <StatCard label="OS em Andamento" value={data?.osAtivas} to="/ordens-servico" />
       </div>
 
       <Link
@@ -248,9 +231,9 @@ function PrestadorDashboard() {
   return (
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Disponíveis p/ Orçar" value={data?.solicitacoesDisponiveis} icon={ClipboardList} to="/prestador/solicitacoes" color="bg-blue-500" urgent />
-        <StatCard label="Orç. Enviados" value={data?.meusOrcamentos} icon={FileText} to="/orcamentos" color="bg-primary" />
-        <StatCard label="OS em Andamento" value={data?.osAtivas} icon={Wrench} to="/ordens-servico" color="bg-green-500" />
+        <StatCard label="Disponíveis p/ Orçar" value={data?.solicitacoesDisponiveis} to="/prestador/solicitacoes" />
+        <StatCard label="Orç. Enviados" value={data?.meusOrcamentos} to="/orcamentos" />
+        <StatCard label="OS em Andamento" value={data?.osAtivas} to="/ordens-servico" />
       </div>
 
       <Link

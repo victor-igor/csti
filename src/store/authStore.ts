@@ -22,11 +22,18 @@ export const useAuthStore = create<AuthState>((set) => ({
 // Singleton listener — runs once on module load
 supabase.auth.onAuthStateChange(async (_event, session) => {
   if (session?.user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
+    let profile: IProfile | null = null
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
+      profile = data
+    } catch {
+      // profile fetch falhou — segue com profile=null. ProtectedRoute libera
+      // mesmo assim porque depende só de session, não de profile.
+    }
     useAuthStore.getState().setSession(session.user, profile, session)
   } else {
     useAuthStore.getState().clearSession()

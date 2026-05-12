@@ -37,7 +37,9 @@ export function useAuth() {
         password: data.senha,
       })
       if (error) return parseApiError(error) || 'E-mail ou senha incorretos'
-      navigate('/dashboard')
+      // Navegação fica a cargo do useEffect na LoginPage, que dispara quando o
+      // onAuthStateChange (authStore) terminar de buscar o profile e setar a session.
+      // Navegar aqui causaria race: ProtectedRoute leria session=null e mandaria pra /login.
       return null
     } catch (err) {
       return err instanceof Error
