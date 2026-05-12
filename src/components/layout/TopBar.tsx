@@ -26,8 +26,14 @@ export function TopBar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] h-14 bg-white flex items-center px-4 gap-4">
-      {/* Spacer left (mobile) / left side (desktop) */}
-      <div className="flex-1 md:flex-none md:w-[200px]" />
+      {/* Logo (mobile) / spacer (desktop, já que Sidebar cobre a logo) */}
+      <div className="flex-1 md:flex-none md:w-[200px] flex items-center">
+        <img
+          src="/logo+texto.png"
+          alt="OrçaFácil"
+          className="md:hidden h-9 object-contain"
+        />
+      </div>
 
       {/* Search bar — centralizada, oculta no mobile */}
       <div className="hidden md:flex flex-1 justify-center">
@@ -68,13 +74,24 @@ export function TopBar() {
         {/* Avatar dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-neutral-25 transition-colors">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
-              {initials}
-            </div>
-            <div className="hidden md:block text-left">
-              <p className="text-sm font-medium text-foreground leading-tight">{firstName}</p>
-              <p className="text-[11px] text-muted-foreground leading-tight">{roleLabel}</p>
-            </div>
+            {profile ? (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
+                {initials}
+              </div>
+            ) : (
+              <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-100 animate-pulse" />
+            )}
+            {profile ? (
+              <div className="hidden md:block text-left">
+                <p className="text-sm font-medium text-foreground leading-tight">{firstName}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">{roleLabel}</p>
+              </div>
+            ) : (
+              <div className="hidden md:block space-y-1">
+                <div className="h-3 w-16 rounded bg-neutral-100 animate-pulse" />
+                <div className="h-2 w-12 rounded bg-neutral-100 animate-pulse" />
+              </div>
+            )}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <UserMenuItems />

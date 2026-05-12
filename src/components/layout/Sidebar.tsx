@@ -121,14 +121,25 @@ export function Sidebar() {
             !isExpanded && 'justify-center px-2',
           )}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
-            {initials}
-          </div>
-          {isExpanded && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{profile?.nome}</p>
-              <p className="text-[11px] text-muted-foreground">{roleLabel}</p>
+          {profile ? (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-semibold text-sm select-none">
+              {initials}
             </div>
+          ) : (
+            <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-100 animate-pulse" />
+          )}
+          {isExpanded && (
+            profile ? (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{profile.nome}</p>
+                <p className="text-[11px] text-muted-foreground">{roleLabel}</p>
+              </div>
+            ) : (
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <div className="h-3 w-24 rounded bg-neutral-100 animate-pulse" />
+                <div className="h-2 w-16 rounded bg-neutral-100 animate-pulse" />
+              </div>
+            )
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-48">
