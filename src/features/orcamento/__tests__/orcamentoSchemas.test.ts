@@ -53,6 +53,6 @@ describe('CreateOrcamentoSchema', () => {
       itens: [{ ...validItem, descricao: '' }],
     })
     expect(result.success).toBe(false)
-    expect(JSON.stringify(result.error?.issues)).toContain('Descri')
+    expect(JSON.stringify(result.error?.issues)).toContain('descri')
   })
 })

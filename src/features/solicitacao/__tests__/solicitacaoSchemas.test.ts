@@ -52,6 +52,7 @@ describe('CreateSolicitacaoSchema', () => {
       titulo: 'Problema no hardware',
       descricao: 'O computador não liga ao pressionar o botão de energia.',
       categoria: 'hardware',
+      urgencia: 'baixa',
     })
     expect(result.success).toBe(true)
   })
@@ -61,6 +62,7 @@ describe('CreateSolicitacaoSchema', () => {
       titulo: 'Instalação de software',
       descricao: 'Preciso instalar o pacote Office na máquina do setor financeiro.',
       categoria: 'software',
+      urgencia: 'media',
     })
     expect(result.success).toBe(true)
   })
