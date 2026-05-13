@@ -243,7 +243,7 @@ export default function OrcamentoFormPage() {
             variant="outline"
             className="w-full"
             disabled={isProcessing}
-            onClick={handleSubmit(salvarRascunho)}
+            onClick={() => { void handleSubmit(salvarRascunho)() }}
           >
             {criando && <Loader2 className="size-4 animate-spin" />}
             {isEditMode ? 'Salvar Alterações' : 'Salvar Rascunho'}
@@ -253,7 +253,7 @@ export default function OrcamentoFormPage() {
               type="button"
               className="w-full"
               disabled={isProcessing}
-              onClick={handleSubmit(enviar)}
+              onClick={() => { void handleSubmit(enviar)() }}
             >
               {enviando && <Loader2 className="size-4 animate-spin" />}
               Enviar Orçamento

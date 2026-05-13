@@ -4,12 +4,12 @@ export const ItemOrcamentoSchema = z.object({
   descricao: z.string().min(1, 'Informe a descrição do item'),
   quantidade: z
     .coerce
-    .number({ invalid_type_error: 'Digite apenas números' })
+    .number({ error: 'Digite apenas números' })
     .int('Deve ser um número inteiro')
     .positive('Deve ser maior que zero'),
   valor_unitario: z
     .coerce
-    .number({ invalid_type_error: 'Digite apenas números' })
+    .number({ error: 'Digite apenas números' })
     .positive('Deve ser maior que zero'),
 })
 
@@ -17,7 +17,7 @@ export const CreateOrcamentoSchema = z.object({
   solicitacao_id: z.string().uuid(),
   prazo_dias: z
     .coerce
-    .number({ invalid_type_error: 'Digite apenas números' })
+    .number({ error: 'Digite apenas números' })
     .int('Deve ser um número inteiro')
     .positive('Deve ser maior que zero')
     .max(365, 'Máximo 365 dias'),
