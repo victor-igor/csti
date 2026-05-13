@@ -39,7 +39,7 @@ export default function OrcamentoFormPage() {
     register,
     reset,
     formState: { errors },
-  } = useForm<CreateOrcamentoFormData>({
+  } = useForm<CreateOrcamentoFormData, unknown, CreateOrcamentoFormData>({
     resolver: zodResolver(CreateOrcamentoSchema),
     defaultValues: {
       solicitacao_id: solicitacaoId,
