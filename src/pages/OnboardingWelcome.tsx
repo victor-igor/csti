@@ -57,7 +57,7 @@ export function OnboardingWelcome() {
         <Dialog.Backdrop className="fixed inset-0 bg-black/40 z-[290]" />
         <Dialog.Popup className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
           <Dialog.Title className="text-lg font-semibold text-neutral-800">
-            Bem-vindo ao OrçaFácil!
+            Bem-vindo ao CSTI!
           </Dialog.Title>
           <Dialog.Description className="mt-2 text-sm text-neutral-600">
             Em 3 passos você sai do problema para a solução:

@@ -32,7 +32,7 @@ export function MobileDrawer() {
         )}
       >
         <div className="h-14 flex items-center px-4 border-b border-neutral-200">
-          <span className="font-semibold text-primary">OrçaFácil</span>
+          <span className="font-semibold text-primary">CSTI</span>
         </div>
 
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">

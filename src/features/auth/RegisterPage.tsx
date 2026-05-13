@@ -50,7 +50,7 @@ export default function RegisterPage() {
 
       {/* Card centralizado */}
       <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl p-8 shadow-2xl">
-        <h1 className="text-2xl font-semibold text-neutral-900 mb-6">Criar sua conta OrçaFácil</h1>
+        <h1 className="text-2xl font-semibold text-neutral-900 mb-6">Criar sua conta CSTI</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <FormField<RegisterFormData>

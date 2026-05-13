@@ -39,7 +39,7 @@ export function TopBar() {
       <div className="flex items-center md:hidden">
         <img
           src="/logo+texto.png"
-          alt="OrçaFácil"
+          alt="CSTI"
           className="h-20 object-contain"
         />
       </div>

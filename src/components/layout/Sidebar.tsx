@@ -49,7 +49,7 @@ export function Sidebar() {
           <>
             <img
               src="/logo+texto.png"
-              alt="OrçaFácil"
+              alt="CSTI"
               className="h-28 flex-1 min-w-0 object-contain object-left"
             />
             <button
@@ -65,7 +65,7 @@ export function Sidebar() {
           <div className="flex flex-col items-center gap-2">
             <img
               src="/iconefundo-roxo.png"
-              alt="OrçaFácil"
+              alt="CSTI"
               className="h-10 w-10 object-cover rounded-lg"
             />
             <button

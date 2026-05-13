@@ -12,7 +12,7 @@ export function DashboardEmptyState({ role }: DashboardEmptyStateProps) {
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100">
           <ClipboardList className="h-7 w-7 text-blue-500" />
         </div>
-        <h3 className="font-semibold text-neutral-800">Bem-vindo ao OrçaFácil!</h3>
+        <h3 className="font-semibold text-neutral-800">Bem-vindo ao CSTI!</h3>
         <p className="mt-1 text-sm text-neutral-500 max-w-xs">
           Crie sua primeira solicitação de orçamento de TI e receba propostas de prestadores.
         </p>
