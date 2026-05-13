@@ -26,7 +26,7 @@ export function OrcamentoCard({ orcamento, valorTotal, onClick }: OrcamentoCardP
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
-      className={`group relative rounded-md border border-border border-l-4 ${borderClass} bg-white p-4 shadow-card ${onClick ? 'cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5' : ''} transition-all duration-200`}
+      className={`group relative rounded-md border border-border border-l-4 ${borderClass} bg-card p-4 shadow-card ${onClick ? 'cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5' : ''} transition-all duration-200`}
     >
       <div className="pr-6">
         <p className="font-mono text-[10px] text-neutral-400 uppercase tracking-wider">{orcamento.numero}</p>

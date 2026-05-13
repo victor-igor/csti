@@ -62,18 +62,21 @@ export function useNavLinks(): NavLink[] {
 export function useNavGroups(): NavGroup[] {
   const { data: solBadge = 0 } = useSolicitacoesBadge()
   const { data: orcBadge = 0 } = useOrcamentosBadge()
+  const role = useAuthStore((s) => s.profile?.role) as Role | undefined
+
+  const solicitacoesHref = role === 'prestador' ? '/prestador/solicitacoes' : '/solicitacoes'
 
   return [
     {
       label: null,
       items: [
-        { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+        { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       ],
     },
     {
       label: 'Gestão',
       items: [
-        { label: 'Solicitações', href: '/solicitacoes', icon: ClipboardList, badge: solBadge || undefined },
+        { label: 'Solicitações', href: solicitacoesHref, icon: ClipboardList, badge: solBadge || undefined },
         { label: 'Orçamentos', href: '/orcamentos', icon: FileText, badge: orcBadge || undefined },
         { label: 'OS', href: '/ordens-servico', icon: Wrench },
       ],

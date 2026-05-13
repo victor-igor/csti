@@ -35,7 +35,8 @@ export function groupOrcamentosByMonth(
   return Object.values(buckets)
 }
 
-export function calcApprovalRate(data: MonthMetric[]): { rate: number; delta: number } {
+export function calcApprovalRate(data: MonthMetric[] | undefined): { rate: number; delta: number } {
+  if (!data || data.length === 0) return { rate: 0, delta: 0 }
   const last = data.at(-1)
   const prev = data.at(-2)
   const rate = last && last.enviados > 0 ? Math.round((last.aprovados / last.enviados) * 100) : 0

@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { ItemOrcamentoRow } from '@/components/organisms/ItemOrcamentoRow'
 import { PdfDownloadButton } from '@/components/pdf/PdfDownloadButton'
 import { Button } from '@/components/ui/button'
+import { StickyActionBar } from '@/components/atoms/StickyActionBar'
 import { useAuthStore } from '@/store/authStore'
 import { useGetOrcamento, useEnviarOrcamento } from './useOrcamento'
 
@@ -114,23 +115,44 @@ export default function OrcamentoDetailPage() {
       </div>
 
       {data.status === 'rascunho' && (
-        <div className="mt-6 flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/prestador/orcamentos/${data.id}/editar`)}
-          >
-            Editar Rascunho
-          </Button>
-          <Button
-            disabled={isPending}
-            onClick={() =>
-              enviar({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })
-            }
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" />}
-            Enviar Orçamento ao Cliente
-          </Button>
-        </div>
+        <>
+          <div className="mt-6 hidden md:flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/prestador/orcamentos/${data.id}/editar`)}
+            >
+              Editar Rascunho
+            </Button>
+            <Button
+              disabled={isPending}
+              onClick={() =>
+                enviar({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })
+              }
+            >
+              {isPending && <Loader2 className="size-4 animate-spin" />}
+              Enviar Orçamento ao Cliente
+            </Button>
+          </div>
+          <StickyActionBar className="bottom-16">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => navigate(`/prestador/orcamentos/${data.id}/editar`)}
+            >
+              Editar Rascunho
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={isPending}
+              onClick={() =>
+                enviar({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })
+              }
+            >
+              {isPending && <Loader2 className="size-4 animate-spin" />}
+              Enviar Orçamento
+            </Button>
+          </StickyActionBar>
+        </>
       )}
     </div>
   )

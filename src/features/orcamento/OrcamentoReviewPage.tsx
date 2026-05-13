@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Dialog } from '@base-ui/react'
 import { useParams } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -16,6 +15,7 @@ import { CurrencyDisplay } from '@/components/atoms/CurrencyDisplay'
 import { ItemOrcamentoRow } from '@/components/organisms/ItemOrcamentoRow'
 import { PdfDownloadButton } from '@/components/pdf/PdfDownloadButton'
 import { Button } from '@/components/ui/button'
+import { StickyActionBar } from '@/components/atoms/StickyActionBar'
 import type { IProfile } from '@/types/domain'
 import { useGetOrcamento, useAprovarOrcamento, useRecusarOrcamento } from './useOrcamento'
 
@@ -66,11 +66,9 @@ export default function OrcamentoReviewPage() {
 
       <PageHeader
         title={`Orçamento ${data.numero}`}
+        subtitle={<StatusBadge status={data.status} />}
         actions={canDownload ? <PdfDownloadButton orcamento={data} itens={itens} prestador={prestadorPdf} /> : null}
       />
-      <div className="mb-1">
-        <StatusBadge status={data.status} />
-      </div>
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 items-start">
 
@@ -132,7 +130,7 @@ export default function OrcamentoReviewPage() {
           {canAct && (
             <div className="space-y-2">
               <Button
-                className="w-full bg-green-600 text-white hover:bg-green-700"
+                className="w-full bg-success text-white hover:bg-success/90"
                 disabled={isProcessing}
                 onClick={() => setConfirmAprovar(true)}
               >
@@ -153,6 +151,28 @@ export default function OrcamentoReviewPage() {
         </div>
       </div>
 
+      {canAct && (
+        <StickyActionBar className="bottom-16">
+          <Button
+            variant="outline"
+            className="flex-1 border-danger text-danger hover:bg-danger/10"
+            disabled={isProcessing}
+            onClick={() => setConfirmRecusar(true)}
+          >
+            {recusando && <Loader2 className="size-4 animate-spin" />}
+            Recusar
+          </Button>
+          <Button
+            className="flex-1 bg-success text-white hover:bg-success/90"
+            disabled={isProcessing}
+            onClick={() => setConfirmAprovar(true)}
+          >
+            {aprovando && <Loader2 className="size-4 animate-spin" />}
+            Aprovar
+          </Button>
+        </StickyActionBar>
+      )}
+
       <ConfirmDialog
         open={confirmAprovar}
         onOpenChange={setConfirmAprovar}
@@ -166,47 +186,39 @@ export default function OrcamentoReviewPage() {
         }}
       />
 
-      <Dialog.Root open={confirmRecusar} onOpenChange={setConfirmRecusar}>
-        <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 bg-black/40 z-[290]" />
-          <Dialog.Popup className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <Dialog.Title className="text-base font-semibold text-neutral-800">
-              Recusar Orçamento
-            </Dialog.Title>
-            <Dialog.Description className="mt-2 text-sm text-neutral-600">
-              Deixe um motivo (opcional) para ajudar o prestador.
-            </Dialog.Description>
-            <textarea
-              value={motivoRecusa}
-              onChange={(e) => setMotivoRecusa(e.target.value)}
-              maxLength={500}
-              rows={4}
-              placeholder="Motivo da recusa (opcional)"
-              className="mt-4 w-full rounded-md border bg-background px-3 py-2 text-sm"
-            />
-            <div className="mt-6 flex justify-end gap-2">
-              <Button variant="outline" type="button" disabled={recusando} onClick={() => setConfirmRecusar(false)}>
-                Cancelar
-              </Button>
-              <Button
-                variant="destructive"
-                disabled={recusando}
-                onClick={() => {
-                  setConfirmRecusar(false)
-                  recusar({
-                    orcamentoId: data.id,
-                    solicitacaoId: data.solicitacao_id,
-                    motivo: motivoRecusa,
-                  })
-                  setMotivoRecusa('')
-                }}
-              >
-                Confirmar Recusa
-              </Button>
-            </div>
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <ConfirmDialog
+        open={confirmRecusar}
+        onOpenChange={setConfirmRecusar}
+        title="Recusar Orçamento"
+        description="Deixe um motivo (opcional) para ajudar o prestador."
+        confirmLabel="Confirmar Recusa"
+        confirmVariant="destructive"
+        loading={recusando}
+        onConfirm={() => {
+          setConfirmRecusar(false)
+          recusar({
+            orcamentoId: data.id,
+            solicitacaoId: data.solicitacao_id,
+            motivo: motivoRecusa,
+          })
+          setMotivoRecusa('')
+        }}
+      >
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-neutral-700" htmlFor="motivo-recusa">
+            Motivo da recusa
+          </label>
+          <textarea
+            id="motivo-recusa"
+            value={motivoRecusa}
+            onChange={(e) => setMotivoRecusa(e.target.value)}
+            maxLength={500}
+            rows={4}
+            placeholder="Motivo da recusa (opcional)"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          />
+        </div>
+      </ConfirmDialog>
     </div>
   )
 }

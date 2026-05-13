@@ -128,10 +128,10 @@ function ClienteDashboard() {
         viewAllTo="/orcamentos"
         viewAllLabel="Ver todos os orçamentos"
       >
-        {(data?.orcPendentesLista.length ?? 0) === 0 ? (
+        {(data?.orcPendentesLista?.length ?? 0) === 0 ? (
           <AllClearBanner />
         ) : (
-          data?.orcPendentesLista.map((orc) => {
+          data?.orcPendentesLista?.map((orc) => {
             const venceEm = orc.validade_ate
               ? `vence ${relativeDate(orc.validade_ate)}`
               : undefined
@@ -149,13 +149,13 @@ function ClienteDashboard() {
         )}
       </DashboardSection>
 
-      {(data?.recente.length ?? 0) > 0 && (
+      {(data?.recente?.length ?? 0) > 0 && (
         <DashboardSection
           title="Atividade Recente"
           icon={<Clock className="h-4 w-4 text-neutral-400" />}
         >
           <div className="rounded-lg border border-border bg-card px-4 py-1 shadow-card">
-            {data?.recente.map((item) => (
+            {data?.recente?.map((item) => (
               <ActivityItem
                 key={item.id}
                 tabelaNome={item.tabela_nome}
@@ -303,12 +303,12 @@ function PrestadorDashboard() {
         viewAllLabel="Ver todas as solicitações"
       >
         {/* Grupo 1: Orçamentos aprovados (só aparece quando existem) */}
-        {(data?.aceitosLista.length ?? 0) > 0 && (
+        {(data?.aceitosLista?.length ?? 0) > 0 && (
           <div className="space-y-1">
             <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Orçamentos aprovados
             </p>
-            {data?.aceitosLista.map((orc) => (
+            {data?.aceitosLista?.map((orc) => (
               <ActionItem
                 key={orc.id}
                 numero={orc.numero}
@@ -322,14 +322,14 @@ function PrestadorDashboard() {
         )}
 
         {/* Grupo 2: Novas oportunidades */}
-        {(data?.disponiveisLista.length ?? 0) > 0 && (
+        {(data?.disponiveisLista?.length ?? 0) > 0 && (
           <div className="space-y-1">
-            {(data?.aceitosLista.length ?? 0) > 0 && (
+            {(data?.aceitosLista?.length ?? 0) > 0 && (
               <p className="mt-3 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Novas oportunidades
               </p>
             )}
-            {data?.disponiveisLista.map((sol) => {
+            {data?.disponiveisLista?.map((sol) => {
               const urgLabel =
                 sol.urgencia && sol.urgencia !== 'baixa'
                   ? sol.urgencia.charAt(0).toUpperCase() + sol.urgencia.slice(1)
@@ -356,18 +356,18 @@ function PrestadorDashboard() {
         )}
 
         {/* Tudo em dia */}
-        {(data?.aceitosLista.length ?? 0) === 0 &&
-          (data?.disponiveisLista.length ?? 0) === 0 && <AllClearBanner />}
+        {(data?.aceitosLista?.length ?? 0) === 0 &&
+          (data?.disponiveisLista?.length ?? 0) === 0 && <AllClearBanner />}
       </DashboardSection>
 
       {/* Atividade recente */}
-      {(data?.recente.length ?? 0) > 0 && (
+      {(data?.recente?.length ?? 0) > 0 && (
         <DashboardSection
           title="Atividade Recente"
           icon={<Clock className="h-4 w-4 text-neutral-400" />}
         >
           <div className="rounded-lg border border-border bg-card px-4 py-1 shadow-card">
-            {data?.recente.map((item) => (
+            {data?.recente?.map((item) => (
               <ActivityItem
                 key={item.id}
                 tabelaNome={item.tabela_nome}

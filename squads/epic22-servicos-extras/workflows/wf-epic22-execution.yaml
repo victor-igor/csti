@@ -1,0 +1,215 @@
+name: wf-epic22-execution
+title: "Epic 22 — Workflow de Execução Completo"
+description: |
+  Workflow sequencial para implementar o Epic 22 (Serviços Extras na Evolução de Sessão).
+  22.1 é pré-requisito bloqueante de 22.2. Deploy só ocorre após QA PASS em ambas.
+
+phases:
+
+  # ═══════════════════════════════════════════════
+  # FASE 0 — PRÉ-FLIGHT (BLOQUEANTE)
+  # ═══════════════════════════════════════════════
+  - id: phase-0-preflight
+    name: "Pré-Flight: Verificar Trigger"
+    agent: "@data-engineer"
+    story: "22.1 — T1"
+    priority: CRITICAL
+    blocking: true
+    description: |
+      Verificar se o trigger atualizar_qtd_usada_pacote cobre INSERT
+      (não apenas UPDATE). Sem isso, qtd_usada não será incrementado
+      para serviços extras. DEVE ser feito antes de qualquer código.
+    action: |
+      Execute no Supabase SQL Editor:
+        SELECT trigger_name, event_manipulation
+        FROM information_schema.triggers
+        WHERE event_object_table = 'agendamentos'
+        AND trigger_name ILIKE '%qtd_usada%';
+
+      Se resultado = UPDATE only → ajustar para AFTER INSERT OR UPDATE OF status
+      Se resultado já inclui INSERT → confirmar e prosseguir para Phase 1
+    output: "Trigger verificado/ajustado ✅"
+    gate: "Trigger confirmado antes de prosseguir"
+
+  # ═══════════════════════════════════════════════
+  # FASE 1 — STORY 22.1: BACKEND
+  # ═══════════════════════════════════════════════
+  - id: phase-1-backend
+    name: "Story 22.1 — Backend RPC + View + Índice"
+    parallel_streams:
+
+      - stream: database
+        agent: "@data-engineer"
+        tasks:
+          - id: "22.1-T2"
+            name: "Migration RPC adicionar_servico_extra_sessao"
+            file: "supabase/migrations/YYYYMMDD_rpc_adicionar_servico_extra_sessao.sql"
+            priority: HIGH
+            estimated: "2h"
+            checklist:
+              - "usuario_id derivado de auth.uid() — não do cliente"
+              - "tutor_id buscado da sessão existente — não do cliente"
+              - "Validação ownership: vet só opera na própria sessão"
+              - "Validação org isolation: catalog_item pertence à org"
+              - "Validação: sales_package_item_id pertence ao pacote informado"
+              - "origem_preco = 'avulso' | 'pacote' preenchido corretamente"
+              - "preco_referencia retornado no JSONB"
+              - "GRANT EXECUTE TO authenticated"
+
+          - id: "22.1-T3"
+            name: "View v_agendamentos_com_preco"
+            file: "supabase/migrations/YYYYMMDD_rpc_adicionar_servico_extra_sessao.sql"
+            priority: MEDIUM
+            estimated: "30min"
+            note: "Incluir na mesma migration do T2"
+            checklist:
+              - "JOIN com mod_sales_package_items via sales_package_item_id"
+              - "JOIN com mod_catalog_items via servico_id"
+              - "preco_efetivo calculado por CASE origem_preco"
+              - "WHERE deleted_at IS NULL"
+
+          - id: "22.1-T4"
+            name: "Índice em sales_package_item_id"
+            priority: MEDIUM
+            estimated: "10min"
+            checklist:
+              - "Verificar existência antes de criar"
+              - "CREATE INDEX IF NOT EXISTS idx_agendamentos_sales_package_item_id"
+              - "Partial index: WHERE sales_package_item_id IS NOT NULL"
+
+      - stream: typescript
+        agent: "@dev"
+        depends_on: []  # Pode rodar em paralelo com database stream
+        tasks:
+          - id: "22.1-T5"
+            name: "Fix getSessionAppointments — filtro deleted_at"
+            file: "src/features/evolutions/api/evolutionsApi.ts"
+            priority: HIGH
+            estimated: "15min"
+            checklist:
+              - "Adicionar .is('deleted_at', null) na query"
+              - "Adicionar .order('data_agendamento', ascending: true)"
+
+          - id: "22.1-T6"
+            name: "Tipos TypeScript AdicionarServicoExtraPayload"
+            file: "src/features/evolutions/api/evolutionsApi.ts"
+            priority: HIGH
+            estimated: "15min"
+            checklist:
+              - "usuario_id e tutor_id REMOVIDOS do payload"
+              - "catalog_item_id adicionado"
+              - "AdicionarServicoExtraResult com preco_referencia e origem_preco"
+              - "Função adicionarServicoExtra() implementada"
+              - "Build sem erros de tipo"
+
+    gate:
+      agent: "@qa"
+      story: "22.1"
+      verdict_required: "PASS"
+      checks:
+        - "Migration aplicada sem erros no Supabase"
+        - "RPC recusa p_usuario_id spoofed"
+        - "RPC valida ownership da sessão"
+        - "RPC valida org isolation"
+        - "Caso avulso: origem_preco = 'avulso', preco_referencia correto"
+        - "Caso pacote: origem_preco = 'pacote', qtd_usada incrementado"
+        - "View v_agendamentos_com_preco disponível"
+        - "getSessionAppointments não retorna soft-deleted"
+        - "Build TypeScript passa"
+
+  # ═══════════════════════════════════════════════
+  # FASE 2 — STORY 22.2: FRONTEND
+  # (desbloqueada após QA PASS da 22.1)
+  # ═══════════════════════════════════════════════
+  - id: phase-2-frontend
+    name: "Story 22.2 — Frontend UI Serviço Extra"
+    depends_on: "phase-1-backend.gate == PASS"
+    agent: "@dev"
+    story: "22.2"
+    estimated: "4h"
+    tasks:
+      - id: "22.2-T1"
+        name: "Query catálogo de serviços"
+        file: "src/features/evolutions/components/SessionEvolutionModal.tsx"
+        checklist:
+          - "Busca mod_catalog_items active=true, type='service'"
+          - "Carrega apenas quando showExtraForm = true"
+          - "Preenche duração com metadata.duration_min do item selecionado"
+          - "Exibe hint 'Avulso: R$ X,XX'"
+
+      - id: "22.2-T2"
+        name: "Query pacotes ativos + itens do pacote"
+        file: "src/features/evolutions/components/SessionEvolutionModal.tsx"
+        checklist:
+          - "Busca mod_sales_packages pet_id=petId, status='ativo'"
+          - "Ao selecionar pacote: carrega mod_sales_package_items"
+          - "Exibe nome + preco_unitario nos itens"
+          - "Itens esgotados (qtd_usada >= qtd_total) aparecem disabled"
+          - "Hint 'No pacote: R$ X,XX (avulso: R$ Y,YY)'"
+
+      - id: "22.2-T3+T4"
+        name: "Estado e handler handleAddExtra()"
+        file: "src/features/evolutions/components/SessionEvolutionModal.tsx"
+        checklist:
+          - "Estados: showExtraForm, extraCatalogItemId, extraServicoNome, extraDuracao, extraPacoteId, extraSalesPackageItemId"
+          - "handleAddExtra() chama adicionarServicoExtra() sem usuario_id/tutor_id"
+          - "Após sucesso: refreshSessionAppointments() + setSelectedServiceIds inclui novo ID"
+          - "Loading spinner no botão Adicionar"
+          - "Erro inline no mini-form (não sobrescreve erro global)"
+
+      - id: "22.2-T5"
+        name: "UI mini-form inline"
+        file: "src/features/evolutions/components/SessionEvolutionModal.tsx"
+        checklist:
+          - "Botão '+ Serviço Extra' no final da grade"
+          - "Mini-form aparece inline (não abre novo modal)"
+          - "Select serviço → select pacote (opcional) → select item do pacote (condicional)"
+          - "Botão Cancelar fecha sem salvar"
+          - "Botão Adicionar disabled se nenhum serviço selecionado"
+
+      - id: "22.2-T6"
+        name: "refreshSessionAppointments no hook"
+        file: "src/features/evolutions/hooks/useSessionEvolution.ts"
+        checklist:
+          - "Função refreshSessionAppointments() exposta no retorno do hook"
+          - "Chama getSessionAppointments e atualiza estado local"
+
+      - id: "22.2-T7"
+        name: "Cleanup props desnecessárias"
+        file: "src/features/evolutions/components/SessionEvolutionModal.tsx"
+        checklist:
+          - "tutorId e usuarioId NÃO adicionados às props do modal"
+          - "Chamadores do modal não precisam passar essas props"
+
+    gate:
+      agent: "@qa"
+      story: "22.2"
+      verdict_required: "PASS"
+      checks:
+        - "Botão '+ Serviço Extra' visível"
+        - "Adicionar serviço avulso: aparece na grade marcado"
+        - "Adicionar serviço com pacote: qtd_usada incrementado"
+        - "Erro inline quando falha"
+        - "Não aparece quando evolução já foi salva"
+        - "Build e typecheck passam"
+
+  # ═══════════════════════════════════════════════
+  # FASE 3 — DEPLOY
+  # (após QA PASS em ambas stories)
+  # ═══════════════════════════════════════════════
+  - id: phase-3-deploy
+    name: "Deploy — Push + PR"
+    depends_on: "phase-2-frontend.gate == PASS"
+    agent: "@devops"
+    tasks:
+      - "git push origin main (ou feature branch)"
+      - "gh pr create com descrição do Epic 22"
+      - "Verificar CI/CD pass"
+      - "Merge após aprovação"
+
+execution_rules:
+  - "Phase 0 é BLOQUEANTE — não iniciar T2 sem confirmar o trigger"
+  - "Streams database e typescript da Fase 1 podem rodar em paralelo"
+  - "Fase 2 só inicia após gate QA PASS da Fase 1"
+  - "Fase 3 só inicia após gate QA PASS da Fase 2"
+  - "@devops é o ÚNICO que faz git push e gh pr create"

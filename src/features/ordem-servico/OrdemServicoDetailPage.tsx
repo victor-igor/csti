@@ -4,14 +4,15 @@ import { Loader2, Phone, ArrowRight } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { InfoCard } from '@/components/molecules/InfoCard'
+import { InfoRow } from '@/components/molecules/InfoRow'
 import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StickyActionBar } from '@/components/atoms/StickyActionBar'
 import { StatusTimeline } from '@/components/organisms/StatusTimeline'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
-import { UserCard } from '@/components/molecules/UserCard'
 import { useGetOrdemServico, useUpdateStatusOS, getProximoStatus } from './useOrdemServico'
 import type { OSStatus } from '@/types/domain'
 
@@ -49,53 +50,68 @@ export default function OrdemServicoDetailPage() {
   const proximoStatus = getProximoStatus(data.status as OSStatus)
   const labelTransicao = LABELS_TRANSICAO[data.status as OSStatus]
   const contraparte = isPrestador ? data.cliente : data.prestador
-  const contraparteRole = isPrestador ? 'Cliente' : (data.prestador?.especialidade ?? 'Prestador')
 
   return (
     <div className="p-6 max-w-5xl">
       <div className="mb-4"><BackButton to="/ordens-servico" /></div>
       <PageHeader title={data.numero} />
 
-      <div className="mt-2 flex flex-wrap gap-2">
-        {data.solicitacao_id && (
-          <Link
-            to={isPrestador ? `/prestador/solicitacoes/${data.solicitacao_id}` : `/solicitacoes/${data.solicitacao_id}`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-          >
-            Ver Solicitação <ArrowRight className="h-3 w-3" />
-          </Link>
-        )}
-        {data.orcamento_id && (
-          <Link
-            to={isPrestador ? `/prestador/orcamentos/${data.orcamento_id}` : `/orcamentos/${data.orcamento_id}/revisar`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-          >
-            Ver Orçamento <ArrowRight className="h-3 w-3" />
-          </Link>
-        )}
-      </div>
-
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <InfoCard label="Status" value={<StatusBadge status={data.status} />} />
+        <InfoCard label="Criado em" value={new Date(data.created_at).toLocaleDateString('pt-BR')} />
         <InfoCard label="Início" value={formatDate(data.data_inicio)} />
         <InfoCard label="Conclusão" value={formatDate(data.data_conclusao)} />
+        {data.solicitacao_id && (
+          <InfoCard
+            label="Solicitação"
+            value={
+              <Link
+                to={isPrestador ? `/prestador/solicitacoes/${data.solicitacao_id}` : `/solicitacoes/${data.solicitacao_id}`}
+                className="inline-flex items-center gap-1 font-medium text-primary hover:underline text-sm"
+              >
+                Ver <ArrowRight className="h-3 w-3" />
+              </Link>
+            }
+          />
+        )}
+        {data.orcamento_id && (
+          <InfoCard
+            label="Orçamento"
+            value={
+              <Link
+                to={isPrestador ? `/prestador/orcamentos/${data.orcamento_id}` : `/orcamentos/${data.orcamento_id}/revisar`}
+                className="inline-flex items-center gap-1 font-medium text-primary hover:underline text-sm"
+              >
+                Ver <ArrowRight className="h-3 w-3" />
+              </Link>
+            }
+          />
+        )}
       </div>
 
       {contraparte && (
-        <div className="mt-6 rounded-md border border-border p-4">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="mt-6 rounded-md border border-border bg-card p-4">
+          <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             {isPrestador ? 'Cliente' : 'Prestador'}
           </p>
-          <UserCard name={contraparte.nome ?? ''} role={contraparteRole} />
-          {contraparte.telefone && (
-            <a
-              href={`tel:${contraparte.telefone}`}
-              className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline"
-            >
-              <Phone className="h-4 w-4" />
-              {contraparte.telefone}
-            </a>
+          <InfoRow label="Nome" value={contraparte.nome ?? '—'} />
+          {!isPrestador && data.prestador?.especialidade && (
+            <InfoRow label="Especialidade" value={data.prestador.especialidade} />
           )}
+          <InfoRow
+            label="Telefone"
+            value={contraparte.telefone ?? '—'}
+            action={
+              contraparte.telefone ? (
+                <a
+                  href={`tel:${contraparte.telefone}`}
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                  <Phone className="h-3 w-3" /> Ligar
+                </a>
+              ) : undefined
+            }
+          />
         </div>
       )}
 
@@ -107,15 +123,20 @@ export default function OrdemServicoDetailPage() {
       )}
 
       {isPrestador && proximoStatus && labelTransicao && (
-        <div className="mt-6">
-          <Button
-            disabled={isPending}
-            onClick={() => setConfirmOpen(true)}
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" />}
-            {labelTransicao}
-          </Button>
-        </div>
+        <>
+          <div className="mt-6 hidden md:flex">
+            <Button disabled={isPending} onClick={() => setConfirmOpen(true)}>
+              {isPending && <Loader2 className="size-4 animate-spin" />}
+              {labelTransicao}
+            </Button>
+          </div>
+          <StickyActionBar className="bottom-16">
+            <Button className="flex-1" disabled={isPending} onClick={() => setConfirmOpen(true)}>
+              {isPending && <Loader2 className="size-4 animate-spin" />}
+              {labelTransicao}
+            </Button>
+          </StickyActionBar>
+        </>
       )}
 
       <ConfirmDialog

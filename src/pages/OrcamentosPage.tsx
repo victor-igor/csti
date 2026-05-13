@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import {
   useListOrcamentosPrestador,
   useListOrcamentosCliente,
+  type IOrcamentoComTotal,
 } from '@/features/orcamento/useOrcamento'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { FilterBar } from '@/components/molecules/FilterBar'
@@ -12,7 +13,6 @@ import { OrcamentoCard } from '@/components/organisms/OrcamentoCard'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { EmptyState } from '@/components/atoms/EmptyState'
 import { ErrorState } from '@/components/atoms/ErrorState'
-import type { IOrcamento } from '@/types/domain'
 
 const CLIENTE_STATUS_FILTERS = [
   { label: 'Todos',    value: '' },
@@ -40,7 +40,7 @@ function OrcamentosList({
   emptyDescription,
   statusFilters,
 }: {
-  data: IOrcamento[]
+  data: IOrcamentoComTotal[]
   isLoading: boolean
   isError: boolean
   refetch: () => void
@@ -79,14 +79,20 @@ function OrcamentosList({
       )}
 
       {!isLoading && !isError && filtered.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtered.map(orc => (
-            <OrcamentoCard
-              key={orc.id}
-              orcamento={orc}
-              onClick={() => navigate(getPath(orc.id))}
-            />
-          ))}
+        <div className="grid grid-cols-1 gap-3">
+          {filtered.map(orc => {
+            const valorTotal = orc.itens_orcamento?.reduce(
+              (sum, i) => sum + (i.quantidade ?? 0) * (i.valor_unitario ?? 0), 0
+            ) ?? null
+            return (
+              <OrcamentoCard
+                key={orc.id}
+                orcamento={orc}
+                valorTotal={valorTotal}
+                onClick={() => navigate(getPath(orc.id))}
+              />
+            )
+          })}
         </div>
       )}
     </div>
@@ -97,7 +103,7 @@ function OrcamentosCliente() {
   const { data = [], isLoading, isError, refetch } = useListOrcamentosCliente()
   return (
     <OrcamentosList
-      data={data as IOrcamento[]}
+      data={data}
       isLoading={isLoading}
       isError={isError}
       refetch={refetch}
@@ -129,8 +135,11 @@ export default function OrcamentosPage() {
   const role = useAuthStore((s) => s.profile?.role)
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader title="Orçamentos" />
+    <div className="p-6 max-w-5xl space-y-6">
+      <PageHeader
+        title="Orçamentos"
+        subtitle={role === 'cliente' ? 'Orçamentos recebidos dos prestadores' : 'Orçamentos criados para seus clientes'}
+      />
       {role === 'cliente' ? <OrcamentosCliente /> : <OrcamentosPrestador />}
     </div>
   )

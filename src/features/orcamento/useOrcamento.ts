@@ -8,6 +8,9 @@ import type { IOrcamento, IItemOrcamento } from '@/types/domain'
 import type { CreateOrcamentoFormData } from './orcamentoSchemas'
 
 export type IOrcamentoComItens = IOrcamento & { itens_orcamento: IItemOrcamento[] }
+export type IOrcamentoComTotal = IOrcamento & {
+  itens_orcamento: Pick<IItemOrcamento, 'valor_unitario' | 'quantidade'>[]
+}
 
 export function useAprovarOrcamento() {
   const queryClient = useQueryClient()
@@ -224,11 +227,11 @@ export function useListOrcamentosPrestador() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orcamentos')
-        .select('*')
+        .select('*, itens_orcamento(valor_unitario, quantidade)')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
       if (error) throw error
-      return data as IOrcamento[]
+      return data as IOrcamentoComTotal[]
     },
   })
 }
@@ -237,15 +240,14 @@ export function useListOrcamentosCliente() {
   return useQuery({
     queryKey: ['orcamentos', 'cliente'],
     queryFn: async () => {
-      // join com solicitacoes_orcamento via FK orcamentos_solicitacao_id_fkey
       const { data, error } = await supabase
         .from('orcamentos')
-        .select('*, solicitacoes_orcamento(numero, titulo)')
+        .select('*, solicitacoes_orcamento(numero, titulo), itens_orcamento(valor_unitario, quantidade)')
         .is('deleted_at', null)
         .in('status', ['enviado', 'aceito', 'recusado'])
         .order('created_at', { ascending: false })
       if (error) throw error
-      return data as (IOrcamento & { solicitacoes_orcamento: { numero: string; titulo: string } | null })[]
+      return data as (IOrcamentoComTotal & { solicitacoes_orcamento: { numero: string; titulo: string } | null })[]
     },
   })
 }

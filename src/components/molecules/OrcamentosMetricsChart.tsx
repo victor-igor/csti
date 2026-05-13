@@ -4,10 +4,11 @@ import { calcApprovalRate } from '@/lib/metricsUtils'
 import type { MonthMetric } from '@/lib/metricsUtils'
 
 interface OrcamentosMetricsChartProps {
-  data: MonthMetric[]
+  data: MonthMetric[] | undefined
 }
 
 export function OrcamentosMetricsChart({ data }: OrcamentosMetricsChartProps) {
+  if (!data) return null
   const { rate, delta } = calcApprovalRate(data)
 
   const TrendIcon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus
