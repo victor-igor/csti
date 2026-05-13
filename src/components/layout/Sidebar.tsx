@@ -64,7 +64,7 @@ export function Sidebar() {
         ) : (
           <div className="flex flex-col items-center gap-2">
             <img
-              src="/logoiconroxo.png"
+              src="/iconefundo%20roxo.png"
               alt="OrçaFácil"
               className="h-10 w-10 object-cover rounded-lg"
             />
