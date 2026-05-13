@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/hooks/useSidebar'
-import { NAV_LINKS } from './navLinks'
+import { useNavLinks } from './useNavLinks'
 
 export function MobileDrawer() {
   const { isDrawerOpen, closeDrawer } = useSidebar()
+  const navLinks = useNavLinks()
   const { pathname } = useLocation()
 
   function isActive(href: string) {
@@ -35,7 +36,7 @@ export function MobileDrawer() {
         </div>
 
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-          {NAV_LINKS.map(({ label, href, icon: Icon }) => (
+          {navLinks.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
               to={href}

@@ -40,7 +40,8 @@ export default function OrcamentoFormPage() {
     reset,
     formState: { errors },
   } = useForm<CreateOrcamentoFormData, unknown, CreateOrcamentoFormData>({
-    resolver: zodResolver(CreateOrcamentoSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(CreateOrcamentoSchema) as any,
     defaultValues: {
       solicitacao_id: solicitacaoId,
       prazo_dias: '' as unknown as number,
