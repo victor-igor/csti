@@ -227,7 +227,8 @@ function PrestadorDashboard() {
           .eq('status', 'aguardando_orcamento')
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
-          .limit(5),
+          .limit(5)
+          .returns<{ id: string; numero: string; titulo: string; categoria: string | null; urgencia: string | null }[]>(),
         supabase
           .from('orcamentos')
           .select('id, numero, created_at')

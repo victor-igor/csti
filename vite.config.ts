@@ -14,12 +14,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react':    ['react', 'react-dom', 'react-router-dom'],
-          'vendor-query':    ['@tanstack/react-query', '@tanstack/react-query-persist-client', '@tanstack/query-sync-storage-persister'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-ui':       ['lucide-react', '@base-ui/react', '@radix-ui/react-dropdown-menu'],
-          'vendor-forms':    ['react-hook-form', '@hookform/resolvers', 'zod'],
+        manualChunks(id) {
+          if (['react', 'react-dom', 'react-router-dom'].some(p => id.includes(`/node_modules/${p}/`))) return 'vendor-react'
+          if (['@tanstack/react-query', '@tanstack/react-query-persist-client', '@tanstack/query-sync-storage-persister'].some(p => id.includes(`/node_modules/${p}/`))) return 'vendor-query'
+          if (id.includes('/node_modules/@supabase/')) return 'vendor-supabase'
+          if (['lucide-react', '@base-ui/react', '@radix-ui/react-dropdown-menu'].some(p => id.includes(`/node_modules/${p}/`))) return 'vendor-ui'
+          if (['react-hook-form', '@hookform/resolvers', 'zod'].some(p => id.includes(`/node_modules/${p}/`))) return 'vendor-forms'
         },
       },
     },

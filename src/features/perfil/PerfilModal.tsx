@@ -8,7 +8,7 @@ import { Dialog } from '@base-ui/react'
 import { Button } from '@/components/ui/button'
 import { PhoneInput } from '@/components/molecules/PhoneInput'
 import { InfoRow } from '@/components/molecules/InfoRow'
-import { parseStoredPhone, buildStoredPhone } from '@/lib/phoneUtils'
+import { parseStoredPhone } from '@/lib/phoneUtils'
 import { parseApiError } from '@/lib/errorUtils'
 import { useAuthStore } from '@/store/authStore'
 import { useGetPerfil, useUpdatePerfil } from '@/features/perfil/usePerfil'
@@ -47,7 +47,7 @@ function PerfilTab() {
   const roleLabel = activeProfile?.role ? ROLE_LABEL[activeProfile.role as Role] : ''
   const initials = activeProfile?.nome?.charAt(0).toUpperCase() ?? '?'
 
-  const { control, handleSubmit, reset, watch } = useForm<PerfilFormData>({
+  const { control, handleSubmit, reset } = useForm<PerfilFormData>({
     resolver: zodResolver(PerfilSchema),
     defaultValues: { nome: '', phoneDial: '+55', phoneNumber: '', especialidade: '' },
   })
@@ -80,8 +80,6 @@ function PerfilTab() {
     reset({ nome: activeProfile?.nome ?? '', phoneDial: parsed.dial, phoneNumber: parsed.number, especialidade: activeProfile?.especialidade ?? '' })
     setIsEditing(false)
   }
-
-  const selectedDial = watch('phoneDial')
 
   if (isEditing) {
     return (

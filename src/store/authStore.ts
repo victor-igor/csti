@@ -35,12 +35,9 @@ supabase.auth.onAuthStateChange((event, session) => {
     track('session_ready', { event })
 
     const profileStart = performance.now()
-    void supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data, error }) => {
+    void Promise.resolve(
+      supabase.from('profiles').select('*').eq('id', session.user.id).single()
+    ).then(({ data, error }) => {
         if (error) {
           console.error('[authStore] profile fetch failed:', error.message, error.code)
           trackError('profile_load_failed', error, { code: error.code })
