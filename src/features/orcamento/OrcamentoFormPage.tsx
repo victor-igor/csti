@@ -193,7 +193,7 @@ export default function OrcamentoFormPage() {
 
             {/* Header de colunas — só em desktop */}
             {fields.length > 0 && (
-              <div className="hidden md:grid grid-cols-[3fr_2fr_2fr_auto] gap-4 px-1 items-center mb-1">
+              <div className="hidden md:grid grid-cols-[2.5fr_2fr_2.5fr_auto] gap-4 px-1 items-center mb-1">
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Descrição do Item / Serviço</span>
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Tipo de Despesa</span>
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Valor Cobrado</span>
@@ -213,7 +213,7 @@ export default function OrcamentoFormPage() {
                 const isServico = tipoAtual === 'servico'
 
                 return (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_auto] gap-4 items-start rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 shadow-sm hover:border-neutral-300 transition-colors">
+                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2.5fr_2fr_2.5fr_auto] gap-4 items-start rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 shadow-sm hover:border-neutral-300 transition-colors">
                     <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-neutral-400">
                       Item #{index + 1}
                     </span>
