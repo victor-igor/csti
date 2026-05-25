@@ -13,7 +13,8 @@ import { EmptyState } from '@/components/atoms/EmptyState'
 import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import type { IProfile, Role } from '@/types/domain'
-import { formatDisplayPhone } from '@/lib/phoneUtils'
+import { formatDisplayPhone, parseStoredPhone, buildStoredPhone } from '@/lib/phoneUtils'
+import { PhoneInput } from '@/components/molecules/PhoneInput'
 
 const ROLE_FILTERS = [
   { label: 'Todos', value: '' },
@@ -401,7 +402,9 @@ interface EditUserFormProps {
 function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps) {
   const [nome, setNome] = useState(user.nome)
   const [role, setRole] = useState<Role>(user.role as Role)
-  const [telefone, setTelefone] = useState(user.telefone ? formatDisplayPhone(user.telefone) : '')
+  const parsedPhone = parseStoredPhone(user.telefone)
+  const [phoneDial, setPhoneDial] = useState(parsedPhone.dial)
+  const [phoneNumber, setPhoneNumber] = useState(parsedPhone.number)
   const [especialidade, setEspecialidade] = useState(user.especialidade ?? '')
 
   const inputCls =
@@ -416,7 +419,7 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
     onSubmit({
       nome,
       role,
-      telefone: telefone.trim() ? telefone.replace(/\D/g, '') : null,
+      telefone: buildStoredPhone(phoneDial, phoneNumber),
       especialidade: role === 'prestador' ? especialidade.trim() || null : null,
     })
   }
@@ -449,12 +452,12 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
 
       <div>
         <label className="block text-xs font-medium text-neutral-500 mb-1">Telefone (opcional)</label>
-        <input
-          type="text"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-          className={inputCls}
-          placeholder="+55 11 99999-9999"
+        <PhoneInput
+          dial={phoneDial}
+          number={phoneNumber}
+          onDialChange={setPhoneDial}
+          onNumberChange={setPhoneNumber}
+          disabled={isPending}
         />
       </div>
 
@@ -503,7 +506,8 @@ function CreateUserForm({ isPending, onCancel, onSubmit }: CreateUserFormProps) 
   const [senha, setSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
   const [role, setRole] = useState<Role>('cliente')
-  const [telefone, setTelefone] = useState('')
+  const [phoneDial, setPhoneDial] = useState('+55')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [especialidade, setEspecialidade] = useState('')
 
   const inputCls =
@@ -532,7 +536,7 @@ function CreateUserForm({ isPending, onCancel, onSubmit }: CreateUserFormProps) 
       email,
       senha,
       role,
-      telefone: telefone.trim() ? telefone.replace(/\D/g, '') : null,
+      telefone: buildStoredPhone(phoneDial, phoneNumber),
       especialidade: role === 'prestador' ? especialidade.trim() || null : null,
     })
   }
@@ -604,12 +608,12 @@ function CreateUserForm({ isPending, onCancel, onSubmit }: CreateUserFormProps) 
 
       <div>
         <label className="block text-xs font-medium text-neutral-500 mb-1">Telefone (opcional)</label>
-        <input
-          type="text"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-          className={inputCls}
-          placeholder="+55 11 99999-9999"
+        <PhoneInput
+          dial={phoneDial}
+          number={phoneNumber}
+          onDialChange={setPhoneDial}
+          onNumberChange={setPhoneNumber}
+          disabled={isPending}
         />
       </div>
 
