@@ -15,6 +15,7 @@ import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { Button } from '@/components/ui/button'
 import { StickyActionBar } from '@/components/atoms/StickyActionBar'
+import { TimelineMensagens } from './components/TimelineMensagens'
 
 export default function SolicitacaoDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -84,10 +85,15 @@ export default function SolicitacaoDetailPage() {
 
           {historico.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">Histórico</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Histórico de Status</h3>
               <StatusTimeline historico={historico} />
             </div>
           )}
+
+          {/* Timeline de Mensagens / Chat */}
+          <div className="pt-2">
+            <TimelineMensagens solicitacaoId={solicitacao.id} />
+          </div>
         </div>
 
         {/* Coluna lateral */}

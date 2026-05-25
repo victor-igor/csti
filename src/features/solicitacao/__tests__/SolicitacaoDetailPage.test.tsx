@@ -22,6 +22,30 @@ vi.mock('@/lib/supabase', () => ({
   supabase: mockSupabase,
 }))
 
+// Mock do window.HTMLElement.prototype.scrollIntoView que não existe no jsdom
+window.HTMLElement.prototype.scrollIntoView = vi.fn()
+
+vi.mock('../useSolicitacao', () => ({
+  useGetSolicitacao: () => ({
+    data: mockSolicitacao,
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+  useCancelSolicitacao: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+  useListMensagensSolicitacao: () => ({
+    data: [],
+    isLoading: false,
+  }),
+  useEnviarMensagemSolicitacao: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+}))
+
 const mockSolicitacao = {
   id: 'sol-1',
   numero: 'SOL-2026-0001',
@@ -53,16 +77,10 @@ function renderPage() {
 
 describe('SolicitacaoDetailPage', () => {
   it('exibe link "Ver Orçamento" apontando para o orçamento específico quando status é orcamento_enviado', async () => {
-    // Setup chain: from().select().eq().is().single()
     mockSupabase.from.mockReturnThis()
     mockSupabase.select.mockReturnThis()
     mockSupabase.eq.mockReturnThis()
     mockSupabase.is.mockReturnThis()
-    mockSupabase.order.mockReturnThis()
-    mockSupabase.maybeSingle.mockReturnThis()
-
-    // First call uses maybeSingle (fetch solicitacao), second call uses single (fetch orcamento)
-    mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockSolicitacao, error: null })
     mockSupabase.single.mockResolvedValueOnce({ data: mockOrcamento, error: null })
 
     renderPage()

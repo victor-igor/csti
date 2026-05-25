@@ -53,6 +53,45 @@ export type Database = {
           },
         ]
       }
+      mensagens_solicitacao: {
+        Row: {
+          created_at: string
+          id: string
+          mensagem: string
+          solicitacao_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mensagem: string
+          solicitacao_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mensagem?: string
+          solicitacao_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_solicitacao_solicitacao_id_fkey"
+            columns: ["solicitacao_id"]
+            isOneToOne: false
+            referencedRelation: "solicitacoes_orcamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensagens_solicitacao_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       notificacoes: {
         Row: {
           created_at: string

@@ -137,3 +137,50 @@ export function useCancelSolicitacao() {
     },
   })
 }
+
+export function useListMensagensSolicitacao(solicitacaoId: string) {
+  return useQuery({
+    queryKey: ['solicitacao-mensagens', solicitacaoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mensagens_solicitacao')
+        .select('*, profiles!usuario_id(nome, role)')
+        .eq('solicitacao_id', solicitacaoId)
+        .order('created_at', { ascending: true })
+      if (error) throw error
+      return data as any[]
+    },
+    enabled: !!solicitacaoId,
+  })
+}
+
+export function useEnviarMensagemSolicitacao() {
+  const queryClient = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: async ({
+      solicitacaoId,
+      mensagem,
+    }: {
+      solicitacaoId: string
+      mensagem: string
+    }) => {
+      if (!user) throw new Error('Usuário não autenticado')
+      const { error } = await supabase
+        .from('mensagens_solicitacao')
+        .insert({
+          solicitacao_id: solicitacaoId,
+          usuario_id: user.id,
+          mensagem: mensagem.trim(),
+        })
+      if (error) throw error
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['solicitacao-mensagens', vars.solicitacaoId] })
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao enviar mensagem')
+    },
+  })
+}

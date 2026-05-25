@@ -38,3 +38,10 @@ export interface IItemOrcamento extends Tables<'itens_orcamento'> {
 export type IOrdemServico = Tables<'ordens_servico'>
 
 export type INotificacao = Tables<'notificacoes'>
+
+export type IMensagemSolicitacao = Tables<'mensagens_solicitacao'> & {
+  profiles?: {
+    nome: string
+    role: Role
+  } | null
+}
