@@ -56,6 +56,7 @@ const itens: IItemOrcamento[] = [
     quantidade: 2,
     valor_unitario: 150,
     valor_total: 300,
+    tipo: 'servico',
     created_at: '2026-01-01T00:00:00Z',
   },
 ]
@@ -85,6 +86,8 @@ describe('generateOrcamentoPdf', () => {
 
   it("nao adiciona marca dagua para status=aceito", () => {
     generateOrcamentoPdf(baseOrcamento, itens, prestador)
-    expect(mocks.setTextColor).not.toHaveBeenCalled()
+    // O mock setTextColor é chamado para cinza (100,100,100) e preto (0,0,0) nos subtotais/total,
+    // mas não deve ser chamado com vermelho (220,50,50) da marca d'água.
+    expect(mocks.setTextColor).not.toHaveBeenCalledWith(220, 50, 50)
   })
 })

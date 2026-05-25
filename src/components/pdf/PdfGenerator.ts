@@ -52,22 +52,59 @@ export function generateOrcamentoPdf(
   // Table rows
   doc.setFont('helvetica', 'normal')
   let totalGeral = 0
+  let servicoTotal = 0
+  let produtoTotal = 0
+  let outrosTotal = 0
+
   for (const item of itens) {
     const total = (item.quantidade ?? 0) * (item.valor_unitario ?? 0)
     totalGeral += total
-    doc.text(item.descricao ?? '', 14, y)
+
+    const tipo = (item as any).tipo || 'servico'
+    if (tipo === 'produto') produtoTotal += total
+    else if (tipo === 'outros') outrosTotal += total
+    else servicoTotal += total
+
+    const tipoLabel = tipo === 'produto' ? 'Peça' : tipo === 'outros' ? 'Outro' : 'Serviço'
+    const descText = `${item.descricao ?? ''} (${tipoLabel})`
+
+    doc.text(descText, 14, y)
     doc.text(String(item.quantidade ?? 0), 110, y)
     doc.text(formatter.format(item.valor_unitario ?? 0), 130, y)
     doc.text(formatter.format(total), 165, y)
     y += 7
   }
 
-  // Total line
+  // Summary sections
   y += 2
   doc.line(14, y, pageWidth - 14, y)
   y += 6
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(100, 100, 100)
+  
+  if (servicoTotal > 0) {
+    doc.text('Subtotal Mão de Obra:', 120, y)
+    doc.text(formatter.format(servicoTotal), 165, y)
+    y += 5
+  }
+  if (produtoTotal > 0) {
+    doc.text('Subtotal Peças / Produtos:', 120, y)
+    doc.text(formatter.format(produtoTotal), 165, y)
+    y += 5
+  }
+  if (outrosTotal > 0) {
+    doc.text('Subtotal Deslocamento / Outros:', 120, y)
+    doc.text(formatter.format(outrosTotal), 165, y)
+    y += 5
+  }
+
+  y += 2
   doc.setFont('helvetica', 'bold')
-  doc.text('Total Geral:', 130, y)
+  doc.setFontSize(10)
+  doc.setTextColor(0, 0, 0)
+  doc.text('Total Geral:', 120, y)
   doc.text(formatter.format(totalGeral), 165, y)
 
   // Watermark for status=enviado

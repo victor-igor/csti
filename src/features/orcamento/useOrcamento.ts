@@ -107,6 +107,7 @@ export function useCreateOrcamento() {
         descricao: item.descricao,
         quantidade: item.quantidade,
         valor_unitario: item.valor_unitario,
+        tipo: item.tipo,
       }))
       const { error: itensErr } = await supabase.from('itens_orcamento').insert(itens)
       if (itensErr) throw itensErr
@@ -152,6 +153,7 @@ export function useUpdateOrcamento(orcamentoId: string) {
         descricao: i.descricao,
         quantidade: i.quantidade,
         valor_unitario: i.valor_unitario,
+        tipo: i.tipo,
       }))
       const { error: errIns } = await supabase
         .from('itens_orcamento')

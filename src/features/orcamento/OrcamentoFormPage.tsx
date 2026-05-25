@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { FormField } from '@/components/molecules/FormField'
 import { TextareaField } from '@/components/molecules/TextareaField'
-import { TotalSummary } from '@/components/molecules/TotalSummary'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
@@ -46,17 +45,27 @@ export default function OrcamentoFormPage() {
       solicitacao_id: solicitacaoId,
       prazo_dias: '' as unknown as number,
       observacoes: '',
-      itens: [{ descricao: '', quantidade: 1, valor_unitario: 0 }],
+      itens: [{ descricao: '', quantidade: 1, valor_unitario: 0, tipo: 'servico' }],
     },
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'itens' })
   const watchedItens = useWatch({ control, name: 'itens' })
 
-  const total = (watchedItens ?? []).reduce(
-    (sum, item) => sum + (item.quantidade ?? 0) * (item.valor_unitario ?? 0),
+  // Agrupamentos de custos por tipo de item
+  const servicoTotal = (watchedItens ?? []).reduce(
+    (sum, item) => sum + (item.tipo === 'servico' ? (item.quantidade ?? 0) * (item.valor_unitario ?? 0) : 0),
     0,
   )
+  const produtoTotal = (watchedItens ?? []).reduce(
+    (sum, item) => sum + (item.tipo === 'produto' ? (item.quantidade ?? 0) * (item.valor_unitario ?? 0) : 0),
+    0,
+  )
+  const outrosTotal = (watchedItens ?? []).reduce(
+    (sum, item) => sum + (item.tipo === 'outros' ? (item.quantidade ?? 0) * (item.valor_unitario ?? 0) : 0),
+    0,
+  )
+  const total = servicoTotal + produtoTotal + outrosTotal
 
   useEffect(() => {
     if (isEditMode && orcamentoExistente) {
@@ -68,6 +77,7 @@ export default function OrcamentoFormPage() {
           descricao: i.descricao,
           quantidade: i.quantidade,
           valor_unitario: i.valor_unitario,
+          tipo: i.tipo as 'servico' | 'produto' | 'outros',
         })),
       })
     }
@@ -161,7 +171,7 @@ export default function OrcamentoFormPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => append({ descricao: '', quantidade: 1, valor_unitario: 0 })}
+                onClick={() => append({ descricao: '', quantidade: 1, valor_unitario: 0, tipo: 'servico' })}
               >
                 <Plus className="size-4" />
                 Adicionar Item
@@ -177,8 +187,9 @@ export default function OrcamentoFormPage() {
 
             {/* Header de colunas — só em desktop */}
             {fields.length > 0 && (
-              <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_auto] gap-2 px-1">
+              <div className="hidden md:grid grid-cols-[1.5fr_1.2fr_0.8fr_1fr_auto] gap-2 px-1">
                 <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Descrição</span>
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Tipo</span>
                 <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Qtd</span>
                 <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Unit. (R$)</span>
                 <span />
@@ -193,7 +204,7 @@ export default function OrcamentoFormPage() {
 
             <div className="space-y-2">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-2 items-start rounded-md border border-border p-2">
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1.5fr_1.2fr_0.8fr_1fr_auto] gap-2 items-start rounded-md border border-border p-2">
                   <span className="md:hidden text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                     Item #{index + 1}
                   </span>
@@ -203,6 +214,16 @@ export default function OrcamentoFormPage() {
                     label=""
                     placeholder="Ex: Troca de HD"
                   />
+                  <div className="flex flex-col gap-1">
+                    <select
+                      {...register(`itens.${index}.tipo`)}
+                      className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px] bg-white"
+                    >
+                      <option value="servico">Mão de obra</option>
+                      <option value="produto">Peça / Produto</option>
+                      <option value="outros">Outros / Deslocamento</option>
+                    </select>
+                  </div>
                   <FormField<CreateOrcamentoFormData>
                     name={`itens.${index}.quantidade`}
                     control={control}
@@ -237,7 +258,24 @@ export default function OrcamentoFormPage() {
 
         {/* Coluna direita sticky */}
         <div className="lg:sticky lg:top-20 space-y-3">
-          <TotalSummary subtotal={total} total={total} />
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 space-y-2.5">
+            <div className="flex justify-between text-xs text-neutral-500">
+              <span>Mão de Obra</span>
+              <CurrencyDisplay value={servicoTotal} />
+            </div>
+            <div className="flex justify-between text-xs text-neutral-500">
+              <span>Peças & Materiais</span>
+              <CurrencyDisplay value={produtoTotal} />
+            </div>
+            <div className="flex justify-between text-xs text-neutral-500">
+              <span>Outros / Deslocamento</span>
+              <CurrencyDisplay value={outrosTotal} />
+            </div>
+            <div className="border-t border-neutral-200 pt-2 flex justify-between text-sm font-semibold text-neutral-800">
+              <span>Total</span>
+              <CurrencyDisplay value={total} />
+            </div>
+          </div>
 
           <Button
             type="button"

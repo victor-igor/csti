@@ -19,6 +19,7 @@ export type Database = {
           id: string
           orcamento_id: string
           quantidade: number
+          tipo: Database["public"]["Enums"]["tipo_item_enum"]
           valor_total: number | null
           valor_unitario: number
         }
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           orcamento_id: string
           quantidade: number
+          tipo?: Database["public"]["Enums"]["tipo_item_enum"]
           valor_total?: number | null
           valor_unitario: number
         }
@@ -37,6 +39,7 @@ export type Database = {
           id?: string
           orcamento_id?: string
           quantidade?: number
+          tipo?: Database["public"]["Enums"]["tipo_item_enum"]
           valor_total?: number | null
           valor_unitario?: number
         }
@@ -380,6 +383,7 @@ export type Database = {
       gerar_numero_solicitacao: { Args: never; Returns: string }
     }
     Enums: {
+      tipo_item_enum: "servico" | "produto" | "outros"
       orcamento_status_enum: "rascunho" | "enviado" | "aceito" | "recusado"
       os_status_enum: "aberta" | "em_andamento" | "concluida" | "cancelada"
       role_enum: "cliente" | "prestador" | "admin"

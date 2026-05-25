@@ -3,7 +3,6 @@ import { Loader2 } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { InfoCard } from '@/components/molecules/InfoCard'
-import { TotalSummary } from '@/components/molecules/TotalSummary'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
@@ -13,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { StickyActionBar } from '@/components/atoms/StickyActionBar'
 import { useAuthStore } from '@/store/authStore'
 import { useGetOrcamento, useEnviarOrcamento } from './useOrcamento'
+import { CurrencyDisplay } from '@/components/atoms/CurrencyDisplay'
 
 export default function OrcamentoDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -29,7 +29,21 @@ export default function OrcamentoDetailPage() {
   )
 
   const itens = data.itens_orcamento ?? []
-  const total = itens.reduce((sum, i) => sum + (i.quantidade ?? 0) * (i.valor_unitario ?? 0), 0)
+  
+  // Agrupamentos de custos por tipo de item
+  const servicoTotal = itens.reduce(
+    (sum, item) => sum + ((item as any).tipo === 'servico' ? (item.quantidade ?? 0) * (item.valor_unitario ?? 0) : 0),
+    0,
+  )
+  const produtoTotal = itens.reduce(
+    (sum, item) => sum + ((item as any).tipo === 'produto' ? (item.quantidade ?? 0) * (item.valor_unitario ?? 0) : 0),
+    0,
+  )
+  const outrosTotal = itens.reduce(
+    (sum, item) => sum + ((item as any).tipo === 'outros' ? (item.quantidade ?? 0) * (item.valor_unitario ?? 0) : 0),
+    0,
+  )
+  const total = servicoTotal + produtoTotal + outrosTotal
   const canDownload = data.status === 'enviado' || data.status === 'aceito'
 
   const prestador = {
@@ -60,16 +74,16 @@ export default function OrcamentoDetailPage() {
         />
         {(data as any).ordens_servico?.id && (
           <InfoCard
-            label="Ordem de Serviço"
-            value={
-              <button
-                className="text-primary hover:underline font-medium text-sm"
-                onClick={() => navigate(`/ordens-servico/${(data as any).ordens_servico.id}`)}
-              >
-                {(data as any).ordens_servico.numero}
-              </button>
-            }
-          />
+             label="Ordem de Serviço"
+             value={
+               <button
+                 className="text-primary hover:underline font-medium text-sm"
+                 onClick={() => navigate(`/ordens-servico/${(data as any).ordens_servico.id}`)}
+               >
+                 {(data as any).ordens_servico.numero}
+               </button>
+             }
+           />
         )}
       </div>
 
@@ -111,7 +125,24 @@ export default function OrcamentoDetailPage() {
       </div>
 
       <div className="mt-6">
-        <TotalSummary subtotal={total} total={total} />
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 space-y-2 max-w-sm ml-auto">
+          <div className="flex justify-between text-xs text-neutral-500">
+            <span>Mão de Obra</span>
+            <CurrencyDisplay value={servicoTotal} />
+          </div>
+          <div className="flex justify-between text-xs text-neutral-500">
+            <span>Peças & Materiais</span>
+            <CurrencyDisplay value={produtoTotal} />
+          </div>
+          <div className="flex justify-between text-xs text-neutral-500">
+            <span>Outros / Deslocamento</span>
+            <CurrencyDisplay value={outrosTotal} />
+          </div>
+          <div className="border-t border-neutral-200 pt-2 flex justify-between text-sm font-semibold text-neutral-800">
+            <span>Total</span>
+            <CurrencyDisplay value={total} />
+          </div>
+        </div>
       </div>
 
       {data.status === 'rascunho' && (
