@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { useForm, useFieldArray, useWatch } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Loader2, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
@@ -12,6 +12,12 @@ import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { CurrencyDisplay } from '@/components/atoms/CurrencyDisplay'
 import { useGetSolicitacao } from '@/features/solicitacao/useSolicitacao'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   CreateOrcamentoSchema,
   type CreateOrcamentoFormData,
@@ -223,14 +229,38 @@ export default function OrcamentoFormPage() {
 
                     {/* Tipo */}
                     <div className="w-full">
-                      <select
-                        {...register(`itens.${index}.tipo`)}
-                        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px] bg-white text-neutral-700 shadow-sm transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:0.65rem_auto] bg-[right_12px_center] bg-no-repeat pr-8"
-                      >
-                        <option value="servico">Mão de obra</option>
-                        <option value="produto">Peça / Produto</option>
-                        <option value="outros">Deslocamento / Taxa</option>
-                      </select>
+                      <Controller
+                        name={`itens.${index}.tipo`}
+                        control={control}
+                        render={({ field }) => {
+                          const labels: Record<string, string> = {
+                            servico: 'Mão de obra',
+                            produto: 'Peça / Produto',
+                            outros: 'Deslocamento / Taxa',
+                          }
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger className="w-full flex items-center justify-between rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px] bg-white text-neutral-700 shadow-sm transition-all cursor-pointer">
+                                <span>{labels[field.value] || 'Selecione'}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500 ml-2">
+                                  <path d="m6 9 6 6 6-6"/>
+                                </svg>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent className="w-48 bg-white border border-neutral-200 rounded-lg shadow-lg p-1 z-50">
+                                <DropdownMenuItem onClick={() => field.onChange('servico')} className="hover:bg-neutral-50 cursor-pointer rounded px-2 py-1.5 text-sm text-neutral-700">
+                                  Mão de obra
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => field.onChange('produto')} className="hover:bg-neutral-50 cursor-pointer rounded px-2 py-1.5 text-sm text-neutral-700">
+                                  Peça / Produto
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => field.onChange('outros')} className="hover:bg-neutral-50 cursor-pointer rounded px-2 py-1.5 text-sm text-neutral-700">
+                                  Deslocamento / Taxa
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )
+                        }}
+                      />
                     </div>
 
                     {/* Quantidade + Valor Unitário */}
