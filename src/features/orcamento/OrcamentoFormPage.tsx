@@ -235,7 +235,7 @@ export default function OrcamentoFormPage() {
 
                     {/* Quantidade + Valor Unitário */}
                     <div className="flex gap-2 items-center w-full">
-                      {!isServico ? (
+                      {tipoAtual === 'produto' ? (
                         <>
                           <div className="w-1/3 min-w-[60px]">
                             <FormField<CreateOrcamentoFormData>
@@ -262,7 +262,7 @@ export default function OrcamentoFormPage() {
                         </>
                       ) : (
                         <div className="w-full">
-                          {/* Campo hidden para submeter quantidade = 1 para mão de obra */}
+                          {/* Campo hidden para submeter quantidade = 1 para mão de obra ou deslocamento */}
                           <input type="hidden" value={1} {...register(`itens.${index}.quantidade`, { valueAsNumber: true })} />
                           <FormField<CreateOrcamentoFormData>
                             name={`itens.${index}.valor_unitario`}
@@ -271,7 +271,7 @@ export default function OrcamentoFormPage() {
                             type="number"
                             min={0.01}
                             step="0.01"
-                            placeholder="Valor total do serviço"
+                            placeholder={tipoAtual === 'servico' ? "Valor total do serviço" : "Valor do deslocamento / taxa"}
                             className="w-full"
                           />
                         </div>
