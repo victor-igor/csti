@@ -187,11 +187,10 @@ export default function OrcamentoFormPage() {
 
             {/* Header de colunas — só em desktop */}
             {fields.length > 0 && (
-              <div className="hidden md:grid grid-cols-[2fr_1.2fr_0.8fr_1.2fr_auto] gap-3 px-1 items-center mb-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Descrição</span>
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Tipo</span>
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Qtd</span>
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Valor Unitário</span>
+              <div className="hidden md:grid grid-cols-[3fr_2fr_2fr_auto] gap-4 px-1 items-center mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Descrição do Item / Serviço</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Tipo de Despesa</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Valor Cobrado</span>
                 <span />
               </div>
             )}
@@ -203,66 +202,99 @@ export default function OrcamentoFormPage() {
             )}
 
             <div className="space-y-3">
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1.2fr_0.8fr_1.2fr_auto] gap-3 items-center rounded-xl border border-neutral-200 bg-neutral-50/50 p-3 shadow-sm hover:border-neutral-300 transition-colors">
-                  <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-neutral-400">
-                    Item #{index + 1}
-                  </span>
-                  
-                  <FormField<CreateOrcamentoFormData>
-                    name={`itens.${index}.descricao`}
-                    control={control}
-                    label=""
-                    placeholder="Ex: Troca de HD ou Configuração de Switch"
-                    className="w-full"
-                  />
+              {fields.map((field, index) => {
+                const tipoAtual = watchedItens?.[index]?.tipo || 'servico'
+                const isServico = tipoAtual === 'servico'
 
-                  <div className="flex flex-col gap-1 w-full">
-                    <select
-                      {...register(`itens.${index}.tipo`)}
-                      className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px] bg-white text-neutral-700 shadow-sm transition-all"
-                    >
-                      <option value="servico">Mão de obra</option>
-                      <option value="produto">Peça / Produto</option>
-                      <option value="outros">Deslocamento / Taxa</option>
-                    </select>
+                return (
+                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_auto] gap-4 items-center rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 shadow-sm hover:border-neutral-300 transition-colors">
+                    <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-neutral-400">
+                      Item #{index + 1}
+                    </span>
+                    
+                    {/* Descrição */}
+                    <FormField<CreateOrcamentoFormData>
+                      name={`itens.${index}.descricao`}
+                      control={control}
+                      label=""
+                      placeholder={isServico ? "Ex: Mão de obra para troca de HD" : "Ex: HD SSD 240GB Kingston"}
+                      className="w-full"
+                    />
+
+                    {/* Tipo */}
+                    <div className="w-full">
+                      <select
+                        {...register(`itens.${index}.tipo`)}
+                        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px] bg-white text-neutral-700 shadow-sm transition-all cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:0.65rem_auto] bg-[right_12px_center] bg-no-repeat pr-8"
+                      >
+                        <option value="servico">Mão de obra</option>
+                        <option value="produto">Peça / Produto</option>
+                        <option value="outros">Deslocamento / Taxa</option>
+                      </select>
+                    </div>
+
+                    {/* Quantidade + Valor Unitário */}
+                    <div className="flex gap-2 items-center w-full">
+                      {!isServico ? (
+                        <>
+                          <div className="w-1/3 min-w-[60px]">
+                            <FormField<CreateOrcamentoFormData>
+                              name={`itens.${index}.quantidade`}
+                              control={control}
+                              label=""
+                              type="number"
+                              min={1}
+                              className="w-full text-center"
+                            />
+                          </div>
+                          <div className="w-2/3">
+                            <FormField<CreateOrcamentoFormData>
+                              name={`itens.${index}.valor_unitario`}
+                              control={control}
+                              label=""
+                              type="number"
+                              min={0.01}
+                              step="0.01"
+                              placeholder="0,00"
+                              className="w-full"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full">
+                          {/* Campo hidden para submeter quantidade = 1 para mão de obra */}
+                          <input type="hidden" value={1} {...register(`itens.${index}.quantidade`, { valueAsNumber: true })} />
+                          <FormField<CreateOrcamentoFormData>
+                            name={`itens.${index}.valor_unitario`}
+                            control={control}
+                            label=""
+                            type="number"
+                            min={0.01}
+                            step="0.01"
+                            placeholder="Valor total do serviço"
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Remover */}
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={fields.length <= 1}
+                        onClick={() => remove(index)}
+                        aria-label="Remover item"
+                        className="text-neutral-400 hover:text-danger hover:bg-danger/10 rounded-lg p-1.5 transition-colors"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </Button>
+                    </div>
                   </div>
-
-                  <FormField<CreateOrcamentoFormData>
-                    name={`itens.${index}.quantidade`}
-                    control={control}
-                    label=""
-                    type="number"
-                    min={1}
-                    className="w-full"
-                  />
-
-                  <FormField<CreateOrcamentoFormData>
-                    name={`itens.${index}.valor_unitario`}
-                    control={control}
-                    label=""
-                    type="number"
-                    min={0.01}
-                    step="0.01"
-                    placeholder="0,00"
-                    className="w-full"
-                  />
-
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      disabled={fields.length <= 1}
-                      onClick={() => remove(index)}
-                      aria-label="Remover item"
-                      className="text-neutral-400 hover:text-danger hover:bg-danger/10 rounded-lg p-1.5 transition-colors"
-                    >
-                      <Trash2 className="h-4.5 w-4.5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
