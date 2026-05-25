@@ -213,7 +213,7 @@ export default function OrcamentoFormPage() {
                 const isServico = tipoAtual === 'servico'
 
                 return (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_auto] gap-4 items-center rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 shadow-sm hover:border-neutral-300 transition-colors">
+                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_auto] gap-4 items-start rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 shadow-sm hover:border-neutral-300 transition-colors">
                     <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-neutral-400">
                       Item #{index + 1}
                     </span>
@@ -228,7 +228,7 @@ export default function OrcamentoFormPage() {
                     />
 
                     {/* Tipo */}
-                    <div className="w-full">
+                    <div className="w-full pt-1.5 md:pt-0">
                       <Controller
                         name={`itens.${index}.tipo`}
                         control={control}
@@ -264,9 +264,9 @@ export default function OrcamentoFormPage() {
                     </div>
 
                     {/* Quantidade + Valor Unitário */}
-                    <div className="flex gap-2 items-center w-full">
+                    <div className="w-full">
                       {tipoAtual === 'produto' ? (
-                        <>
+                        <div className="flex gap-2 items-start w-full">
                           <div className="w-1/3 min-w-[60px]">
                             <FormField<CreateOrcamentoFormData>
                               name={`itens.${index}.quantidade`}
@@ -289,7 +289,7 @@ export default function OrcamentoFormPage() {
                               className="w-full"
                             />
                           </div>
-                        </>
+                        </div>
                       ) : (
                         <div className="w-full">
                           {/* Campo hidden para submeter quantidade = 1 para mão de obra ou deslocamento */}
@@ -309,7 +309,7 @@ export default function OrcamentoFormPage() {
                     </div>
 
                     {/* Remover */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end pt-2 md:pt-1">
                       <Button
                         type="button"
                         variant="ghost"
