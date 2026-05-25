@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Edit2, Trash2, Mail, Phone, ShieldAlert, ShieldCheck, UserCheck, Loader2, X, Plus } from 'lucide-react'
+import { Edit2, Trash2, Mail, Phone, ShieldAlert, ShieldCheck, UserCheck, Loader2, X, Plus, PowerOff, Power } from 'lucide-react'
 import { Dialog } from '@base-ui/react'
 import { supabase } from '@/lib/supabase'
 import { parseApiError } from '@/lib/errorUtils'
@@ -39,6 +39,12 @@ const ROLE_BADGE: Record<Role, React.ReactNode> = {
     </span>
   ),
 }
+
+const INATIVO_BADGE = (
+  <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500 border border-neutral-200">
+    <PowerOff className="h-3 w-3" /> Inativo
+  </span>
+)
 
 export default function AdminUsuariosPage() {
   const queryClient = useQueryClient()
@@ -116,6 +122,35 @@ export default function AdminUsuariosPage() {
     },
   })
 
+  // 3. Deactivate / Reactivate Mutations
+  const deactivateMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.rpc('admin_desativar_usuario', { p_user_id: userId })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      toast.success('Usuário desativado com sucesso.')
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao desativar usuário')
+    },
+  })
+
+  const reactivateMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.rpc('admin_reativar_usuario', { p_user_id: userId })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      toast.success('Usuário reativado com sucesso!')
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao reativar usuário')
+    },
+  })
+
   // 4. Delete User Mutation (RPC)
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -148,7 +183,7 @@ export default function AdminUsuariosPage() {
     <div className="p-6 max-w-5xl space-y-6">
       <PageHeader
         title="Gerenciamento de Usuários"
-        subtitle="Analise novos cadastros na fila de aprovação e edite permissões de contas"
+        subtitle="Gerencie os usuários da plataforma — crie, edite, desative ou exclua contas"
         actions={
           <Button onClick={() => setIsCreatingUser(true)} className="flex items-center gap-1.5 h-9 text-xs">
             <Plus className="h-4 w-4" /> Novo Usuário
@@ -196,10 +231,15 @@ export default function AdminUsuariosPage() {
         <div className="grid gap-4 grid-cols-1">
           {filteredUsers.map((user) => {
             const initials = user.nome.charAt(0).toUpperCase()
+            const isInactive = user.ativo === false
             return (
               <div
                 key={user.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border bg-card p-5 shadow-card hover:border-primary/50 transition-colors"
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border bg-card p-5 shadow-card transition-colors ${
+                  isInactive
+                    ? 'border-neutral-200 opacity-60 grayscale-[30%]'
+                    : 'border-border hover:border-primary/50'
+                }`}
               >
                 {/* User details */}
                 <div className="flex items-start gap-4 min-w-0">
@@ -210,6 +250,7 @@ export default function AdminUsuariosPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-bold text-foreground truncate">{user.nome}</p>
                       {ROLE_BADGE[user.role as Role]}
+                      {isInactive && INATIVO_BADGE}
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
                       <Mail className="h-3.5 w-3.5 shrink-0" /> {user.email}
@@ -228,7 +269,28 @@ export default function AdminUsuariosPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3 sm:self-center shrink-0">
+                <div className="flex items-center gap-2 sm:self-center shrink-0">
+                  {/* Toggle Deactivate / Reactivate */}
+                  {isInactive ? (
+                    <button
+                      onClick={() => reactivateMutation.mutate(user.id)}
+                      disabled={reactivateMutation.isPending}
+                      className="p-2 rounded-md hover:bg-green-50 text-neutral-400 hover:text-green-600 transition-colors"
+                      title="Reativar Usuário"
+                    >
+                      <Power className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => deactivateMutation.mutate(user.id)}
+                      disabled={deactivateMutation.isPending}
+                      className="p-2 rounded-md hover:bg-amber-50 text-neutral-400 hover:text-amber-600 transition-colors"
+                      title="Desativar Usuário"
+                    >
+                      <PowerOff className="h-4 w-4" />
+                    </button>
+                  )}
+
                   {/* Standard edit / delete actions */}
                   <div className="flex items-center gap-1">
                     <button

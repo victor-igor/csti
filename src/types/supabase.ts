@@ -221,7 +221,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ativo: boolean
           created_at: string
+          desativado_em: string | null
           documento: string | null
           email: string
           especialidade: string | null
@@ -233,7 +235,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ativo?: boolean
           created_at?: string
+          desativado_em?: string | null
           documento?: string | null
           email: string
           especialidade?: string | null
@@ -245,7 +249,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ativo?: boolean
           created_at?: string
+          desativado_em?: string | null
           documento?: string | null
           email?: string
           especialidade?: string | null
@@ -366,6 +372,8 @@ export type Database = {
         Returns: string
       }
       admin_deletar_usuario: { Args: { p_user_id: string }; Returns: unknown }
+      admin_desativar_usuario: { Args: { p_user_id: string }; Returns: unknown }
+      admin_reativar_usuario: { Args: { p_user_id: string }; Returns: unknown }
       aprovar_orcamento: { Args: { p_orcamento_id: string }; Returns: string }
       gerar_numero_orcamento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
