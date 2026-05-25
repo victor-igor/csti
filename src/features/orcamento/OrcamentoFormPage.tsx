@@ -187,50 +187,56 @@ export default function OrcamentoFormPage() {
 
             {/* Header de colunas — só em desktop */}
             {fields.length > 0 && (
-              <div className="hidden md:grid grid-cols-[1.5fr_1.2fr_0.8fr_1fr_auto] gap-2 px-1">
-                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Descrição</span>
-                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Tipo</span>
-                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Qtd</span>
-                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Unit. (R$)</span>
+              <div className="hidden md:grid grid-cols-[2fr_1.2fr_0.8fr_1.2fr_auto] gap-3 px-1 items-center mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Descrição</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Tipo</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Qtd</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Valor Unitário</span>
                 <span />
               </div>
             )}
 
             {fields.length === 0 && (
-              <p className="py-4 text-center text-sm text-muted-foreground">
+              <p className="py-4 text-center text-sm text-neutral-500">
                 Nenhum item adicionado.
               </p>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1.5fr_1.2fr_0.8fr_1fr_auto] gap-2 items-start rounded-md border border-border p-2">
-                  <span className="md:hidden text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1.2fr_0.8fr_1.2fr_auto] gap-3 items-center rounded-xl border border-neutral-200 bg-neutral-50/50 p-3 shadow-sm hover:border-neutral-300 transition-colors">
+                  <span className="md:hidden text-[11px] font-bold uppercase tracking-wide text-neutral-400">
                     Item #{index + 1}
                   </span>
+                  
                   <FormField<CreateOrcamentoFormData>
                     name={`itens.${index}.descricao`}
                     control={control}
                     label=""
-                    placeholder="Ex: Troca de HD"
+                    placeholder="Ex: Troca de HD ou Configuração de Switch"
+                    className="w-full"
                   />
-                  <div className="flex flex-col gap-1">
+
+                  <div className="flex flex-col gap-1 w-full">
                     <select
                       {...register(`itens.${index}.tipo`)}
-                      className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px] bg-white"
+                      className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px] bg-white text-neutral-700 shadow-sm transition-all"
                     >
                       <option value="servico">Mão de obra</option>
                       <option value="produto">Peça / Produto</option>
-                      <option value="outros">Outros / Deslocamento</option>
+                      <option value="outros">Deslocamento / Taxa</option>
                     </select>
                   </div>
+
                   <FormField<CreateOrcamentoFormData>
                     name={`itens.${index}.quantidade`}
                     control={control}
                     label=""
                     type="number"
                     min={1}
+                    className="w-full"
                   />
+
                   <FormField<CreateOrcamentoFormData>
                     name={`itens.${index}.valor_unitario`}
                     control={control}
@@ -238,18 +244,23 @@ export default function OrcamentoFormPage() {
                     type="number"
                     min={0.01}
                     step="0.01"
+                    placeholder="0,00"
+                    className="w-full"
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={fields.length <= 1}
-                    onClick={() => remove(index)}
-                    aria-label="Remover item"
-                    className="mt-1 text-muted-foreground hover:text-danger"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={fields.length <= 1}
+                      onClick={() => remove(index)}
+                      aria-label="Remover item"
+                      className="text-neutral-400 hover:text-danger hover:bg-danger/10 rounded-lg p-1.5 transition-colors"
+                    >
+                      <Trash2 className="h-4.5 w-4.5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
