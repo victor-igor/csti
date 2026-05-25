@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Edit2, Trash2, Mail, Phone, ShieldAlert, ShieldCheck, UserCheck, Loader2, X, Check, Ban } from 'lucide-react'
+import { Edit2, Trash2, Mail, Phone, ShieldAlert, ShieldCheck, UserCheck, Loader2, X, Plus } from 'lucide-react'
 import { Dialog } from '@base-ui/react'
 import { supabase } from '@/lib/supabase'
 import { parseApiError } from '@/lib/errorUtils'
@@ -40,30 +40,13 @@ const ROLE_BADGE: Record<Role, React.ReactNode> = {
   ),
 }
 
-const APROVACAO_BADGE: Record<'pendente' | 'aprovado' | 'recusado', React.ReactNode> = {
-  pendente: (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200 animate-pulse">
-      Aprovação Pendente
-    </span>
-  ),
-  aprovado: (
-    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200">
-      Aprovado
-    </span>
-  ),
-  recusado: (
-    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-700 border border-red-200">
-      Recusado
-    </span>
-  ),
-}
-
 export default function AdminUsuariosPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [activeRole, setActiveRole] = useState('')
   const [editingUser, setEditingUser] = useState<IProfile | null>(null)
   const [deletingUser, setDeletingUser] = useState<IProfile | null>(null)
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
 
   // 1. Fetch Users
   const { data: users = [], isLoading, isError, refetch } = useQuery({
@@ -78,6 +61,36 @@ export default function AdminUsuariosPage() {
     },
   })
 
+  // Create User Mutation
+  const createMutation = useMutation({
+    mutationFn: async (newUser: {
+      email: string
+      senha: string
+      nome: string
+      role: Role
+      telefone: string | null
+      especialidade: string | null
+    }) => {
+      const { error } = await supabase.rpc('admin_criar_usuario', {
+        p_email: newUser.email,
+        p_senha: newUser.senha,
+        p_nome: newUser.nome,
+        p_role: newUser.role,
+        p_telefone: newUser.telefone ?? null,
+        p_especialidade: newUser.especialidade ?? null,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      toast.success('Usuário criado com sucesso!')
+      setIsCreatingUser(false)
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao criar usuário')
+    },
+  })
+
   // 2. Update User Mutation
   const updateMutation = useMutation({
     mutationFn: async (updated: Partial<IProfile> & { id: string }) => {
@@ -88,7 +101,6 @@ export default function AdminUsuariosPage() {
           role: updated.role,
           telefone: updated.telefone ?? null,
           especialidade: updated.especialidade ?? null,
-          status_aprovacao: updated.status_aprovacao,
         })
         .eq('id', updated.id)
       if (error) throw error
@@ -101,25 +113,6 @@ export default function AdminUsuariosPage() {
     },
     onError: (error: Error) => {
       toast.error(parseApiError(error) || 'Erro ao atualizar usuário')
-    },
-  })
-
-  // 3. Quick Status Change Mutation (Aprovar / Recusar)
-  const statusMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: string; status: 'aprovado' | 'recusado' }) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status_aprovacao: status })
-        .eq('id', userId)
-      if (error) throw error
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
-      queryClient.invalidateQueries({ queryKey: ['badge', 'solicitacoes'] })
-      toast.success(`Usuário ${variables.status === 'aprovado' ? 'aprovado' : 'recusado'} com sucesso!`)
-    },
-    onError: (error: Error) => {
-      toast.error(parseApiError(error) || 'Erro ao alterar status de aprovação')
     },
   })
 
@@ -156,6 +149,11 @@ export default function AdminUsuariosPage() {
       <PageHeader
         title="Gerenciamento de Usuários"
         subtitle="Analise novos cadastros na fila de aprovação e edite permissões de contas"
+        actions={
+          <Button onClick={() => setIsCreatingUser(true)} className="flex items-center gap-1.5 h-9 text-xs">
+            <Plus className="h-4 w-4" /> Novo Usuário
+          </Button>
+        }
       />
 
       <FilterBar
@@ -198,7 +196,6 @@ export default function AdminUsuariosPage() {
         <div className="grid gap-4 grid-cols-1">
           {filteredUsers.map((user) => {
             const initials = user.nome.charAt(0).toUpperCase()
-            const isPending = user.status_aprovacao === 'pendente'
             return (
               <div
                 key={user.id}
@@ -213,7 +210,6 @@ export default function AdminUsuariosPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-bold text-foreground truncate">{user.nome}</p>
                       {ROLE_BADGE[user.role as Role]}
-                      {APROVACAO_BADGE[user.status_aprovacao as 'pendente' | 'aprovado' | 'recusado']}
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
                       <Mail className="h-3.5 w-3.5 shrink-0" /> {user.email}
@@ -233,29 +229,6 @@ export default function AdminUsuariosPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 sm:self-center shrink-0">
-                  {/* Quick actions for pending */}
-                  {isPending && (
-                    <div className="flex items-center gap-2 border-r border-border pr-3">
-                      <Button
-                        size="xs"
-                        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1 h-8 text-[11px]"
-                        disabled={statusMutation.isPending}
-                        onClick={() => statusMutation.mutate({ userId: user.id, status: 'aprovado' })}
-                      >
-                        <Check className="h-3.5 w-3.5" /> Aprovar
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-1 h-8 text-[11px]"
-                        disabled={statusMutation.isPending}
-                        onClick={() => statusMutation.mutate({ userId: user.id, status: 'recusado' })}
-                      >
-                        <Ban className="h-3.5 w-3.5" /> Recusar
-                      </Button>
-                    </div>
-                  )}
-
                   {/* Standard edit / delete actions */}
                   <div className="flex items-center gap-1">
                     <button
@@ -320,6 +293,33 @@ export default function AdminUsuariosPage() {
           </Dialog.Portal>
         </Dialog.Root>
       )}
+
+      {/* ── Create User Modal (Dialog) ── */}
+      {isCreatingUser && (
+        <Dialog.Root open={isCreatingUser} onOpenChange={setIsCreatingUser}>
+          <Dialog.Portal>
+            <Dialog.Backdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300]" />
+            <Dialog.Popup className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] w-[calc(100%-2rem)] max-w-md rounded-xl bg-white p-6 shadow-2xl overflow-hidden flex flex-col space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                <h3 className="text-base font-semibold text-neutral-900">Novo Usuário</h3>
+                <button
+                  onClick={() => setIsCreatingUser(false)}
+                  className="p-1.5 rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+                  aria-label="Fechar"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <CreateUserForm
+                isPending={createMutation.isPending}
+                onCancel={() => setIsCreatingUser(false)}
+                onSubmit={(data) => createMutation.mutate(data)}
+              />
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      )}
     </div>
   )
 }
@@ -333,7 +333,6 @@ interface EditUserFormProps {
     role: Role
     telefone: string | null
     especialidade: string | null
-    status_aprovacao: 'pendente' | 'aprovado' | 'recusado'
   }) => void
 }
 
@@ -342,9 +341,6 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
   const [role, setRole] = useState<Role>(user.role as Role)
   const [telefone, setTelefone] = useState(user.telefone ? formatDisplayPhone(user.telefone) : '')
   const [especialidade, setEspecialidade] = useState(user.especialidade ?? '')
-  const [statusAprovacao, setStatusAprovacao] = useState<'pendente' | 'aprovado' | 'recusado'>(
-    (user.status_aprovacao as 'pendente' | 'aprovado' | 'recusado') ?? 'pendente'
-  )
 
   const inputCls =
     'w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors'
@@ -360,7 +356,6 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
       role,
       telefone: telefone.trim() ? telefone.replace(/\D/g, '') : null,
       especialidade: role === 'prestador' ? especialidade.trim() || null : null,
-      status_aprovacao: statusAprovacao,
     })
   }
 
@@ -377,32 +372,17 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-medium text-neutral-500 mb-1">Papel (Nível de Acesso)</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as Role)}
-            className={inputCls}
-          >
-            <option value="cliente">Cliente</option>
-            <option value="prestador">Prestador</option>
-            <option value="admin">Administrador</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-neutral-500 mb-1">Status de Aprovação</label>
-          <select
-            value={statusAprovacao}
-            onChange={(e) => setStatusAprovacao(e.target.value as 'pendente' | 'aprovado' | 'recusado')}
-            className={inputCls}
-          >
-            <option value="pendente">Pendente</option>
-            <option value="aprovado">Aprovado</option>
-            <option value="recusado">Recusado</option>
-          </select>
-        </div>
+      <div>
+        <label className="block text-xs font-medium text-neutral-500 mb-1">Papel (Nível de Acesso)</label>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as Role)}
+          className={inputCls}
+        >
+          <option value="cliente">Cliente</option>
+          <option value="prestador">Prestador</option>
+          <option value="admin">Administrador</option>
+        </select>
       </div>
 
       <div>
@@ -436,6 +416,162 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
         <Button type="submit" disabled={isPending} size="sm">
           {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
           Salvar Alterações
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+interface CreateUserFormProps {
+  isPending: boolean
+  onCancel: () => void
+  onSubmit: (data: {
+    email: string
+    senha: string
+    nome: string
+    role: Role
+    telefone: string | null
+    especialidade: string | null
+  }) => void
+}
+
+function CreateUserForm({ isPending, onCancel, onSubmit }: CreateUserFormProps) {
+  const [nome, setNome] = useState('')
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [role, setRole] = useState<Role>('cliente')
+  const [telefone, setTelefone] = useState('')
+  const [especialidade, setEspecialidade] = useState('')
+
+  const inputCls =
+    'w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors'
+
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!nome.trim()) {
+      toast.error('Nome não pode estar vazio')
+      return
+    }
+    if (!email.trim() || !email.includes('@')) {
+      toast.error('Insira um e-mail válido')
+      return
+    }
+    if (senha.length < 8) {
+      toast.error('A senha deve ter no mínimo 8 caracteres')
+      return
+    }
+    if (senha !== confirmarSenha) {
+      toast.error('As senhas não conferem')
+      return
+    }
+    onSubmit({
+      nome,
+      email,
+      senha,
+      role,
+      telefone: telefone.trim() ? telefone.replace(/\D/g, '') : null,
+      especialidade: role === 'prestador' ? especialidade.trim() || null : null,
+    })
+  }
+
+  return (
+    <form onSubmit={handleFormSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+      <div>
+        <label className="block text-xs font-medium text-neutral-500 mb-1">Nome completo</label>
+        <input
+          type="text"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          className={inputCls}
+          placeholder="Ex: João da Silva"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-neutral-500 mb-1">E-mail</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={inputCls}
+          placeholder="joao@exemplo.com"
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium text-neutral-500 mb-1">Senha</label>
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            className={inputCls}
+            placeholder="Mínimo 8 chars"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-neutral-500 mb-1">Confirmar Senha</label>
+          <input
+            type="password"
+            value={confirmarSenha}
+            onChange={(e) => setConfirmarSenha(e.target.value)}
+            className={inputCls}
+            placeholder="Repita a senha"
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-neutral-500 mb-1">Papel (Nível de Acesso)</label>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as Role)}
+          className={inputCls}
+        >
+          <option value="cliente">Cliente</option>
+          <option value="prestador">Prestador</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-neutral-500 mb-1">Telefone (opcional)</label>
+        <input
+          type="text"
+          value={telefone}
+          onChange={(e) => setTelefone(e.target.value)}
+          className={inputCls}
+          placeholder="+55 11 99999-9999"
+        />
+      </div>
+
+      {role === 'prestador' && (
+        <div>
+          <label className="block text-xs font-medium text-neutral-500 mb-1">Especialidade</label>
+          <input
+            type="text"
+            value={especialidade}
+            onChange={(e) => setEspecialidade(e.target.value)}
+            className={inputCls}
+            placeholder="Ex: Hardware, Redes, Suporte"
+            required
+          />
+        </div>
+      )}
+
+      <div className="flex gap-2 justify-end pt-2 border-t border-neutral-100">
+        <Button variant="outline" type="button" onClick={onCancel} disabled={isPending} size="sm">
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isPending} size="sm">
+          {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+          Criar Usuário
         </Button>
       </div>
     </form>

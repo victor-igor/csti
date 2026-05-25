@@ -354,6 +354,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_criar_usuario: {
+        Args: {
+          p_email: string
+          p_senha: string
+          p_nome: string
+          p_role: string
+          p_telefone: string | null
+          p_especialidade: string | null
+        }
+        Returns: string
+      }
       admin_deletar_usuario: { Args: { p_user_id: string }; Returns: unknown }
       aprovar_orcamento: { Args: { p_orcamento_id: string }; Returns: string }
       gerar_numero_orcamento: { Args: never; Returns: string }

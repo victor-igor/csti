@@ -54,25 +54,6 @@ function useOrcamentosBadge() {
   })
 }
 
-function usePendingUsersBadge() {
-  const profile = useAuthStore((s) => s.profile)
-  const role = profile?.role as Role | undefined
-
-  return useQuery({
-    queryKey: ['badge', 'pending-users', role, profile?.id],
-    queryFn: async () => {
-      if (role !== 'admin') return 0
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('status_aprovacao', 'pendente')
-      if (error) throw error
-      return count ?? 0
-    },
-    enabled: profile?.role === 'admin',
-  })
-}
-
 export function useNavLinks(): NavLink[] {
   const groups = useNavGroups()
   return groups.flatMap((g) => g.items)
@@ -81,7 +62,6 @@ export function useNavLinks(): NavLink[] {
 export function useNavGroups(): NavGroup[] {
   const { data: solBadge = 0 } = useSolicitacoesBadge()
   const { data: orcBadge = 0 } = useOrcamentosBadge()
-  const { data: pendingUsersBadge = 0 } = usePendingUsersBadge()
   const role = useAuthStore((s) => s.profile?.role) as Role | undefined
 
   const solicitacoesHref = role === 'prestador' ? '/prestador/solicitacoes' : '/solicitacoes'
@@ -93,7 +73,7 @@ export function useNavGroups(): NavGroup[] {
   ]
 
   if (role === 'admin') {
-    gestaoItems.push({ label: 'Usuários', href: '/admin/usuarios', icon: Users, badge: pendingUsersBadge || undefined })
+    gestaoItems.push({ label: 'Usuários', href: '/admin/usuarios', icon: Users })
   }
 
   return [

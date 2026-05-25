@@ -7,16 +7,9 @@ import { Button } from '@/components/ui/button'
 import { RegisterSchema, type RegisterFormData } from './authSchemas'
 import { useAuth } from './useAuth'
 import { FormField } from '@/components/molecules/FormField'
-import { SelectField } from '@/components/molecules/SelectField'
 import { PhoneInput } from '@/components/molecules/PhoneInput'
 import { buildStoredPhone } from '@/lib/phoneUtils'
 import DashboardPreview from './DashboardPreview'
-
-const ROLE_OPTIONS = [
-  { value: 'cliente', label: 'Cliente' },
-  { value: 'prestador', label: 'Prestador' },
-  { value: 'admin', label: 'Administrador' },
-]
 
 export default function RegisterPage() {
   const { register: registerUser } = useAuth()
@@ -24,12 +17,10 @@ export default function RegisterPage() {
   const [phoneDial, setPhoneDial] = useState('+55')
   const [phoneNumber, setPhoneNumber] = useState('')
 
-  const { control, handleSubmit, watch, formState: { isSubmitting } } = useForm<RegisterFormData>({
+  const { control, handleSubmit, formState: { isSubmitting } } = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: { nome: '', email: '', senha: '', confirmar_senha: '', telefone: '', especialidade: '', role: 'cliente', aceita_termos: false },
   })
-
-  const role = watch('role')
 
   async function onSubmit(data: RegisterFormData) {
     setServerError(null)
@@ -85,22 +76,7 @@ export default function RegisterPage() {
             placeholder="Repita a senha"
           />
 
-          <SelectField<RegisterFormData>
-            name="role"
-            control={control}
-            label="Perfil"
-            options={ROLE_OPTIONS}
-            placeholder="Selecione um perfil"
-          />
 
-          {role === 'prestador' && (
-            <FormField<RegisterFormData>
-              name="especialidade"
-              control={control}
-              label="Especialidade"
-              placeholder="Ex: Redes, Hardware, Suporte"
-            />
-          )}
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
