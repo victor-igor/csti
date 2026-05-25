@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Loader2, Phone, ArrowRight } from 'lucide-react'
+import { Loader2, Phone, ArrowRight, XCircle } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { InfoCard } from '@/components/molecules/InfoCard'
 import { InfoRow } from '@/components/molecules/InfoRow'
 import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
+import { OverflowMenu } from '@/components/molecules/OverflowMenu'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
@@ -60,15 +61,43 @@ export default function OrdemServicoDetailPage() {
   const labelTransicao = LABELS_TRANSICAO[data.status as OSStatus]
   const contraparte = isPrestador ? data.cliente : data.prestador
 
-  // Cancelar: admin pode sempre; cliente pode se a OS está em status cancelável
   const podeCancelar =
     (isAdmin || isCliente) &&
     STATUS_CANCELAVEIS.includes(data.status as OSStatus)
 
+  // ─── Ação primária (CTA) — avançar status para o prestador ───────────────
+  const primaryAction = isPrestador && proximoStatus && labelTransicao ? (
+    <Button disabled={isPending} onClick={() => setConfirmOpen(true)}>
+      {isPending && <Loader2 className="size-4 animate-spin" />}
+      {labelTransicao}
+    </Button>
+  ) : null
+
+  // ─── Ações do overflow "⋮" — cancelar para admin/cliente ─────────────────
+  const overflowActions = [
+    podeCancelar && {
+      label: 'Cancelar OS',
+      icon: XCircle,
+      variant: 'destructive' as const,
+      onClick: () => setConfirmCancelOpen(true),
+    },
+  ].filter(Boolean) as import('@/components/molecules/OverflowMenu').OverflowAction[]
+
   return (
     <div className="p-6 max-w-5xl pb-24 md:pb-6">
-      <div className="mb-4"><BackButton to={isPrestador ? '/prestador/ordens-servico' : '/ordens-servico'} /></div>
-      <PageHeader title={data.numero} />
+      <div className="mb-4">
+        <BackButton to={isPrestador ? '/prestador/ordens-servico' : '/ordens-servico'} />
+      </div>
+
+      <PageHeader
+        title={data.numero}
+        primaryAction={primaryAction}
+        overflowMenu={
+          overflowActions.length > 0 ? (
+            <OverflowMenu actions={overflowActions} />
+          ) : undefined
+        }
+      />
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <InfoCard label="Status" value={<StatusBadge status={data.status} />} />
@@ -136,43 +165,10 @@ export default function OrdemServicoDetailPage() {
         </div>
       )}
 
-      {/* Ações — desktop (inline) */}
-      {(isPrestador || podeCancelar) && (
-        <div className="mt-6 hidden md:flex gap-3 flex-wrap">
-          {isPrestador && proximoStatus && labelTransicao && (
-            <Button disabled={isPending} onClick={() => setConfirmOpen(true)}>
-              {isPending && <Loader2 className="size-4 animate-spin" />}
-              {labelTransicao}
-            </Button>
-          )}
-          {podeCancelar && (
-            <button
-              onClick={() => setConfirmCancelOpen(true)}
-              className="rounded-md border border-danger px-4 py-2 text-sm font-medium text-danger hover:bg-danger/5 transition-colors cursor-pointer"
-            >
-              Cancelar OS
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Ações — mobile (sticky) */}
-      {(isPrestador || podeCancelar) && (
+      {/* Mobile: sticky apenas para a ação primária do prestador */}
+      {primaryAction && (
         <StickyActionBar className="bottom-16">
-          {isPrestador && proximoStatus && labelTransicao && (
-            <Button className="flex-1" disabled={isPending} onClick={() => setConfirmOpen(true)}>
-              {isPending && <Loader2 className="size-4 animate-spin" />}
-              {labelTransicao}
-            </Button>
-          )}
-          {podeCancelar && (
-            <button
-              onClick={() => setConfirmCancelOpen(true)}
-              className="flex-1 rounded-md border border-danger px-3 py-2 text-sm font-medium text-danger hover:bg-danger/5 transition-colors cursor-pointer"
-            >
-              Cancelar OS
-            </button>
-          )}
+          <div className="flex-1">{primaryAction}</div>
         </StickyActionBar>
       )}
 

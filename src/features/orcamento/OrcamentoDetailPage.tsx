@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Pencil, Trash2, XCircle, Send } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
 import { InfoCard } from '@/components/molecules/InfoCard'
@@ -10,8 +11,10 @@ import { ItemOrcamentoRow } from '@/components/organisms/ItemOrcamentoRow'
 import { PdfDownloadButton } from '@/components/pdf/PdfDownloadButton'
 import { Button } from '@/components/ui/button'
 import { StickyActionBar } from '@/components/atoms/StickyActionBar'
+import { OverflowMenu } from '@/components/molecules/OverflowMenu'
+import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { useAuthStore } from '@/store/authStore'
-import { useGetOrcamento, useEnviarOrcamento } from './useOrcamento'
+import { useGetOrcamento, useEnviarOrcamento, useDeleteOrcamento } from './useOrcamento'
 import { CurrencyDisplay } from '@/components/atoms/CurrencyDisplay'
 
 export default function OrcamentoDetailPage() {
@@ -20,6 +23,8 @@ export default function OrcamentoDetailPage() {
   const profile = useAuthStore((s) => s.profile)
   const { data, isLoading, isError, refetch } = useGetOrcamento(id ?? '')
   const { mutate: enviar, isPending } = useEnviarOrcamento()
+  const { mutate: excluir, isPending: excluindo } = useDeleteOrcamento()
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (isLoading) return <div className="p-6"><LoadingSkeleton rows={6} /></div>
   if (isError || !data) return (
@@ -29,8 +34,7 @@ export default function OrcamentoDetailPage() {
   )
 
   const itens = data.itens_orcamento ?? []
-  
-  // Agrupamentos de custos por tipo de item
+
   const servicoTotal = itens.reduce(
     (sum, item) => sum + ((item as any).tipo === 'servico' ? (item.quantidade ?? 0) * (item.valor_unitario ?? 0) : 0),
     0,
@@ -52,15 +56,77 @@ export default function OrcamentoDetailPage() {
     telefone: profile?.telefone ?? null,
   }
 
+  const isPrestador = profile?.role === 'prestador'
+  const podeExcluir = isPrestador && (data.status === 'rascunho' || data.status === 'enviado')
+  const podeEditar = isPrestador && data.status === 'rascunho'
+  const podeEnviar = isPrestador && data.status === 'rascunho'
+  const podeRetirar = isPrestador && data.status === 'enviado'
+
+  // ─── Ação primária (CTA) ──────────────────────────────────────────────────
+  const primaryAction = (() => {
+    if (podeEnviar) {
+      return (
+        <Button
+          disabled={isPending}
+          onClick={() => enviar({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })}
+        >
+          {isPending && <Loader2 className="size-4 animate-spin" />}
+          <Send className="h-4 w-4" />
+          Enviar ao Cliente
+        </Button>
+      )
+    }
+    return null
+  })()
+
+  // ─── Ações do overflow "⋮" ─────────────────────────────────────────────
+  const overflowActions = [
+    canDownload && {
+      label: 'Baixar PDF',
+      icon: undefined,
+      onClick: () => {/* handled by PdfDownloadButton below */},
+    },
+    podeEditar && {
+      label: 'Editar Rascunho',
+      icon: Pencil,
+      onClick: () => navigate(`/prestador/orcamentos/${data.id}/editar`),
+    },
+    (podeExcluir || podeRetirar) && { separator: true },
+    podeRetirar && {
+      label: 'Retirar Orçamento',
+      icon: XCircle,
+      variant: 'destructive' as const,
+      onClick: () => setConfirmDelete(true),
+    },
+    podeEditar && podeExcluir && {
+      label: 'Excluir Rascunho',
+      icon: Trash2,
+      variant: 'destructive' as const,
+      separator: !podeRetirar,
+      onClick: () => setConfirmDelete(true),
+    },
+  ].filter(Boolean) as import('@/components/molecules/OverflowMenu').OverflowAction[]
+
+  // PDF download goes in the actions slot (non-CTA)
+  const headerActions = canDownload
+    ? <PdfDownloadButton orcamento={data} itens={itens} prestador={prestador} />
+    : null
+
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-6 max-w-5xl pb-24 md:pb-6">
       <div className="mb-4">
-        <BackButton to="/orcamentos" />
+        <BackButton to={isPrestador ? '/orcamentos' : '/orcamentos'} />
       </div>
 
       <PageHeader
         title={data.numero}
-        actions={canDownload ? <PdfDownloadButton orcamento={data} itens={itens} prestador={prestador} /> : null}
+        actions={headerActions}
+        primaryAction={primaryAction}
+        overflowMenu={
+          overflowActions.length > 0 ? (
+            <OverflowMenu actions={overflowActions} />
+          ) : undefined
+        }
       />
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -131,7 +197,7 @@ export default function OrcamentoDetailPage() {
             <CurrencyDisplay value={servicoTotal} />
           </div>
           <div className="flex justify-between text-xs text-neutral-500">
-            <span>Peças & Materiais</span>
+            <span>Peças &amp; Materiais</span>
             <CurrencyDisplay value={produtoTotal} />
           </div>
           <div className="flex justify-between text-xs text-neutral-500">
@@ -145,46 +211,30 @@ export default function OrcamentoDetailPage() {
         </div>
       </div>
 
-      {data.status === 'rascunho' && (
-        <>
-          <div className="mt-6 hidden md:flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/prestador/orcamentos/${data.id}/editar`)}
-            >
-              Editar Rascunho
-            </Button>
-            <Button
-              disabled={isPending}
-              onClick={() =>
-                enviar({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })
-              }
-            >
-              {isPending && <Loader2 className="size-4 animate-spin" />}
-              Enviar Orçamento ao Cliente
-            </Button>
-          </div>
-          <StickyActionBar className="bottom-16">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => navigate(`/prestador/orcamentos/${data.id}/editar`)}
-            >
-              Editar Rascunho
-            </Button>
-            <Button
-              className="flex-1"
-              disabled={isPending}
-              onClick={() =>
-                enviar({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })
-              }
-            >
-              {isPending && <Loader2 className="size-4 animate-spin" />}
-              Enviar Orçamento
-            </Button>
-          </StickyActionBar>
-        </>
+      {/* Mobile: sticky apenas para a ação primária */}
+      {primaryAction && (
+        <StickyActionBar className="bottom-16">
+          <div className="flex-1">{primaryAction}</div>
+        </StickyActionBar>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={data.status === 'rascunho' ? 'Excluir Rascunho' : 'Retirar Orçamento'}
+        description={
+          data.status === 'rascunho'
+            ? 'Tem certeza que deseja excluir este rascunho de orçamento permanentemente?'
+            : 'Tem certeza que deseja retirar/cancelar este orçamento enviado? O cliente não poderá mais visualizá-lo.'
+        }
+        confirmLabel="Sim, confirmar"
+        cancelLabel="Voltar"
+        loading={excluindo}
+        onConfirm={() => {
+          setConfirmDelete(false)
+          excluir({ orcamentoId: data.id, solicitacaoId: data.solicitacao_id })
+        }}
+      />
     </div>
   )
 }
