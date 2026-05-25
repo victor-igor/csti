@@ -138,6 +138,60 @@ export function useCancelSolicitacao() {
   })
 }
 
+export function useUpdateSolicitacao(solicitacaoId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: Partial<CreateSolicitacaoFormData>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const payload: any = {
+        titulo: data.titulo,
+        descricao: data.descricao,
+        categoria: data.categoria,
+        equipamento: data.equipamento || null,
+        urgencia: data.urgencia,
+        prazo_desejado: data.prazo_desejado || null,
+      }
+      const { error } = await supabase
+        .from('solicitacoes_orcamento')
+        .update(payload)
+        .eq('id', solicitacaoId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', solicitacaoId] })
+      toast.success('Solicitação atualizada com sucesso!')
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao atualizar solicitação')
+    },
+  })
+}
+
+export function useDeleteSolicitacao() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async (solicitacaoId: string) => {
+      const { error } = await supabase
+        .from('solicitacoes_orcamento')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', solicitacaoId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      toast.success('Solicitação excluída com sucesso')
+      navigate('/solicitacoes')
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao excluir solicitação')
+    },
+  })
+}
+
 export function useListMensagensSolicitacao(solicitacaoId: string) {
   return useQuery({
     queryKey: ['solicitacao-mensagens', solicitacaoId],

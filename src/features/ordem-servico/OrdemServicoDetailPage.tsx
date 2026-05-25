@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Loader2, Phone, ArrowRight } from 'lucide-react'
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { BackButton } from '@/components/molecules/BackButton'
@@ -13,7 +13,7 @@ import { StickyActionBar } from '@/components/atoms/StickyActionBar'
 import { StatusTimeline } from '@/components/organisms/StatusTimeline'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
-import { useGetOrdemServico, useUpdateStatusOS, getProximoStatus } from './useOrdemServico'
+import { useGetOrdemServico, useUpdateStatusOS, useCancelOrdemServico, getProximoStatus } from './useOrdemServico'
 import type { OSStatus } from '@/types/domain'
 import { formatDisplayPhone } from '@/lib/phoneUtils'
 
@@ -34,13 +34,18 @@ const OS_STATUS_LABEL: Partial<Record<OSStatus, string>> = {
   cancelada: 'Cancelada',
 }
 
+const STATUS_CANCELAVEIS: OSStatus[] = ['aberta', 'em_andamento']
+
 export default function OrdemServicoDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false)
 
   const { data, isLoading, isError, refetch } = useGetOrdemServico(id ?? '')
   const { mutate: updateStatus, isPending } = useUpdateStatusOS()
+  const { mutate: cancelarOS, isPending: cancelando } = useCancelOrdemServico()
 
   if (isLoading) return <div className="p-6"><LoadingSkeleton rows={6} /></div>
   if (isError || !data) return (
@@ -48,13 +53,21 @@ export default function OrdemServicoDetailPage() {
   )
 
   const isPrestador = profile?.role === 'prestador'
+  const isAdmin = profile?.role === 'admin'
+  const isCliente = profile?.role === 'cliente'
+
   const proximoStatus = getProximoStatus(data.status as OSStatus)
   const labelTransicao = LABELS_TRANSICAO[data.status as OSStatus]
   const contraparte = isPrestador ? data.cliente : data.prestador
 
+  // Cancelar: admin pode sempre; cliente pode se a OS está em status cancelável
+  const podeCancelar =
+    (isAdmin || isCliente) &&
+    STATUS_CANCELAVEIS.includes(data.status as OSStatus)
+
   return (
-    <div className="p-6 max-w-5xl">
-      <div className="mb-4"><BackButton to="/ordens-servico" /></div>
+    <div className="p-6 max-w-5xl pb-24 md:pb-6">
+      <div className="mb-4"><BackButton to={isPrestador ? '/prestador/ordens-servico' : '/ordens-servico'} /></div>
       <PageHeader title={data.numero} />
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -123,23 +136,47 @@ export default function OrdemServicoDetailPage() {
         </div>
       )}
 
-      {isPrestador && proximoStatus && labelTransicao && (
-        <>
-          <div className="mt-6 hidden md:flex">
+      {/* Ações — desktop (inline) */}
+      {(isPrestador || podeCancelar) && (
+        <div className="mt-6 hidden md:flex gap-3 flex-wrap">
+          {isPrestador && proximoStatus && labelTransicao && (
             <Button disabled={isPending} onClick={() => setConfirmOpen(true)}>
               {isPending && <Loader2 className="size-4 animate-spin" />}
               {labelTransicao}
             </Button>
-          </div>
-          <StickyActionBar className="bottom-16">
+          )}
+          {podeCancelar && (
+            <button
+              onClick={() => setConfirmCancelOpen(true)}
+              className="rounded-md border border-danger px-4 py-2 text-sm font-medium text-danger hover:bg-danger/5 transition-colors cursor-pointer"
+            >
+              Cancelar OS
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Ações — mobile (sticky) */}
+      {(isPrestador || podeCancelar) && (
+        <StickyActionBar className="bottom-16">
+          {isPrestador && proximoStatus && labelTransicao && (
             <Button className="flex-1" disabled={isPending} onClick={() => setConfirmOpen(true)}>
               {isPending && <Loader2 className="size-4 animate-spin" />}
               {labelTransicao}
             </Button>
-          </StickyActionBar>
-        </>
+          )}
+          {podeCancelar && (
+            <button
+              onClick={() => setConfirmCancelOpen(true)}
+              className="flex-1 rounded-md border border-danger px-3 py-2 text-sm font-medium text-danger hover:bg-danger/5 transition-colors cursor-pointer"
+            >
+              Cancelar OS
+            </button>
+          )}
+        </StickyActionBar>
       )}
 
+      {/* Dialog: Avançar status (prestador) */}
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -150,6 +187,23 @@ export default function OrdemServicoDetailPage() {
         onConfirm={() => {
           setConfirmOpen(false)
           updateStatus({ id: data.id, status: proximoStatus as OSStatus })
+        }}
+      />
+
+      {/* Dialog: Cancelar OS (admin/cliente) */}
+      <ConfirmDialog
+        open={confirmCancelOpen}
+        onOpenChange={setConfirmCancelOpen}
+        title="Cancelar Ordem de Serviço"
+        description="Tem certeza que deseja cancelar esta ordem de serviço? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, cancelar"
+        cancelLabel="Voltar"
+        loading={cancelando}
+        onConfirm={() => {
+          setConfirmCancelOpen(false)
+          cancelarOS({ id: data.id }, {
+            onSuccess: () => navigate(isPrestador ? '/prestador/ordens-servico' : '/ordens-servico'),
+          })
         }}
       />
     </div>

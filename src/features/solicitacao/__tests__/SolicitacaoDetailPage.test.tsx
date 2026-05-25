@@ -36,6 +36,14 @@ vi.mock('../useSolicitacao', () => ({
     mutate: vi.fn(),
     isPending: false,
   }),
+  useDeleteSolicitacao: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+  useUpdateSolicitacao: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
   useListMensagensSolicitacao: () => ({
     data: [],
     isLoading: false,
