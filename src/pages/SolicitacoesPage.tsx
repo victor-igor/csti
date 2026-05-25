@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { useNavigate, Outlet } from 'react-router-dom'
+import { Pencil, XCircle, Trash2 } from 'lucide-react'
 import { ListPageShell } from '@/components/molecules/ListPageShell'
 import { StatusFilterChips } from '@/components/molecules/StatusFilterChips'
 import { Pagination } from '@/components/molecules/Pagination'
 import { SolicitacaoCard } from '@/components/organisms/SolicitacaoCard'
+import { OverflowMenu } from '@/components/molecules/OverflowMenu'
+import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { EmptyState } from '@/components/atoms/EmptyState'
 import { ErrorState } from '@/components/atoms/ErrorState'
-import { useListSolicitacoes } from '@/features/solicitacao/useSolicitacao'
-import type { SolicitacaoStatus } from '@/types/domain'
+import { useListSolicitacoes, useCancelSolicitacao, useDeleteSolicitacao } from '@/features/solicitacao/useSolicitacao'
+import type { SolicitacaoStatus, ISolicitacao } from '@/types/domain'
 
 const PAGE_SIZE = 10
 
@@ -21,14 +24,23 @@ const STATUS_FILTERS: { label: string; value: SolicitacaoStatus | 'todos' }[] = 
   { label: 'Cancelado',    value: 'cancelado' },
 ]
 
+const STATUS_EDITAVEIS: SolicitacaoStatus[] = ['aberta', 'aguardando_orcamento']
+
 export default function SolicitacoesPage() {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState<SolicitacaoStatus | 'todos'>('todos')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
 
+  // Estado para dialogs de ação rápida
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [confirmCancel, setConfirmCancel] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
   const filters = activeFilter !== 'todos' ? { status: activeFilter } : undefined
   const { data = [], isLoading, isError, refetch } = useListSolicitacoes(filters)
+  const { mutate: cancelar, isPending: cancelando } = useCancelSolicitacao()
+  const { mutate: excluir, isPending: excluindo } = useDeleteSolicitacao()
 
   const filtered = search
     ? data.filter(s =>
@@ -54,6 +66,25 @@ export default function SolicitacoesPage() {
   const handleSearchChange = (v: string) => {
     setSearch(v)
     setPage(1)
+  }
+
+  function buildOverflowMenu(s: ISolicitacao) {
+    const podeEditar = STATUS_EDITAVEIS.includes(s.status as SolicitacaoStatus)
+    if (!podeEditar) return undefined
+
+    return (
+      <OverflowMenu
+        actions={[
+          {
+            label: 'Editar',
+            icon: Pencil,
+            onClick: () => navigate(`/solicitacoes/${s.id}`),
+          },
+          { separator: true, label: 'Cancelar', icon: XCircle, variant: 'destructive', onClick: () => { setSelectedId(s.id); setConfirmCancel(true) } },
+          { label: 'Excluir', icon: Trash2, variant: 'destructive', onClick: () => { setSelectedId(s.id); setConfirmDelete(true) } },
+        ]}
+      />
+    )
   }
 
   if (isLoading) return <div className="p-4 sm:p-6"><LoadingSkeleton rows={4} /></div>
@@ -101,6 +132,7 @@ export default function SolicitacoesPage() {
                 key={s.id}
                 solicitacao={s}
                 onClick={() => navigate(`/solicitacoes/${s.id}`)}
+                overflowMenu={buildOverflowMenu(s)}
               />
             ))}
             <Pagination
@@ -112,6 +144,37 @@ export default function SolicitacoesPage() {
           </>
         )}
       </ListPageShell>
+
+      {/* Dialogs de confirmação centralizados */}
+      <ConfirmDialog
+        open={confirmCancel}
+        onOpenChange={(open) => { setConfirmCancel(open); if (!open) setSelectedId(null) }}
+        title="Cancelar Solicitação"
+        description="Tem certeza que deseja cancelar esta solicitação? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, cancelar"
+        cancelLabel="Voltar"
+        loading={cancelando}
+        onConfirm={() => {
+          if (selectedId) cancelar(selectedId)
+          setConfirmCancel(false)
+          setSelectedId(null)
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={(open) => { setConfirmDelete(open); if (!open) setSelectedId(null) }}
+        title="Excluir Solicitação"
+        description="Tem certeza que deseja excluir permanentemente esta solicitação e todos os orçamentos associados? Esta ação não pode ser desfeita."
+        confirmLabel="Sim, excluir"
+        cancelLabel="Voltar"
+        loading={excluindo}
+        onConfirm={() => {
+          if (selectedId) excluir(selectedId)
+          setConfirmDelete(false)
+          setSelectedId(null)
+        }}
+      />
     </>
   )
 }

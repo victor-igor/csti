@@ -7,9 +7,11 @@ interface SolicitacaoCardProps {
   solicitacao: ISolicitacao
   onClick: () => void
   variant?: 'cliente' | 'prestador'
+  /** Slot para OverflowMenu "⋮" — substitui o ChevronRight quando presente */
+  overflowMenu?: React.ReactNode
 }
 
-export function SolicitacaoCard({ solicitacao, onClick, variant = 'cliente' }: SolicitacaoCardProps) {
+export function SolicitacaoCard({ solicitacao, onClick, variant = 'cliente', overflowMenu }: SolicitacaoCardProps) {
   const novo = isNew(solicitacao.created_at)
 
   return (
@@ -32,7 +34,7 @@ export function SolicitacaoCard({ solicitacao, onClick, variant = 'cliente' }: S
         {solicitacao.numero}
       </p>
 
-      <p className="mt-0.5 text-sm font-semibold text-foreground leading-tight line-clamp-2 pr-6">
+      <p className="mt-0.5 text-sm font-semibold text-foreground leading-tight line-clamp-2 pr-10">
         {solicitacao.titulo}
       </p>
 
@@ -81,7 +83,16 @@ export function SolicitacaoCard({ solicitacao, onClick, variant = 'cliente' }: S
         </span>
       </div>
 
-      <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
+      {/* Overflow menu ou chevron */}
+      <div
+        className="absolute right-3 top-1/2 -translate-y-1/2"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        {overflowMenu ?? (
+          <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
+        )}
+      </div>
     </div>
   )
 }

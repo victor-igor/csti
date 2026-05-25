@@ -99,3 +99,29 @@ export function useUpdateStatusOS() {
     },
   })
 }
+
+export function useCancelOrdemServico() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, observacao }: { id: string; observacao?: string }) => {
+      const { error } = await supabase
+        .from('ordens_servico')
+        .update({
+          status: 'cancelada',
+          observacoes: observacao?.trim() ? `[Cancelamento: ${observacao.trim()}]` : null,
+        })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['ordens-servico'] })
+      queryClient.invalidateQueries({ queryKey: ['ordens-servico', vars.id] })
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      toast.success('Ordem de serviço cancelada')
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao cancelar ordem de serviço')
+    },
+  })
+}

@@ -172,6 +172,52 @@ export function useUpdateOrcamento(orcamentoId: string) {
   })
 }
 
+export function useDeleteOrcamento() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async ({
+      orcamentoId,
+      solicitacaoId,
+    }: {
+      orcamentoId: string
+      solicitacaoId: string
+    }) => {
+      const { error: orcErr } = await supabase
+        .from('orcamentos')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', orcamentoId)
+      if (orcErr) throw orcErr
+
+      // Reverter status da solicitação se não restarem orçamentos ativos
+      const { data: orcamentos, error: countErr } = await supabase
+        .from('orcamentos')
+        .select('id')
+        .eq('solicitacao_id', solicitacaoId)
+        .is('deleted_at', null)
+      if (countErr) throw countErr
+
+      if (orcamentos.length === 0) {
+        const { error: solErr } = await supabase
+          .from('solicitacoes_orcamento')
+          .update({ status: 'aguardando_orcamento' })
+          .eq('id', solicitacaoId)
+        if (solErr) throw solErr
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      toast.success('Orçamento excluído com sucesso')
+      navigate('/prestador/orcamentos')
+    },
+    onError: (error: Error) => {
+      toast.error(parseApiError(error) || 'Erro ao excluir orçamento')
+    },
+  })
+}
+
 export function useEnviarOrcamento() {
   const queryClient = useQueryClient()
 
