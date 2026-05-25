@@ -39,3 +39,13 @@ Plans:
 - [x] 02-02-PLAN.md — Schemas Zod com mensagens PT-BR + fix bug coerce.number (D-01, D-02, D-03)
 - [x] 02-03-PLAN.md — Wire parseApiError em 5 hooks (useSolicitacao, useOrcamento, useOrdemServico, useAuth, PerfilModal)
 - [x] 02-04-PLAN.md — ErrorState contextual em 6 páginas com isError (D-09, D-10)
+
+### Phase 4: UX Cliente/Prestador — Ondas A+B (UX-PERSONA-REVIEW)
+
+**Goal:** Fechar os 12 gaps de maior impacto (4 críticos + 8 altos) identificados na auditoria `UX-PERSONA-REVIEW.md`, incluindo o canal Cliente↔Prestador via "Updates da OS" (substituto leve do chat in-app). Foco em informação/ação faltantes nas jornadas reais das duas personas.
+**Requirements**: [N-04, N-07, N-08, N-10, N-13, N-17, N-18, N-20, N-21, N-23-sub, N-26, N-07b]
+**Depends on:** Phase 2
+**Plans:** TBD (definido pelo gsd-planner)
+
+Plans:
+- [ ] (a ser gerado pelo gsd-planner com base em 04-CONTEXT.md)

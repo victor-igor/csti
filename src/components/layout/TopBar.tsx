@@ -16,6 +16,7 @@ import type { Role } from '@/types/domain'
 const ROLE_LABEL: Record<Role, string> = {
   cliente: 'Cliente',
   prestador: 'Prestador',
+  admin: 'Administrador',
 }
 
 export function TopBar() {

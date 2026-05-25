@@ -8,7 +8,7 @@ import { Dialog } from '@base-ui/react'
 import { Button } from '@/components/ui/button'
 import { PhoneInput } from '@/components/molecules/PhoneInput'
 import { InfoRow } from '@/components/molecules/InfoRow'
-import { parseStoredPhone } from '@/lib/phoneUtils'
+import { parseStoredPhone, buildStoredPhone, formatDisplayPhone } from '@/lib/phoneUtils'
 import { parseApiError } from '@/lib/errorUtils'
 import { useAuthStore } from '@/store/authStore'
 import { useGetPerfil, useUpdatePerfil } from '@/features/perfil/usePerfil'
@@ -19,6 +19,7 @@ import type { Role } from '@/types/domain'
 const ROLE_LABEL: Record<Role, string> = {
   cliente: 'Cliente',
   prestador: 'Prestador',
+  admin: 'Administrador',
 }
 
 const PerfilSchema = z.object({
@@ -65,7 +66,7 @@ function PerfilTab() {
   }, [activeProfile, reset])
 
   function onSubmit(data: PerfilFormData) {
-    const telefone = data.phoneNumber ? `${data.phoneDial} ${data.phoneNumber}` : null
+    const telefone = buildStoredPhone(data.phoneDial, data.phoneNumber ?? '')
     mutate(
       { nome: data.nome, telefone, especialidade: data.especialidade ?? null },
       {
@@ -169,7 +170,7 @@ function PerfilTab() {
         label="Telefone"
         value={
           activeProfile?.telefone
-            ? <span>{activeProfile.telefone}</span>
+            ? <span>{formatDisplayPhone(activeProfile.telefone)}</span>
             : <button onClick={() => setIsEditing(true)} className="text-sm text-primary hover:underline">Adicionar telefone</button>
         }
         action={activeProfile?.telefone ? (

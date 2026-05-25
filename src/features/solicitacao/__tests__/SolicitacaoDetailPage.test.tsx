@@ -64,7 +64,7 @@ describe('SolicitacaoDetailPage', () => {
       .mockResolvedValueOnce({ data: mockOrcamento, error: null })
 
     renderPage()
-    const link = await screen.findByRole('link', { name: /ver orçamento/i })
-    expect(link).toHaveAttribute('href', '/orcamentos/orc-123/revisar')
+    const links = await screen.findAllByRole('link', { name: /ver orçamento/i })
+    expect(links[0]).toHaveAttribute('href', '/orcamentos/orc-123/revisar')
   })
 })

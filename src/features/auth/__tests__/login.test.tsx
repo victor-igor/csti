@@ -23,14 +23,24 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-vi.mock('@/store/authStore', () => ({
-  useAuthStore: Object.assign(vi.fn(() => null), {
-    getState: vi.fn(() => ({ setLoading: vi.fn() })),
-  }),
-}))
+vi.mock('@/store/authStore', async () => {
+  const { create } = await import('zustand')
+  const mockStore = create((set) => ({
+    user: null,
+    profile: null,
+    session: null,
+    setSession: (user: any, profile: any, session: any) => set({ user, profile, session }),
+    setProfile: (profile: any) => set({ profile }),
+    clearSession: () => set({ user: null, profile: null, session: null }),
+  }))
+  return {
+    useAuthStore: mockStore,
+  }
+})
 
 import { supabase } from '@/lib/supabase'
 import LoginPage from '../LoginPage'
+import { useAuthStore } from '@/store/authStore'
 
 function renderLoginPage() {
   return render(
@@ -43,6 +53,7 @@ function renderLoginPage() {
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    useAuthStore.getState().clearSession()
   })
 
   it('exibe erro de email inválido inline', async () => {
@@ -87,9 +98,14 @@ describe('LoginPage', () => {
   })
 
   it('redireciona para /dashboard após login bem-sucedido', async () => {
-    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
-      data: { user: { id: 'u1' } as never, session: { access_token: 'tok' } as never },
-      error: null,
+    vi.mocked(supabase.auth.signInWithPassword).mockImplementationOnce(async () => {
+      const mockUser = { id: 'u1' } as any
+      const mockSession = { access_token: 'tok', user: mockUser } as any
+      useAuthStore.getState().setSession(mockUser, null, mockSession)
+      return {
+        data: { user: mockUser, session: mockSession },
+        error: null,
+      }
     })
 
     renderLoginPage()
@@ -110,9 +126,14 @@ describe('useAuth.login', () => {
   })
 
   it('chama signInWithPassword com email e senha corretos', async () => {
-    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
-      data: { user: { id: 'u1' } as never, session: { access_token: 'tok' } as never },
-      error: null,
+    vi.mocked(supabase.auth.signInWithPassword).mockImplementationOnce(async () => {
+      const mockUser = { id: 'u1' } as any
+      const mockSession = { access_token: 'tok', user: mockUser } as any
+      useAuthStore.getState().setSession(mockUser, null, mockSession)
+      return {
+        data: { user: mockUser, session: mockSession },
+        error: null,
+      }
     })
 
     renderLoginPage()
@@ -130,9 +151,14 @@ describe('useAuth.login', () => {
   })
 
   it('chama setSession após login bem-sucedido — verifica navigate /dashboard chamado', async () => {
-    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
-      data: { user: { id: 'u1' } as never, session: { access_token: 'tok' } as never },
-      error: null,
+    vi.mocked(supabase.auth.signInWithPassword).mockImplementationOnce(async () => {
+      const mockUser = { id: 'u1' } as any
+      const mockSession = { access_token: 'tok', user: mockUser } as any
+      useAuthStore.getState().setSession(mockUser, null, mockSession)
+      return {
+        data: { user: mockUser, session: mockSession },
+        error: null,
+      }
     })
 
     renderLoginPage()

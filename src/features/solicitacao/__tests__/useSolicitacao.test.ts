@@ -130,12 +130,12 @@ describe('useListSolicitacoesParaPrestador', () => {
   })
 
   it('retorna apenas solicitações aguardando_orcamento', async () => {
-    const mockData = [
-      { id: '1', titulo: 'Solicitacao 1', status: 'aguardando_orcamento' },
-      { id: '2', titulo: 'Solicitacao 2', status: 'aguardando_orcamento' },
+    const mockQueryData = [
+      { id: '1', titulo: 'Solicitacao 1', status: 'aguardando_orcamento', profiles: { nome: 'Cliente A' } },
+      { id: '2', titulo: 'Solicitacao 2', status: 'aguardando_orcamento', profiles: null },
     ]
 
-    mockSupabase.order.mockResolvedValueOnce({ data: mockData, error: null })
+    mockSupabase.order.mockResolvedValueOnce({ data: mockQueryData, error: null })
 
     const { result } = renderHook(() => useListSolicitacoesParaPrestador(), {
       wrapper: createWrapper(),
@@ -144,6 +144,9 @@ describe('useListSolicitacoesParaPrestador', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(mockSupabase.eq).toHaveBeenCalledWith('status', 'aguardando_orcamento')
     expect(mockSupabase.is).toHaveBeenCalledWith('deleted_at', null)
-    expect(result.current.data).toEqual(mockData)
+    expect(result.current.data).toEqual([
+      { id: '1', titulo: 'Solicitacao 1', status: 'aguardando_orcamento', cliente_nome: 'Cliente A' },
+      { id: '2', titulo: 'Solicitacao 2', status: 'aguardando_orcamento', cliente_nome: null },
+    ])
   })
 })

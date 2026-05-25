@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 import { useGetOrdemServico, useUpdateStatusOS, getProximoStatus } from './useOrdemServico'
 import type { OSStatus } from '@/types/domain'
+import { formatDisplayPhone } from '@/lib/phoneUtils'
 
 function formatDate(date: string | null) {
   if (!date) return '—'
@@ -100,11 +101,11 @@ export default function OrdemServicoDetailPage() {
           )}
           <InfoRow
             label="Telefone"
-            value={contraparte.telefone ?? '—'}
+            value={contraparte.telefone ? formatDisplayPhone(contraparte.telefone) : '—'}
             action={
               contraparte.telefone ? (
                 <a
-                  href={`tel:${contraparte.telefone}`}
+                  href={`tel:+${contraparte.telefone.replace(/\D/g, '')}`}
                   className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                 >
                   <Phone className="h-3 w-3" /> Ligar

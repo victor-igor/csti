@@ -9,6 +9,7 @@ const valid = {
   role: 'cliente' as const,
   telefone: '',
   especialidade: '',
+  aceita_termos: true,
 }
 
 describe('RegisterSchema', () => {
@@ -53,7 +54,7 @@ describe('RegisterSchema', () => {
   })
 
   it('role inválida → erro de validação', () => {
-    const result = RegisterSchema.safeParse({ ...valid, role: 'admin' })
+    const result = RegisterSchema.safeParse({ ...valid, role: 'invalido' as any })
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.flatten().fieldErrors.role).toBeDefined()

@@ -32,8 +32,8 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeInTheDocument()
   })
 
-  it('renderiza size sm com classe px-3', () => {
+  it('renderiza size sm com classe px-2.5', () => {
     const { container } = render(<Button size="sm">Pequeno</Button>)
-    expect(container.firstChild).toHaveClass('px-3')
+    expect(container.firstChild).toHaveClass('px-2.5')
   })
 })

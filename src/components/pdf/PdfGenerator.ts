@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import type { IOrcamento, IItemOrcamento, IProfile } from '@/types/domain'
+import { formatDisplayPhone } from '@/lib/phoneUtils'
 
 const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -32,7 +33,7 @@ export function generateOrcamentoPdf(
     y += 6
   }
   if (prestador.telefone) {
-    doc.text(`Telefone: ${prestador.telefone}`, 14, y)
+    doc.text(`Telefone: ${formatDisplayPhone(prestador.telefone)}`, 14, y)
     y += 6
   }
   y += 4

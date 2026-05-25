@@ -102,11 +102,37 @@ export function formatPhoneByDial(value: string, dial: string): string {
 
 export function parseStoredPhone(stored: string | null | undefined): { dial: string; number: string } {
   if (!stored) return { dial: '+55', number: '' }
-  const country = COUNTRIES.find((c) => stored.startsWith(c.dial + ' '))
-  if (country) return { dial: country.dial, number: stored.slice(country.dial.length + 1) }
-  return { dial: '+55', number: stored }
+  
+  // Keep only '+' and digits
+  const clean = stored.replace(/[^\d+]/g, '')
+  if (!clean) return { dial: '+55', number: '' }
+
+  // Ensure it starts with '+'
+  const cleanWithPlus = clean.startsWith('+') ? clean : `+${clean}`
+
+  // Sort countries by dial code length descending to match longer country codes first
+  const sortedCountries = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length)
+  const country = sortedCountries.find((c) => cleanWithPlus.startsWith(c.dial))
+
+  if (country) {
+    const numberPart = cleanWithPlus.slice(country.dial.length)
+    return { dial: country.dial, number: formatPhoneByDial(numberPart, country.dial) }
+  }
+
+  // Fallback for numbers stored without country code
+  return { dial: '+55', number: formatPhoneByDial(cleanWithPlus.replace(/^\+55/, ''), '+55') }
 }
 
 export function buildStoredPhone(dial: string, number: string): string | null {
-  return number ? `${dial} ${number}` : null
+  if (!number) return null
+  const cleanDial = dial.replace(/[^\d+]/g, '') // Keep '+' and digits
+  const cleanNumber = number.replace(/\D/g, '') // Keep only digits
+  const combined = `${cleanDial}${cleanNumber}`
+  return combined.startsWith('+') ? combined : `+${combined}`
+}
+
+export function formatDisplayPhone(stored: string | null | undefined): string {
+  if (!stored) return ''
+  const { dial, number } = parseStoredPhone(stored)
+  return number ? `${dial} ${number}` : stored
 }

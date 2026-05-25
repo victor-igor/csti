@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase'
 import { parseApiError } from '@/lib/errorUtils'
 import { track, trackError } from '@/lib/analytics'
 import type { RegisterFormData, LoginFormData } from './authSchemas'
+import { useAuthStore } from '@/store/authStore'
+import type { IProfile } from '@/types/domain'
 
 export function useAuth() {
   const navigate = useNavigate()
@@ -26,9 +28,25 @@ export function useAuth() {
         especialidade: data.especialidade ?? null,
       })
       if (profileError) throw profileError
+
+      // Fetch the updated profile and save to the store to avoid race condition with auth state change
+      const { data: profileData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single()
+      
+      if (!fetchError && profileData) {
+        useAuthStore.getState().setProfile(profileData as IProfile)
+      }
     }
 
-    navigate('/login', { state: { message: 'Conta criada! Faça login.' } })
+    const hasSession = useAuthStore.getState().session !== null
+    if (hasSession) {
+      navigate('/dashboard')
+    } else {
+      navigate('/login', { state: { message: 'Conta criada! Faça login.' } })
+    }
   }
 
   async function login(data: LoginFormData): Promise<string | null> {

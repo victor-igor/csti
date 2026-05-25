@@ -25,6 +25,7 @@ const OrdemServicoListPage = lazy(() => import('@/features/ordem-servico/OrdemSe
 const OrdemServicoDetailPage = lazy(() => import('@/features/ordem-servico/OrdemServicoDetailPage'))
 const SolicitacaoListPrestadorPage = lazy(() => import('@/features/solicitacao/SolicitacaoListPrestadorPage'))
 const NotificacoesPage = lazy(() => import('@/pages/NotificacoesPage'))
+const AdminUsuariosPage = lazy(() => import('@/pages/AdminUsuariosPage'))
 
 const Fallback = () => <LoadingSkeleton rows={4} className="m-6" />
 
@@ -46,16 +47,16 @@ export default function App() {
                   <Route index element={<Navigate to="/dashboard" replace />} />
                   <Route path="dashboard" element={<DashboardPage />} />
 
-                  {/* Cliente only */}
-                  <Route element={<RoleGuard allowedRoles={['cliente']} />}>
+                  {/* Cliente and Admin */}
+                  <Route element={<RoleGuard allowedRoles={['cliente', 'admin']} />}>
                     <Route path="solicitacoes" element={<SolicitacoesPage />}>
                       <Route path="nova" element={<SolicitacaoFormDialog />} />
                       <Route path=":id" element={<SolicitacaoDetailDialog />} />
                     </Route>
                   </Route>
 
-                  {/* Prestador only */}
-                  <Route element={<RoleGuard allowedRoles={['prestador']} />}>
+                  {/* Prestador and Admin */}
+                  <Route element={<RoleGuard allowedRoles={['prestador', 'admin']} />}>
                     <Route path="prestador/solicitacoes" element={<SolicitacaoListPrestadorPage />}>
                       <Route path=":id" element={<SolicitacaoDetailDialog />} />
                     </Route>
@@ -64,9 +65,14 @@ export default function App() {
                     <Route path="prestador/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
                   </Route>
 
-                  {/* Cliente only — review orcamento */}
-                  <Route element={<RoleGuard allowedRoles={['cliente']} />}>
+                  {/* Cliente and Admin — review orcamento */}
+                  <Route element={<RoleGuard allowedRoles={['cliente', 'admin']} />}>
                     <Route path="orcamentos/:id/revisar" element={<OrcamentoReviewPage />} />
+                  </Route>
+
+                  {/* Admin only */}
+                  <Route element={<RoleGuard allowedRoles={['admin']} />}>
+                    <Route path="admin/usuarios" element={<AdminUsuariosPage />} />
                   </Route>
 
                   {/* All authenticated */}

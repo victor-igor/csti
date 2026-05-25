@@ -73,7 +73,12 @@ export default function LoginPage() {
 
           <div className="space-y-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-foreground">Senha</span>
+              <label
+                htmlFor="senha"
+                className="text-sm font-medium text-foreground cursor-pointer"
+              >
+                Senha
+              </label>
               <Link
                 to="/recuperar-senha"
                 className="text-sm text-primary font-medium hover:underline"

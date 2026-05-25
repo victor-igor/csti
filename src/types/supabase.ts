@@ -228,6 +228,7 @@ export type Database = {
           id: string
           nome: string
           role: Database["public"]["Enums"]["role_enum"]
+          status_aprovacao: "pendente" | "aprovado" | "recusado"
           telefone: string | null
           updated_at: string
         }
@@ -239,6 +240,7 @@ export type Database = {
           id: string
           nome: string
           role: Database["public"]["Enums"]["role_enum"]
+          status_aprovacao?: "pendente" | "aprovado" | "recusado"
           telefone?: string | null
           updated_at?: string
         }
@@ -250,6 +252,7 @@ export type Database = {
           id?: string
           nome?: string
           role?: Database["public"]["Enums"]["role_enum"]
+          status_aprovacao?: "pendente" | "aprovado" | "recusado"
           telefone?: string | null
           updated_at?: string
         }
@@ -351,6 +354,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_deletar_usuario: { Args: { p_user_id: string }; Returns: unknown }
       aprovar_orcamento: { Args: { p_orcamento_id: string }; Returns: string }
       gerar_numero_orcamento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
@@ -359,7 +363,7 @@ export type Database = {
     Enums: {
       orcamento_status_enum: "rascunho" | "enviado" | "aceito" | "recusado"
       os_status_enum: "aberta" | "em_andamento" | "concluida" | "cancelada"
-      role_enum: "cliente" | "prestador"
+      role_enum: "cliente" | "prestador" | "admin"
       solicitacao_status_enum:
         | "aberta"
         | "aguardando_orcamento"
@@ -462,7 +466,7 @@ export const Constants = {
     Enums: {
       orcamento_status_enum: ["rascunho", "enviado", "aceito", "recusado"],
       os_status_enum: ["aberta", "em_andamento", "concluida", "cancelada"],
-      role_enum: ["cliente", "prestador"],
+      role_enum: ["cliente", "prestador", "admin"],
       solicitacao_status_enum: [
         "aberta",
         "aguardando_orcamento",

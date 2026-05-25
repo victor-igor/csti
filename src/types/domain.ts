@@ -1,6 +1,6 @@
 import type { Tables } from './supabase'
 
-export type Role = 'cliente' | 'prestador'
+export type Role = 'cliente' | 'prestador' | 'admin'
 
 export type SolicitacaoStatus =
   | 'aberta'

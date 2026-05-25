@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, FileText, Wrench, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, FileText, Wrench, Users, type LucideIcon } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
@@ -23,7 +23,7 @@ function useSolicitacoesBadge() {
   return useQuery({
     queryKey: ['badge', 'solicitacoes', role, profile?.id],
     queryFn: async () => {
-      if (role === 'cliente') return 0
+      if (role === 'cliente' || role === 'admin') return 0
       const { count, error } = await supabase
         .from('solicitacoes_orcamento')
         .select('*', { count: 'exact', head: true })
@@ -42,7 +42,7 @@ function useOrcamentosBadge() {
   return useQuery({
     queryKey: ['badge', 'orcamentos', role, profile?.id],
     queryFn: async () => {
-      if (role === 'prestador') return 0
+      if (role === 'prestador' || role === 'admin') return 0
       const { count, error } = await supabase
         .from('orcamentos')
         .select('*', { count: 'exact', head: true })
@@ -54,6 +54,25 @@ function useOrcamentosBadge() {
   })
 }
 
+function usePendingUsersBadge() {
+  const profile = useAuthStore((s) => s.profile)
+  const role = profile?.role as Role | undefined
+
+  return useQuery({
+    queryKey: ['badge', 'pending-users', role, profile?.id],
+    queryFn: async () => {
+      if (role !== 'admin') return 0
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('status_aprovacao', 'pendente')
+      if (error) throw error
+      return count ?? 0
+    },
+    enabled: profile?.role === 'admin',
+  })
+}
+
 export function useNavLinks(): NavLink[] {
   const groups = useNavGroups()
   return groups.flatMap((g) => g.items)
@@ -62,9 +81,20 @@ export function useNavLinks(): NavLink[] {
 export function useNavGroups(): NavGroup[] {
   const { data: solBadge = 0 } = useSolicitacoesBadge()
   const { data: orcBadge = 0 } = useOrcamentosBadge()
+  const { data: pendingUsersBadge = 0 } = usePendingUsersBadge()
   const role = useAuthStore((s) => s.profile?.role) as Role | undefined
 
   const solicitacoesHref = role === 'prestador' ? '/prestador/solicitacoes' : '/solicitacoes'
+
+  const gestaoItems: NavLink[] = [
+    { label: 'Solicitações', href: solicitacoesHref, icon: ClipboardList, badge: solBadge || undefined },
+    { label: 'Orçamentos', href: '/orcamentos', icon: FileText, badge: orcBadge || undefined },
+    { label: 'OS', href: '/ordens-servico', icon: Wrench },
+  ]
+
+  if (role === 'admin') {
+    gestaoItems.push({ label: 'Usuários', href: '/admin/usuarios', icon: Users, badge: pendingUsersBadge || undefined })
+  }
 
   return [
     {
@@ -75,11 +105,7 @@ export function useNavGroups(): NavGroup[] {
     },
     {
       label: 'Gestão',
-      items: [
-        { label: 'Solicitações', href: solicitacoesHref, icon: ClipboardList, badge: solBadge || undefined },
-        { label: 'Orçamentos', href: '/orcamentos', icon: FileText, badge: orcBadge || undefined },
-        { label: 'OS', href: '/ordens-servico', icon: Wrench },
-      ],
+      items: gestaoItems,
     },
   ]
 }

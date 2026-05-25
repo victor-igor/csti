@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Plus, Zap, Clock, BarChart2 } from 'lucide-react'
+import { Plus, Zap, Clock, BarChart2, Users } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
@@ -384,6 +384,84 @@ function PrestadorDashboard() {
   )
 }
 
+// ─── Dashboard do Administrador ────────────────────────────────────────────────
+
+function AdminDashboard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['dashboard', 'admin'],
+    queryFn: async () => {
+      const [usr, sol, orc, os] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true }),
+        supabase
+          .from('solicitacoes_orcamento')
+          .select('id', { count: 'exact', head: true })
+          .is('deleted_at', null),
+        supabase
+          .from('orcamentos')
+          .select('id', { count: 'exact', head: true })
+          .is('deleted_at', null),
+        supabase
+          .from('ordens_servico')
+          .select('id', { count: 'exact', head: true }),
+      ])
+
+      return {
+        totalUsuarios: usr.count ?? 0,
+        totalSolicitacoes: sol.count ?? 0,
+        totalOrcamentos: orc.count ?? 0,
+        totalOS: os.count ?? 0,
+      }
+    },
+  })
+
+  if (isLoading) return <LoadingSkeleton rows={5} />
+
+  return (
+    <div className="space-y-8">
+      {/* Stat Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total de Usuários" value={data?.totalUsuarios} to="/admin/usuarios" />
+        <StatCard label="Total de Solicitações" value={data?.totalSolicitacoes} to="/solicitacoes" />
+        <StatCard label="Total de Orçamentos" value={data?.totalOrcamentos} to="/orcamentos" />
+        <StatCard label="Total de OS" value={data?.totalOS} to="/ordens-servico" />
+      </div>
+
+      <DashboardSection
+        title="Controle Administrativo"
+        icon={<Users className="h-4 w-4 text-neutral-400" />}
+      >
+        <div className="rounded-lg border border-border bg-card p-6 shadow-card space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Você está acessando a plataforma como **Administrador**. Você possui acesso total para auditar solicitações, orçamentos, ordens de serviço e contas de usuários.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/admin/usuarios"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
+            >
+              Gerenciar Usuários
+            </Link>
+            <Link
+              to="/solicitacoes"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-neutral-50 transition-colors"
+            >
+              Auditar Solicitações
+            </Link>
+            <Link
+              to="/orcamentos"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-neutral-50 transition-colors"
+            >
+              Auditar Orçamentos
+            </Link>
+          </div>
+        </div>
+      </DashboardSection>
+    </div>
+  )
+}
+
 // ─── DashboardPage ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -391,7 +469,12 @@ export default function DashboardPage() {
 
   const greeting = greetingByHour()
   const firstName = profile?.nome?.split(' ')[0] ?? 'bem-vindo'
-  const roleLabel = profile?.role === 'prestador' ? 'Prestador' : 'Cliente'
+  const roleLabel =
+    profile?.role === 'admin'
+      ? 'Administrador'
+      : profile?.role === 'prestador'
+      ? 'Prestador'
+      : 'Cliente'
 
   const hoje = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
@@ -405,7 +488,13 @@ export default function DashboardPage() {
         title={`${greeting}, ${firstName}!`}
         subtitle={`${hoje.charAt(0).toUpperCase() + hoje.slice(1)} • Painel do ${roleLabel}`}
       />
-      {profile?.role === 'prestador' ? <PrestadorDashboard /> : <ClienteDashboard />}
+      {profile?.role === 'admin' ? (
+        <AdminDashboard />
+      ) : profile?.role === 'prestador' ? (
+        <PrestadorDashboard />
+      ) : (
+        <ClienteDashboard />
+      )}
     </div>
   )
 }

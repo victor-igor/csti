@@ -15,6 +15,7 @@ import DashboardPreview from './DashboardPreview'
 const ROLE_OPTIONS = [
   { value: 'cliente', label: 'Cliente' },
   { value: 'prestador', label: 'Prestador' },
+  { value: 'admin', label: 'Administrador' },
 ]
 
 export default function RegisterPage() {
