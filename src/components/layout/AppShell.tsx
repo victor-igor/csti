@@ -9,6 +9,7 @@ import { useSidebar } from '@/hooks/useSidebar'
 import { useAuthStore } from '@/store/authStore'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { FloatingChatWidget } from './FloatingChatWidget'
 
 export function AppShell() {
   const isExpanded = useSidebar((s) => s.isExpanded)
@@ -63,6 +64,7 @@ export function AppShell() {
 
       <BottomNav />
       <PerfilModal />
+      <FloatingChatWidget />
     </div>
   )
 }
