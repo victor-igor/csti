@@ -15,6 +15,7 @@ const mockSupabase = vi.hoisted(() => ({
   order: vi.fn(),
   eq: vi.fn(),
   single: vi.fn(),
+  maybeSingle: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -91,15 +92,16 @@ describe('useGetSolicitacao', () => {
     mockSupabase.eq.mockReturnThis()
     mockSupabase.order.mockReturnThis()
     mockSupabase.single.mockReturnThis()
+    mockSupabase.maybeSingle.mockReturnThis()
   })
 
   it('retorna solicitação quando id é válido', async () => {
     const mockSolicitacao = { id: 'abc-123', titulo: 'Solicitacao Teste', status: 'aberta' }
     const mockHistorico: never[] = []
 
-    // useGetSolicitacao uses Promise.all: first call resolves via .single(),
+    // useGetSolicitacao uses Promise.all: first call resolves via .maybeSingle(),
     // second call (status_historico) resolves via .order()
-    mockSupabase.single.mockResolvedValueOnce({ data: mockSolicitacao, error: null })
+    mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockSolicitacao, error: null })
     mockSupabase.order.mockResolvedValueOnce({ data: mockHistorico, error: null })
 
     const { result } = renderHook(() => useGetSolicitacao('abc-123'), {

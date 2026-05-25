@@ -15,6 +15,7 @@ const mockSupabase = vi.hoisted(() => ({
   eq: vi.fn(),
   order: vi.fn(),
   single: vi.fn(),
+  maybeSingle: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -58,10 +59,11 @@ describe('SolicitacaoDetailPage', () => {
     mockSupabase.eq.mockReturnThis()
     mockSupabase.is.mockReturnThis()
     mockSupabase.order.mockReturnThis()
-    // First call: fetch solicitacao; second call: fetch orcamento
-    mockSupabase.single
-      .mockResolvedValueOnce({ data: mockSolicitacao, error: null })
-      .mockResolvedValueOnce({ data: mockOrcamento, error: null })
+    mockSupabase.maybeSingle.mockReturnThis()
+
+    // First call uses maybeSingle (fetch solicitacao), second call uses single (fetch orcamento)
+    mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockSolicitacao, error: null })
+    mockSupabase.single.mockResolvedValueOnce({ data: mockOrcamento, error: null })
 
     renderPage()
     const links = await screen.findAllByRole('link', { name: /ver orçamento/i })

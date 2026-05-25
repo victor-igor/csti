@@ -69,7 +69,7 @@ export function useGetSolicitacao(id: string) {
             .select('*')
             .is('deleted_at', null)
             .eq('id', id)
-            .single(),
+            .maybeSingle(),
           supabase
             .from('status_historico')
             .select('status_novo, created_at, observacao')
@@ -78,6 +78,7 @@ export function useGetSolicitacao(id: string) {
             .order('created_at', { ascending: true }),
         ])
       if (error) throw error
+      if (!solicitacao) throw new Error('Solicitação não encontrada ou acesso negado')
       if (historicoError) throw historicoError
       return {
         ...solicitacao,
