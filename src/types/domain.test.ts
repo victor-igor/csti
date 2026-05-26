@@ -8,6 +8,17 @@ import type {
   IOrcamento,
 } from './domain'
 
+describe('Role type', () => {
+  it('todos os 4 valores de Role compilam', () => {
+    const roles: Role[] = ['cliente', 'prestador', 'admin', 'super_admin']
+    expect(roles).toHaveLength(4)
+  })
+
+  it('não aceita string inválida', () => {
+    expectTypeOf<'invalido'>().not.toMatchTypeOf<Role>()
+  })
+})
+
 describe('SolicitacaoStatus', () => {
   it('todos os 5 valores válidos compilam', () => {
     const values: SolicitacaoStatus[] = [

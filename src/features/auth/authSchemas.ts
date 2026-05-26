@@ -9,7 +9,7 @@ export const RegisterSchema = z
     email: z.string().min(1, 'E-mail obrigatório').email('E-mail inválido'),
     senha: z.string().min(8, 'Mínimo 8 caracteres'),
     confirmar_senha: z.string(),
-    role: z.enum(['cliente', 'prestador', 'admin'], {
+    role: z.enum(['cliente', 'prestador', 'admin', 'super_admin'], {
       error: 'Selecione um perfil válido',
     }),
     telefone: z.string().optional(),

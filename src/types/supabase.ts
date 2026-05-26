@@ -425,7 +425,7 @@ export type Database = {
       tipo_item_enum: "servico" | "produto" | "outros"
       orcamento_status_enum: "rascunho" | "enviado" | "aceito" | "recusado"
       os_status_enum: "aberta" | "em_andamento" | "concluida" | "cancelada"
-      role_enum: "cliente" | "prestador" | "admin"
+      role_enum: "cliente" | "prestador" | "admin" | "super_admin"
       solicitacao_status_enum:
         | "aberta"
         | "aguardando_orcamento"
@@ -528,7 +528,7 @@ export const Constants = {
     Enums: {
       orcamento_status_enum: ["rascunho", "enviado", "aceito", "recusado"],
       os_status_enum: ["aberta", "em_andamento", "concluida", "cancelada"],
-      role_enum: ["cliente", "prestador", "admin"],
+      role_enum: ["cliente", "prestador", "admin", "super_admin"],
       solicitacao_status_enum: [
         "aberta",
         "aguardando_orcamento",

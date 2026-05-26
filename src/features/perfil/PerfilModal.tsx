@@ -20,6 +20,7 @@ const ROLE_LABEL: Record<Role, string> = {
   cliente: 'Cliente',
   prestador: 'Prestador',
   admin: 'Administrador',
+  super_admin: 'Super Admin',
 }
 
 const PerfilSchema = z.object({

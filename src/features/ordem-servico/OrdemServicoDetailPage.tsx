@@ -28,7 +28,7 @@ const LABELS_TRANSICAO: Partial<Record<OSStatus, string>> = {
   em_andamento: 'Marcar como Concluída',
 }
 
-const OS_STATUS_LABEL: Partial<Record<OSStatus, string>> = {
+export const OS_STATUS_LABEL: Partial<Record<OSStatus, string>> = {
   aberta: 'Aberta',
   em_andamento: 'Em Andamento',
   concluida: 'Concluída',
@@ -56,17 +56,21 @@ export default function OrdemServicoDetailPage() {
   const isPrestador = profile?.role === 'prestador'
   const isAdmin = profile?.role === 'admin'
   const isCliente = profile?.role === 'cliente'
+  const isSuperAdmin = profile?.role === 'super_admin'
 
   const proximoStatus = getProximoStatus(data.status as OSStatus)
   const labelTransicao = LABELS_TRANSICAO[data.status as OSStatus]
   const contraparte = isPrestador ? data.cliente : data.prestador
 
   const podeCancelar =
-    (isAdmin || isCliente) &&
+    (isAdmin || isCliente || isSuperAdmin) &&
     STATUS_CANCELAVEIS.includes(data.status as OSStatus)
 
-  // ─── Ação primária (CTA) — avançar status para o prestador ───────────────
-  const primaryAction = isPrestador && proximoStatus && labelTransicao ? (
+  // Prestador e super_admin podem avançar o status (admin não pode)
+  const podeAvancarStatus = (isPrestador || isSuperAdmin) && !!proximoStatus && !!labelTransicao
+
+  // ─── Ação primária (CTA) — avançar status para prestador e admin ─────────
+  const primaryAction = podeAvancarStatus ? (
     <Button disabled={isPending} onClick={() => setConfirmOpen(true)}>
       {isPending && <Loader2 className="size-4 animate-spin" />}
       {labelTransicao}

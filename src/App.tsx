@@ -48,7 +48,7 @@ export default function App() {
                   <Route path="dashboard" element={<DashboardPage />} />
 
                   {/* Cliente and Admin */}
-                  <Route element={<RoleGuard allowedRoles={['cliente', 'admin']} />}>
+                  <Route element={<RoleGuard allowedRoles={['cliente', 'admin', 'super_admin']} />}>
                     <Route path="solicitacoes" element={<SolicitacoesPage />}>
                       <Route path="nova" element={<SolicitacaoFormDialog />} />
                       <Route path=":id" element={<SolicitacaoDetailDialog />} />
@@ -56,7 +56,7 @@ export default function App() {
                   </Route>
 
                   {/* Prestador and Admin */}
-                  <Route element={<RoleGuard allowedRoles={['prestador', 'admin']} />}>
+                  <Route element={<RoleGuard allowedRoles={['prestador', 'admin', 'super_admin']} />}>
                     <Route path="prestador/solicitacoes" element={<SolicitacaoListPrestadorPage />}>
                       <Route path=":id" element={<SolicitacaoDetailDialog />} />
                     </Route>
@@ -66,12 +66,12 @@ export default function App() {
                   </Route>
 
                   {/* Cliente and Admin — review orcamento */}
-                  <Route element={<RoleGuard allowedRoles={['cliente', 'admin']} />}>
+                  <Route element={<RoleGuard allowedRoles={['cliente', 'admin', 'super_admin']} />}>
                     <Route path="orcamentos/:id/revisar" element={<OrcamentoReviewPage />} />
                   </Route>
 
                   {/* Admin only */}
-                  <Route element={<RoleGuard allowedRoles={['admin']} />}>
+                  <Route element={<RoleGuard allowedRoles={['admin', 'super_admin']} />}>
                     <Route path="admin/usuarios" element={<AdminUsuariosPage />} />
                   </Route>
 

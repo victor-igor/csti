@@ -53,7 +53,14 @@ export function TimelineMensagens({ solicitacaoId }: TimelineMensagensProps) {
         {mensagens.map((msg) => {
           const isMe = msg.usuario_id === currentUser?.id
           const senderName = msg.profiles?.nome || 'Usuário'
-          const senderRole = msg.profiles?.role === 'prestador' ? 'Prestador' : msg.profiles?.role === 'admin' ? 'Admin' : 'Cliente'
+          const senderRole =
+            msg.profiles?.role === 'super_admin'
+              ? 'Super Admin'
+              : msg.profiles?.role === 'prestador'
+              ? 'Prestador'
+              : msg.profiles?.role === 'admin'
+              ? 'Admin'
+              : 'Cliente'
           const dateStr = new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
           return (

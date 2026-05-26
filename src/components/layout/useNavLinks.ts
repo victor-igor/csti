@@ -23,7 +23,7 @@ function useSolicitacoesBadge() {
   return useQuery({
     queryKey: ['badge', 'solicitacoes', role, profile?.id],
     queryFn: async () => {
-      if (role === 'cliente' || role === 'admin') return 0
+      if (role === 'cliente' || role === 'admin' || role === 'super_admin') return 0
       const { count, error } = await supabase
         .from('solicitacoes_orcamento')
         .select('*', { count: 'exact', head: true })
@@ -42,7 +42,7 @@ function useOrcamentosBadge() {
   return useQuery({
     queryKey: ['badge', 'orcamentos', role, profile?.id],
     queryFn: async () => {
-      if (role === 'prestador' || role === 'admin') return 0
+      if (role === 'prestador' || role === 'admin' || role === 'super_admin') return 0
       const { count, error } = await supabase
         .from('orcamentos')
         .select('*', { count: 'exact', head: true })
@@ -72,7 +72,7 @@ export function useNavGroups(): NavGroup[] {
     { label: 'OS', href: '/ordens-servico', icon: Wrench },
   ]
 
-  if (role === 'admin') {
+  if (role === 'admin' || role === 'super_admin') {
     gestaoItems.push({ label: 'Usuários', href: '/admin/usuarios', icon: Users })
   }
 

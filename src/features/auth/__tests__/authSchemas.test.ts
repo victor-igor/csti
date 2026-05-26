@@ -79,4 +79,12 @@ describe('RegisterSchema', () => {
     })
     expect(result.success).toBe(true)
   })
+
+  it('todos os campos válidos com role=super_admin → passa', () => {
+    const result = RegisterSchema.safeParse({
+      ...valid,
+      role: 'super_admin',
+    })
+    expect(result.success).toBe(true)
+  })
 })

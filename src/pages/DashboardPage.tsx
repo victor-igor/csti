@@ -470,7 +470,9 @@ export default function DashboardPage() {
   const greeting = greetingByHour()
   const firstName = profile?.nome?.split(' ')[0] ?? 'bem-vindo'
   const roleLabel =
-    profile?.role === 'admin'
+    profile?.role === 'super_admin'
+      ? 'Super Admin'
+      : profile?.role === 'admin'
       ? 'Administrador'
       : profile?.role === 'prestador'
       ? 'Prestador'
@@ -488,7 +490,7 @@ export default function DashboardPage() {
         title={`${greeting}, ${firstName}!`}
         subtitle={`${hoje.charAt(0).toUpperCase() + hoje.slice(1)} • Painel do ${roleLabel}`}
       />
-      {profile?.role === 'admin' ? (
+      {profile?.role === 'admin' || profile?.role === 'super_admin' ? (
         <AdminDashboard />
       ) : profile?.role === 'prestador' ? (
         <PrestadorDashboard />

@@ -15,13 +15,7 @@ import { Button } from '@/components/ui/button'
 import type { IProfile, Role } from '@/types/domain'
 import { formatDisplayPhone, parseStoredPhone, buildStoredPhone } from '@/lib/phoneUtils'
 import { PhoneInput } from '@/components/molecules/PhoneInput'
-
-const ROLE_FILTERS = [
-  { label: 'Todos', value: '' },
-  { label: 'Clientes', value: 'cliente' },
-  { label: 'Prestadores', value: 'prestador' },
-  { label: 'Administradores', value: 'admin' },
-]
+import { useAuthStore } from '@/store/authStore'
 
 const ROLE_BADGE: Record<Role, React.ReactNode> = {
   cliente: (
@@ -37,6 +31,11 @@ const ROLE_BADGE: Record<Role, React.ReactNode> = {
   admin: (
     <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700">
       <ShieldAlert className="h-3 w-3" /> Admin
+    </span>
+  ),
+  super_admin: (
+    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
+      <ShieldAlert className="h-3 w-3" /> Super Admin
     </span>
   ),
 }
@@ -78,15 +77,19 @@ export default function AdminUsuariosPage() {
       telefone: string | null
       especialidade: string | null
     }) => {
-      const { error } = await supabase.rpc('admin_criar_usuario', {
-        p_email: newUser.email,
-        p_senha: newUser.senha,
-        p_nome: newUser.nome,
-        p_role: newUser.role,
-        p_telefone: newUser.telefone ?? null,
-        p_especialidade: newUser.especialidade ?? null,
+      const { data, error } = await supabase.functions.invoke('admin-criar-usuario', {
+        body: {
+          email: newUser.email,
+          senha: newUser.senha,
+          nome: newUser.nome,
+          role: newUser.role,
+          telefone: newUser.telefone ?? null,
+          especialidade: newUser.especialidade ?? null,
+        },
       })
       if (error) throw error
+      // A Edge Function pode retornar { error } no body mesmo com status 200
+      if (data?.error) throw new Error(data.error)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
@@ -97,6 +100,7 @@ export default function AdminUsuariosPage() {
       toast.error(parseApiError(error) || 'Erro ao criar usuário')
     },
   })
+
 
   // 2. Update User Mutation
   const updateMutation = useMutation({
@@ -170,8 +174,21 @@ export default function AdminUsuariosPage() {
     },
   })
 
+  const currentUserRole = useAuthStore((s) => s.profile?.role)
+  const isSuperAdmin = currentUserRole === 'super_admin'
+
+  const roleFilters = [
+    { label: 'Todos', value: '' },
+    { label: 'Clientes', value: 'cliente' },
+    { label: 'Prestadores', value: 'prestador' },
+    { label: 'Administradores', value: 'admin' },
+    ...(isSuperAdmin ? [{ label: 'Super Admins', value: 'super_admin' }] : []),
+  ]
+
   // Filtering
-  const filteredUsers = users
+  const visibleUsers = users.filter((u) => isSuperAdmin || u.role !== 'super_admin')
+
+  const filteredUsers = visibleUsers
     .filter((u) => !activeRole || u.role === activeRole)
     .filter(
       (u) =>
@@ -198,13 +215,13 @@ export default function AdminUsuariosPage() {
         placeholder="Buscar por nome ou e-mail..."
         filters={
           <StatusFilterChips
-            filters={ROLE_FILTERS}
+            filters={roleFilters}
             active={activeRole}
             onSelect={setActiveRole}
           />
         }
         resultCount={filteredUsers.length}
-        totalCount={users.length}
+        totalCount={visibleUsers.length}
       />
 
       {isLoading && <LoadingSkeleton rows={5} />}
@@ -349,6 +366,7 @@ export default function AdminUsuariosPage() {
               <EditUserForm
                 user={editingUser}
                 isPending={updateMutation.isPending}
+                currentUserRole={currentUserRole as Role}
                 onCancel={() => setEditingUser(null)}
                 onSubmit={(data) => updateMutation.mutate({ id: editingUser.id, ...data })}
               />
@@ -376,6 +394,7 @@ export default function AdminUsuariosPage() {
 
               <CreateUserForm
                 isPending={createMutation.isPending}
+                currentUserRole={currentUserRole as Role}
                 onCancel={() => setIsCreatingUser(false)}
                 onSubmit={(data) => createMutation.mutate(data)}
               />
@@ -390,6 +409,7 @@ export default function AdminUsuariosPage() {
 interface EditUserFormProps {
   user: IProfile
   isPending: boolean
+  currentUserRole: Role
   onCancel: () => void
   onSubmit: (data: {
     nome: string
@@ -399,7 +419,7 @@ interface EditUserFormProps {
   }) => void
 }
 
-function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps) {
+function EditUserForm({ user, isPending, currentUserRole, onCancel, onSubmit }: EditUserFormProps) {
   const [nome, setNome] = useState(user.nome)
   const [role, setRole] = useState<Role>(user.role as Role)
   const parsedPhone = parseStoredPhone(user.telefone)
@@ -447,6 +467,7 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
           <option value="cliente">Cliente</option>
           <option value="prestador">Prestador</option>
           <option value="admin">Administrador</option>
+          {currentUserRole === 'super_admin' && <option value="super_admin">Super Admin</option>}
         </select>
       </div>
 
@@ -489,6 +510,7 @@ function EditUserForm({ user, isPending, onCancel, onSubmit }: EditUserFormProps
 
 interface CreateUserFormProps {
   isPending: boolean
+  currentUserRole: Role
   onCancel: () => void
   onSubmit: (data: {
     email: string
@@ -500,7 +522,7 @@ interface CreateUserFormProps {
   }) => void
 }
 
-function CreateUserForm({ isPending, onCancel, onSubmit }: CreateUserFormProps) {
+function CreateUserForm({ isPending, currentUserRole, onCancel, onSubmit }: CreateUserFormProps) {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -603,6 +625,7 @@ function CreateUserForm({ isPending, onCancel, onSubmit }: CreateUserFormProps) 
           <option value="cliente">Cliente</option>
           <option value="prestador">Prestador</option>
           <option value="admin">Administrador</option>
+          {currentUserRole === 'super_admin' && <option value="super_admin">Super Admin</option>}
         </select>
       </div>
 
