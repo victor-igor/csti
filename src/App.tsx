@@ -10,8 +10,10 @@ import { AppShell } from '@/components/layout/AppShell'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { OnboardingWelcome } from '@/pages/OnboardingWelcome'
 
-const LoginPage        = lazy(() => import('@/features/auth/LoginPage'))
-const RegisterPage     = lazy(() => import('@/features/auth/RegisterPage'))
+const LoginPage           = lazy(() => import('@/features/auth/LoginPage'))
+const RegisterPage        = lazy(() => import('@/features/auth/RegisterPage'))
+const RecuperarSenhaPage  = lazy(() => import('@/features/auth/RecuperarSenhaPage'))
+const RedefinirSenhaPage  = lazy(() => import('@/features/auth/RedefinirSenhaPage'))
 const DashboardPage    = lazy(() => import('@/pages/DashboardPage'))
 const SolicitacoesPage = lazy(() => import('@/pages/SolicitacoesPage'))
 const OrcamentosPage   = lazy(() => import('@/pages/OrcamentosPage'))
@@ -24,6 +26,7 @@ const OrcamentoReviewPage = lazy(() => import('@/features/orcamento/OrcamentoRev
 const OrdemServicoListPage = lazy(() => import('@/features/ordem-servico/OrdemServicoListPage'))
 const OrdemServicoDetailPage = lazy(() => import('@/features/ordem-servico/OrdemServicoDetailPage'))
 const SolicitacaoListPrestadorPage = lazy(() => import('@/features/solicitacao/SolicitacaoListPrestadorPage'))
+const OrcamentoPrestadorPage = lazy(() => import('@/features/orcamento/OrcamentoPrestadorPage'))
 const NotificacoesPage = lazy(() => import('@/pages/NotificacoesPage'))
 const AdminUsuariosPage = lazy(() => import('@/pages/AdminUsuariosPage'))
 
@@ -38,8 +41,10 @@ export default function App() {
           <Suspense fallback={<Fallback />}>
             <Routes>
               {/* Public */}
-              <Route path="/login"    element={<LoginPage />} />
-              <Route path="/cadastro" element={<RegisterPage />} />
+              <Route path="/login"           element={<LoginPage />} />
+              <Route path="/cadastro"        element={<RegisterPage />} />
+              <Route path="/recuperar-senha" element={<RecuperarSenhaPage />} />
+              <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
 
               {/* Protected */}
               <Route element={<ProtectedRoute />}>
@@ -60,6 +65,7 @@ export default function App() {
                     <Route path="prestador/solicitacoes" element={<SolicitacaoListPrestadorPage />}>
                       <Route path=":id" element={<SolicitacaoDetailDialog />} />
                     </Route>
+                    <Route path="prestador/orcamentos" element={<OrcamentoPrestadorPage />} />
                     <Route path="prestador/orcamentos/novo/:solicitacaoId" element={<OrcamentoFormPage />} />
                     <Route path="prestador/orcamentos/:id" element={<OrcamentoDetailPage />} />
                     <Route path="prestador/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
@@ -75,12 +81,20 @@ export default function App() {
                     <Route path="admin/usuarios" element={<AdminUsuariosPage />} />
                   </Route>
 
+                  {/* Cliente and Admin — lista de orçamentos recebidos */}
+                  <Route element={<RoleGuard allowedRoles={['cliente', 'admin', 'super_admin']} />}>
+                    <Route path="orcamentos/*" element={<OrcamentosPage />} />
+                  </Route>
+
+                  {/* Cliente, Prestador and Admin — ordens de serviço */}
+                  <Route element={<RoleGuard allowedRoles={['cliente', 'prestador', 'admin', 'super_admin']} />}>
+                    <Route path="ordens-servico" element={<OrdemServicoListPage />} />
+                    <Route path="ordens-servico/:id" element={<OrdemServicoDetailPage />} />
+                  </Route>
+
                   {/* All authenticated */}
-                  <Route path="orcamentos/*"    element={<OrcamentosPage />} />
-                  <Route path="ordens-servico" element={<OrdemServicoListPage />} />
-                  <Route path="ordens-servico/:id" element={<OrdemServicoDetailPage />} />
-                  <Route path="perfil"           element={<PerfilPage />} />
-                  <Route path="notificacoes"    element={<NotificacoesPage />} />
+                  <Route path="perfil"        element={<PerfilPage />} />
+                  <Route path="notificacoes"  element={<NotificacoesPage />} />
                 </Route>
               </Route>
 
