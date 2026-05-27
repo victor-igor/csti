@@ -1,10 +1,21 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuthStore } from '@/store/authStore'
 import type { Role } from '@/types/domain'
 
 interface RoleGuardProps {
   allowedRoles: Role[]
+}
+
+function RoleRedirect() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    toast.error('Você não tem permissão para acessar essa página.')
+    navigate('/dashboard', { replace: true })
+  }, [navigate])
+  return null
 }
 
 export function RoleGuard({ allowedRoles }: RoleGuardProps) {
@@ -19,7 +30,7 @@ export function RoleGuard({ allowedRoles }: RoleGuardProps) {
   }
 
   if (!allowedRoles.includes(profile.role as Role)) {
-    return <Navigate to="/dashboard" replace />
+    return <RoleRedirect />
   }
 
   return <Outlet />
