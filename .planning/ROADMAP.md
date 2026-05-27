@@ -40,6 +40,20 @@ Plans:
 - [x] 02-03-PLAN.md — Wire parseApiError em 5 hooks (useSolicitacao, useOrcamento, useOrdemServico, useAuth, PerfilModal)
 - [x] 02-04-PLAN.md — ErrorState contextual em 6 páginas com isError (D-09, D-10)
 
+### Phase 5: Correção de Bugs Críticos — Chat, RLS, Navegação e UX
+
+**Goal:** Corrigir 7 bugs identificados na auditoria do sistema: chat invisível no Dialog, RLS duplicado em mensagens, menu do prestador com link quebrado, RoleGuard sem feedback, página 404 ausente e error states não padronizados nas queries.
+**Requirements**: [BUG-01, BUG-02, BUG-03, BUG-04, BUG-05, BUG-06, BUG-07]
+**Depends on:** Phase 2
+**Plans:** 3/5 plans executed
+
+Plans:
+- [x] 05-01-PLAN.md — Chat no SolicitacaoDetailDialog: adicionar TimelineMensagens (BUG-01)
+- [x] 05-02-PLAN.md — RLS mensagens: dropar policies duplicadas via migration (BUG-02)
+- [x] 05-03-PLAN.md — Menu prestador: remover link /orcamentos quebrado + badge (BUG-03, BUG-07)
+- [ ] 05-04-PLAN.md — RoleGuard com toast de feedback + Página 404 (BUG-04, BUG-05)
+- [ ] 05-05-PLAN.md — Error states em páginas de listagem (BUG-06)
+
 ### Phase 4: UX Cliente/Prestador — Ondas A+B (UX-PERSONA-REVIEW)
 
 **Goal:** Fechar os 12 gaps de maior impacto (4 críticos + 8 altos) identificados na auditoria `UX-PERSONA-REVIEW.md`, incluindo o canal Cliente↔Prestador via "Updates da OS" (substituto leve do chat in-app). Foco em informação/ação faltantes nas jornadas reais das duas personas.
