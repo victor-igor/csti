@@ -121,7 +121,7 @@ export default function OrcamentoReviewPage() {
               <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Prestador</p>
               <UserCard
                 name={prestador.nome}
-                role={prestador.especialidade ?? 'Prestador'}
+                role={prestador.especialidade?.join(', ') || 'Prestador'}
               />
             </div>
           )}

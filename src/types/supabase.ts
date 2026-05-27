@@ -417,9 +417,12 @@ export type Database = {
       admin_desativar_usuario: { Args: { p_user_id: string }; Returns: unknown }
       admin_reativar_usuario: { Args: { p_user_id: string }; Returns: unknown }
       aprovar_orcamento: { Args: { p_orcamento_id: string }; Returns: string }
+      deletar_orcamento_prestador: { Args: { p_orcamento_id: string }; Returns: undefined }
+      enviar_orcamento: { Args: { p_orcamento_id: string }; Returns: undefined }
       gerar_numero_orcamento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
       gerar_numero_solicitacao: { Args: never; Returns: string }
+      recusar_orcamento: { Args: { p_orcamento_id: string; p_motivo?: string }; Returns: string }
     }
     Enums: {
       tipo_item_enum: "servico" | "produto" | "outros"

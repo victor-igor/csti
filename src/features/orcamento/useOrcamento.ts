@@ -54,7 +54,7 @@ export function useRecusarOrcamento() {
       // RPC atômica: marca orçamento como recusado + reverte solicitação
       const { data: solId, error } = await supabase.rpc('recusar_orcamento', {
         p_orcamento_id: orcamentoId,
-        p_motivo: motivo ?? null,
+        p_motivo: motivo ?? undefined,
       })
       if (error) throw error
       return (solId ?? _solicitacaoId) as string

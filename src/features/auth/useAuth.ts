@@ -25,7 +25,7 @@ export function useAuth() {
         email: data.email,
         role: data.role,
         telefone: data.telefone ?? null,
-        especialidade: data.especialidade ?? null,
+        especialidade: data.especialidade ? [data.especialidade] : null,
       })
       if (profileError) throw profileError
 

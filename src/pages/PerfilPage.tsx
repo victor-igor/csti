@@ -46,7 +46,7 @@ export default function PerfilPage() {
     defaultValues: {
       nome: storeProfile?.nome ?? '',
       telefone: storeProfile?.telefone ?? '',
-      especialidade: storeProfile?.especialidade ?? '',
+      especialidade: storeProfile?.especialidade?.join(', ') ?? '',
     },
   })
 
@@ -55,7 +55,7 @@ export default function PerfilPage() {
       reset({
         nome: profile.nome ?? '',
         telefone: profile.telefone ?? '',
-        especialidade: profile.especialidade ?? '',
+        especialidade: profile.especialidade?.join(', ') ?? '',
       })
     }
   }, [profile, reset])
@@ -67,10 +67,14 @@ export default function PerfilPage() {
 
   function handleConfirm() {
     if (!pendingData) return
+    const especialidades = pendingData.especialidade
+      ?.split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
     const payload = {
       nome: pendingData.nome,
       telefone: pendingData.telefone ?? null,
-      especialidade: pendingData.especialidade ?? null,
+      especialidade: especialidades && especialidades.length > 0 ? especialidades : null,
     }
     mutate(payload, {
       onSuccess: () => {

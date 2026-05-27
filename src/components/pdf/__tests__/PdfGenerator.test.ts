@@ -63,7 +63,7 @@ const itens: IItemOrcamento[] = [
 
 const prestador: Pick<IProfile, 'nome' | 'especialidade' | 'telefone'> = {
   nome: 'Joao Silva',
-  especialidade: 'TI',
+  especialidade: ['TI'],
   telefone: '11999999999',
 }
 
