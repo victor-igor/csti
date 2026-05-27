@@ -3,12 +3,15 @@ import { Dialog } from '@base-ui/react'
 import { ClipboardList, FileText, Wrench } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
+import { useOnboardingStore } from '@/hooks/useOnboarding'
 
 const STORAGE_KEY = 'orcafacil_onboarding_seen'
 
 export function OnboardingWelcome() {
   const profile = useAuthStore((s) => s.profile)
   const [open, setOpen] = useState(false)
+  const startTour = useOnboardingStore((s) => s.startTour)
+  const tourDone = useOnboardingStore((s) => s.tourDone)
 
   useEffect(() => {
     if (!profile) return
@@ -49,6 +52,13 @@ export function OnboardingWelcome() {
         // coluna pode não existir; localStorage cobre
       }
     }
+
+    // Inicia o tour Joyride após fechar o modal (só se não foi feito antes)
+    if (!tourDone && profile?.role) {
+      const role = profile.role as 'cliente' | 'prestador' | 'admin' | 'super_admin'
+      // Pequeno delay para garantir que o modal fechou antes do tour começar
+      setTimeout(() => startTour(role), 300)
+    }
   }
 
   return (
@@ -81,7 +91,7 @@ export function OnboardingWelcome() {
               onClick={handleClose}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
             >
-              Entendi
+              Entendi — iniciar tour →
             </button>
           </div>
         </Dialog.Popup>

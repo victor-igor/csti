@@ -66,7 +66,7 @@ function OrcamentosList({
         search={search}
         onSearchChange={setSearch}
         placeholder="Buscar por número..."
-        filters={<StatusFilterChips filters={statusFilters} active={activeStatus} onSelect={setActiveStatus} />}
+        filters={<div data-tour="filtros-orcamentos"><StatusFilterChips filters={statusFilters} active={activeStatus} onSelect={setActiveStatus} /></div>}
         resultCount={filtered.length}
         totalCount={data.length}
       />

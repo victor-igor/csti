@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { FloatingChatWidget } from './FloatingChatWidget'
+import { OnboardingTour } from '@/features/onboarding/OnboardingTour'
 
 export function AppShell() {
   const isExpanded = useSidebar((s) => s.isExpanded)
@@ -65,6 +66,7 @@ export function AppShell() {
       <BottomNav />
       <PerfilModal />
       <FloatingChatWidget />
+      <OnboardingTour />
     </div>
   )
 }

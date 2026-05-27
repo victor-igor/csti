@@ -247,7 +247,7 @@ export default function AdminUsuariosPage() {
       )}
 
       {!isLoading && !isError && filteredUsers.length > 0 && (
-        <div className="grid gap-4 grid-cols-1">
+        <div className="grid gap-4 grid-cols-1" data-tour="tabela-usuarios">
           {filteredUsers.map((user) => {
             const initials = user.nome.charAt(0).toUpperCase()
             const isInactive = user.ativo === false

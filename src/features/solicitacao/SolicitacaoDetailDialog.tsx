@@ -19,7 +19,8 @@ import { TimelineMensagens } from './components/TimelineMensagens'
 export default function SolicitacaoDetailDialog() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const role = useAuthStore((s) => s.profile?.role)
+  const profile = useAuthStore((s) => s.profile)
+  const role = profile?.role
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isEditing, setIsEditing] = useState(false)

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { usePerfilModal } from '@/store/perfilModalStore'
 import { useSidebar } from '@/hooks/useSidebar'
+import { useOnboardingStore } from '@/hooks/useOnboarding'
 import { NotificacoesBell } from '@/features/notificacoes/NotificacoesBell'
 import { UserMenuItems } from './UserMenuItems'
 import {
@@ -24,10 +25,17 @@ export function TopBar() {
   const profile = useAuthStore((s) => s.profile)
   const openPerfilModal = usePerfilModal((s) => s.open)
   const isExpanded = useSidebar((s) => s.isExpanded)
+  const startTour = useOnboardingStore((s) => s.startTour)
 
   const initials = profile?.nome?.charAt(0).toUpperCase() ?? '?'
   const firstName = profile?.nome?.split(' ')[0] ?? ''
   const roleLabel = profile?.role ? ROLE_LABEL[profile.role as Role] : ''
+
+  const handleStartTour = () => {
+    if (profile?.role) {
+      startTour(profile.role as 'cliente' | 'prestador' | 'admin' | 'super_admin')
+    }
+  }
 
   return (
     <header
@@ -62,6 +70,8 @@ export function TopBar() {
       <div className="flex items-center gap-1 shrink-0 ml-auto">
         {/* Help — oculto no mobile */}
         <button
+          id="onboarding-help-button"
+          onClick={handleStartTour}
           className="hidden md:flex items-center justify-center p-2 rounded-lg text-neutral-500 hover:bg-neutral-25 transition-colors"
           aria-label="Ajuda"
           title="Ajuda"

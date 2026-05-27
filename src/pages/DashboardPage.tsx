@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Plus, Zap, Clock, BarChart2, Users } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
+// Tour de onboarding agora gerenciado pelo OnboardingTour.tsx (React Joyride via AppShell)
 import { PageHeader } from '@/components/molecules/PageHeader'
 import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { DashboardSection } from '@/components/molecules/DashboardSection'
@@ -465,6 +467,7 @@ function AdminDashboard() {
 // ─── DashboardPage ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
 
   const greeting = greetingByHour()

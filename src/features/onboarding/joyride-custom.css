@@ -1,0 +1,75 @@
+/* ─────────────────────────────────────────────────────────────
+   React Joyride — Identidade Visual CSTI
+   ───────────────────────────────────────────────────────────── */
+
+/* Tooltip wrapper */
+.__floater.__floater__open {
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.18));
+}
+
+/* Tooltip body */
+.react-joyride__tooltip {
+  border-radius: 12px !important;
+  padding: 20px 22px !important;
+  max-width: 340px !important;
+  font-family: inherit !important;
+}
+
+/* Header */
+.react-joyride__tooltip header {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin-bottom: 8px !important;
+}
+
+/* Conteúdo */
+.react-joyride__tooltip__main {
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  color: #374151 !important;
+}
+
+/* Barra de progresso */
+.react-joyride__progress {
+  font-size: 11px !important;
+  color: #6b7280 !important;
+  margin-top: 12px !important;
+}
+
+/* Botão primário (Próximo / Entendi) */
+.react-joyride__tooltip button[data-action="primary"] {
+  background-color: #2563eb !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 6px 14px !important;
+  transition: background-color 0.15s !important;
+}
+
+.react-joyride__tooltip button[data-action="primary"]:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Botão secundário (Anterior) */
+.react-joyride__tooltip button[data-action="back"] {
+  color: #6b7280 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+/* Botão pular */
+.react-joyride__tooltip button[data-action="skip"] {
+  color: #9ca3af !important;
+  font-size: 12px !important;
+}
+
+/* Overlay */
+.react-joyride__overlay {
+  mix-blend-mode: normal !important;
+}
+
+/* Spotlight (elemento destacado) */
+.react-joyride__spotlight {
+  border-radius: 8px !important;
+}

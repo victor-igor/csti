@@ -1,0 +1,77 @@
+/* Customização do Driver.js para o Design System do OrçaFácil */
+
+.orcafacil-driver-popover {
+  background-color: #ffffff !important;
+  color: #061b31 !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 6px 22px rgba(0, 55, 112, 0.10) !important; /* shadow-floating */
+  border: 1px solid #e5edf5 !important;
+  max-width: 350px !important;
+}
+
+.orcafacil-driver-popover .driver-popover-title {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #061b31 !important;
+  margin-bottom: 8px !important;
+}
+
+.orcafacil-driver-popover .driver-popover-description {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: #64748d !important; /* muted-foreground */
+}
+
+.orcafacil-driver-popover .driver-popover-footer {
+  margin-top: 20px !important;
+  display: flex !important;
+  gap: 8px !important;
+  justify-content: flex-end !important;
+}
+
+.orcafacil-driver-popover .driver-popover-btn {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  text-shadow: none !important;
+}
+
+/* Botão "Próximo" e "Finalizar" (Primary) */
+.orcafacil-driver-popover .driver-popover-next-btn,
+.orcafacil-driver-popover .driver-popover-close-btn {
+  background-color: #533afd !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 1.7px 3.4px rgba(50,50,93,.2) !important;
+}
+
+.orcafacil-driver-popover .driver-popover-next-btn:hover {
+  background-color: #4032c8 !important;
+}
+
+/* Botão "Anterior" (Secondary/Outline) */
+.orcafacil-driver-popover .driver-popover-prev-btn {
+  background-color: transparent !important;
+  color: #533afd !important;
+  border: 1px solid #e5edf5 !important;
+}
+
+.orcafacil-driver-popover .driver-popover-prev-btn:hover {
+  background-color: #f8fafd !important;
+}
+
+/* Progress bar */
+.orcafacil-driver-popover .driver-popover-progress-text {
+  color: #95a4ba !important;
+  font-size: 12px !important;
+}
+
+.driver-stage-no-animation {
+  border-radius: 6px !important;
+}

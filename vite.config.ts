@@ -35,6 +35,7 @@ export default defineConfig({
       '@hookform/resolvers/zod',
       'sonner',
       'lucide-react',
+      'react-joyride',
     ],
   },
   test: {

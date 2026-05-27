@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Outlet } from 'react-router-dom'
 import { Pencil, XCircle, Trash2 } from 'lucide-react'
 import { ListPageShell } from '@/components/molecules/ListPageShell'
@@ -11,6 +11,7 @@ import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { EmptyState } from '@/components/atoms/EmptyState'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { useListSolicitacoes, useCancelSolicitacao, useDeleteSolicitacao } from '@/features/solicitacao/useSolicitacao'
+import { useAuthStore } from '@/store/authStore'
 import type { SolicitacaoStatus, ISolicitacao } from '@/types/domain'
 
 const PAGE_SIZE = 10
@@ -99,6 +100,7 @@ export default function SolicitacoesPage() {
         columns={1}
         actions={
           <button
+            data-tour="nova-solicitacao"
             onClick={() => navigate('/solicitacoes/nova')}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
           >
@@ -106,11 +108,13 @@ export default function SolicitacoesPage() {
           </button>
         }
         filters={
-          <StatusFilterChips
-            filters={STATUS_FILTERS}
-            active={activeFilter}
-            onSelect={handleFilterChange}
-          />
+          <div data-tour="filtros-solicitacoes">
+            <StatusFilterChips
+              filters={STATUS_FILTERS}
+              active={activeFilter}
+              onSelect={handleFilterChange}
+            />
+          </div>
         }
         search={search}
         onSearchChange={handleSearchChange}

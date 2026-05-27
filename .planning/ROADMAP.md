@@ -61,5 +61,13 @@ Plans:
 **Depends on:** Phase 2
 **Plans:** TBD (definido pelo gsd-planner)
 
+### Phase 6: Onboarding Interativo com Driver.js
+
+**Goal:** Implementar tour interativo usando Driver.js para a Dashboard, guiando o usuário pelas funcionalidades principais (Sidebar, Novo Orçamento, Notificações, Perfil) com tema Stripe.
+**Requirements**: [ONB-01, ONB-02, ONB-03, ONB-04, ONB-05]
+**Depends on:** Phase 1
+**Plans:** 2 plans
+
 Plans:
-- [ ] (a ser gerado pelo gsd-planner com base em 04-CONTEXT.md)
+- [ ] 06-01-PLAN.md — Setup da infraestrutura, hook useOnboarding e tema CSS
+- [ ] 06-02-PLAN.md — Definição do tour, injeção de seletores e gatilhos (Auto + Help Button)
