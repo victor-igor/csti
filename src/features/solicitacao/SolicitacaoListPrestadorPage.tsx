@@ -65,7 +65,7 @@ export default function SolicitacaoListPrestadorPage() {
   }
 
   if (isLoading) return <div className="p-4 sm:p-6"><LoadingSkeleton rows={4} /></div>
-  if (isError) return <div className="p-4 sm:p-6"><ErrorState message="Não foi possível carregar as solicitações. Verifique sua conexão e tente novamente." onRetry={refetch} /></div>
+  if (isError) return <div className="p-4 sm:p-6"><ErrorState message="Não foi possível carregar as solicitações disponíveis. Verifique sua conexão e tente novamente." onRetry={refetch} /></div>
 
   return (
     <>
