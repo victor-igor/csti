@@ -66,9 +66,13 @@ export function useNavGroups(): NavGroup[] {
 
   const solicitacoesHref = role === 'prestador' ? '/prestador/solicitacoes' : '/solicitacoes'
 
+  const orcamentosItem: NavLink = role === 'prestador'
+    ? { label: 'Meus Orçamentos', href: '/prestador/orcamentos', icon: FileText }
+    : { label: 'Orçamentos', href: '/orcamentos', icon: FileText, badge: orcBadge || undefined }
+
   const gestaoItems: NavLink[] = [
     { label: 'Solicitações', href: solicitacoesHref, icon: ClipboardList, badge: solBadge || undefined },
-    { label: 'Orçamentos', href: '/orcamentos', icon: FileText, badge: orcBadge || undefined },
+    orcamentosItem,
     { label: 'OS', href: '/ordens-servico', icon: Wrench },
   ]
 
