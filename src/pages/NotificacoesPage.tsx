@@ -67,7 +67,7 @@ export default function NotificacoesPage() {
     return (
       <div className="p-6 space-y-6">
         <PageHeader title="Notificações" />
-        <ErrorState message="Erro ao carregar notificações" onRetry={refetch} />
+        <ErrorState message="Não foi possível carregar as notificações. Verifique sua conexão e tente novamente." onRetry={refetch} />
       </div>
     )
   }
