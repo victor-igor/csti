@@ -29,6 +29,7 @@ const SolicitacaoListPrestadorPage = lazy(() => import('@/features/solicitacao/S
 const OrcamentoPrestadorPage = lazy(() => import('@/features/orcamento/OrcamentoPrestadorPage'))
 const NotificacoesPage = lazy(() => import('@/pages/NotificacoesPage'))
 const AdminUsuariosPage = lazy(() => import('@/pages/AdminUsuariosPage'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 const Fallback = () => <LoadingSkeleton rows={4} className="m-6" />
 
@@ -98,7 +99,7 @@ export default function App() {
                 </Route>
               </Route>
 
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

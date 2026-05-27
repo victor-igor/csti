@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { FileQuestion } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export default function NotFoundPage() {
   return (
@@ -12,9 +11,12 @@ export default function NotFoundPage() {
       <p className="text-sm text-neutral-500 max-w-xs">
         O endereço que você acessou não existe ou foi movido.
       </p>
-      <Button asChild className="mt-2">
-        <Link to="/dashboard">Voltar ao início</Link>
-      </Button>
+      <Link
+        to="/dashboard"
+        className="mt-2 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/80 transition-colors"
+      >
+        Voltar ao início
+      </Link>
     </div>
   )
 }
