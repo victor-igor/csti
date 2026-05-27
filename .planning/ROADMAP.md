@@ -45,14 +45,14 @@ Plans:
 **Goal:** Corrigir 7 bugs identificados na auditoria do sistema: chat invisível no Dialog, RLS duplicado em mensagens, menu do prestador com link quebrado, RoleGuard sem feedback, página 404 ausente e error states não padronizados nas queries.
 **Requirements**: [BUG-01, BUG-02, BUG-03, BUG-04, BUG-05, BUG-06, BUG-07]
 **Depends on:** Phase 2
-**Plans:** 3/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 05-01-PLAN.md — Chat no SolicitacaoDetailDialog: adicionar TimelineMensagens (BUG-01)
 - [x] 05-02-PLAN.md — RLS mensagens: dropar policies duplicadas via migration (BUG-02)
 - [x] 05-03-PLAN.md — Menu prestador: remover link /orcamentos quebrado + badge (BUG-03, BUG-07)
-- [ ] 05-04-PLAN.md — RoleGuard com toast de feedback + Página 404 (BUG-04, BUG-05)
-- [ ] 05-05-PLAN.md — Error states em páginas de listagem (BUG-06)
+- [x] 05-04-PLAN.md — RoleGuard com toast de feedback + Página 404 (BUG-04, BUG-05)
+- [x] 05-05-PLAN.md — Error states em páginas de listagem (BUG-06)
 
 ### Phase 4: UX Cliente/Prestador — Ondas A+B (UX-PERSONA-REVIEW)
 
