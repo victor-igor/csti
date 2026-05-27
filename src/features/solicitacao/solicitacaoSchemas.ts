@@ -1,6 +1,17 @@
 import { z } from 'zod'
 
 export const CATEGORIAS = ['hardware', 'software', 'rede', 'segurança', 'suporte', 'outro'] as const
+export type Categoria = (typeof CATEGORIAS)[number]
+
+export const CATEGORIA_LABEL: Record<Categoria, string> = {
+  hardware: 'Hardware',
+  software: 'Software',
+  rede: 'Rede',
+  segurança: 'Segurança',
+  suporte: 'Suporte',
+  outro: 'Outro',
+}
+
 export const URGENCIAS = ['baixa', 'media', 'urgente'] as const
 export type Urgencia = (typeof URGENCIAS)[number]
 

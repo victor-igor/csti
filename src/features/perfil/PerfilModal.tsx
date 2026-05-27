@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, User, Shield, Loader2, Pencil } from 'lucide-react'
+import { CATEGORIAS, CATEGORIA_LABEL } from '@/features/solicitacao/solicitacaoSchemas'
 import { toast } from 'sonner'
 import { Dialog } from '@base-ui/react'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,7 @@ const PerfilSchema = z.object({
   nome: z.string().min(2, 'Mínimo 2 caracteres'),
   phoneDial: z.string(),
   phoneNumber: z.string().optional(),
-  especialidade: z.string().optional(),
+  especialidade: z.array(z.string()).optional(),
 })
 type PerfilFormData = z.infer<typeof PerfilSchema>
 
@@ -51,7 +52,7 @@ function PerfilTab() {
 
   const { control, handleSubmit, reset } = useForm<PerfilFormData>({
     resolver: zodResolver(PerfilSchema),
-    defaultValues: { nome: '', phoneDial: '+55', phoneNumber: '', especialidade: '' },
+    defaultValues: { nome: '', phoneDial: '+55', phoneNumber: '', especialidade: [] },
   })
 
   useEffect(() => {
@@ -61,7 +62,7 @@ function PerfilTab() {
         nome: activeProfile.nome ?? '',
         phoneDial: parsed.dial,
         phoneNumber: parsed.number,
-        especialidade: activeProfile.especialidade ?? '',
+        especialidade: Array.isArray(activeProfile.especialidade) ? activeProfile.especialidade : [],
       })
     }
   }, [activeProfile, reset])
@@ -69,7 +70,7 @@ function PerfilTab() {
   function onSubmit(data: PerfilFormData) {
     const telefone = buildStoredPhone(data.phoneDial, data.phoneNumber ?? '')
     mutate(
-      { nome: data.nome, telefone, especialidade: data.especialidade ?? null },
+      { nome: data.nome, telefone, especialidade: data.especialidade?.length ? data.especialidade : null },
       {
         onSuccess: () => { toast.success('Perfil atualizado!'); setIsEditing(false) },
         onError: (error: Error) => toast.error(parseApiError(error) || 'Erro ao atualizar perfil'),
@@ -79,7 +80,7 @@ function PerfilTab() {
 
   function handleCancel() {
     const parsed = parseStoredPhone(activeProfile?.telefone)
-    reset({ nome: activeProfile?.nome ?? '', phoneDial: parsed.dial, phoneNumber: parsed.number, especialidade: activeProfile?.especialidade ?? '' })
+    reset({ nome: activeProfile?.nome ?? '', phoneDial: parsed.dial, phoneNumber: parsed.number, especialidade: Array.isArray(activeProfile?.especialidade) ? activeProfile.especialidade : [] })
     setIsEditing(false)
   }
 
@@ -100,10 +101,43 @@ function PerfilTab() {
 
         {activeProfile?.role === 'prestador' && (
           <div>
-            <label className="block text-xs font-medium text-neutral-500 mb-1">Especialidade</label>
-            <Controller name="especialidade" control={control} render={({ field }) => (
-              <input {...field} type="text" placeholder="Ex: Redes, Hardware, Suporte" className={inputCls} />
-            )} />
+            <label className="block text-xs font-medium text-neutral-500 mb-1">
+              Áreas de atuação
+            </label>
+            <Controller
+              name="especialidade"
+              control={control}
+              render={({ field }) => {
+                const selected: string[] = field.value ?? []
+                const toggle = (cat: string) => {
+                  const next = selected.includes(cat)
+                    ? selected.filter((c) => c !== cat)
+                    : [...selected, cat]
+                  field.onChange(next)
+                }
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {CATEGORIAS.map((cat) => {
+                      const active = selected.includes(cat)
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => toggle(cat)}
+                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            active
+                              ? 'bg-primary text-white border-primary'
+                              : 'bg-white text-neutral-600 border-neutral-300 hover:border-primary/50'
+                          }`}
+                        >
+                          {CATEGORIA_LABEL[cat]}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              }}
+            />
           </div>
         )}
 
@@ -183,8 +217,20 @@ function PerfilTab() {
 
       {activeProfile?.role === 'prestador' && (
         <InfoRow
-          label="Especialidade"
-          value={activeProfile?.especialidade || <span className="text-neutral-400">Não informada</span>}
+          label="Áreas de atuação"
+          value={
+            Array.isArray(activeProfile?.especialidade) && activeProfile.especialidade.length > 0
+              ? (
+                <div className="flex flex-wrap gap-1">
+                  {activeProfile.especialidade.map((cat) => (
+                    <span key={cat} className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">
+                      {CATEGORIA_LABEL[cat as typeof CATEGORIAS[number]] ?? cat}
+                    </span>
+                  ))}
+                </div>
+              )
+              : <span className="text-neutral-400">Nenhuma área selecionada</span>
+          }
           action={
             <button onClick={() => setIsEditing(true)} className="text-sm text-primary hover:underline flex items-center gap-1">
               <Pencil className="h-3.5 w-3.5" /> Editar

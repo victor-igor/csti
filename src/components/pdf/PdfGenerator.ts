@@ -16,7 +16,7 @@ export function generateOrcamentoPdf(
   // Header
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
-  doc.text('OrçaFácil', 14, y)
+  doc.text('CSTI', 14, y)
   y += 8
 
   doc.setFontSize(11)

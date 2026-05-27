@@ -115,7 +115,7 @@ export default function OrcamentoDetailPage() {
   return (
     <div className="p-6 max-w-5xl pb-24 md:pb-6">
       <div className="mb-4">
-        <BackButton to={isPrestador ? '/orcamentos' : '/orcamentos'} />
+        <BackButton to={isPrestador ? '/prestador/orcamentos' : '/orcamentos'} />
       </div>
 
       <PageHeader

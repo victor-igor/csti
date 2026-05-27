@@ -42,13 +42,22 @@ function useOrcamentosBadge() {
   return useQuery({
     queryKey: ['badge', 'orcamentos', role, profile?.id],
     queryFn: async () => {
-      if (role === 'prestador' || role === 'admin' || role === 'super_admin') return 0
-      const { count, error } = await supabase
-        .from('orcamentos')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'enviado')
-      if (error) throw error
-      return count ?? 0
+      if (role === 'admin' || role === 'super_admin') return 0
+      if (role === 'cliente') {
+        // Cliente sees orcamentos count for 'enviado' status (awaiting their review/approval)
+        const { count, error } = await supabase
+          .from('orcamentos')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'enviado')
+        if (error) throw error
+        return count ?? 0
+      }
+      if (role === 'prestador') {
+        // TODO: Prestador badge should count orcamentos awaiting their attention (e.g., rascunho, draft status, or pending revisions).
+        // This requires clarification on which statuses indicate work for prestador. For now returning 0 with explicit comment.
+        return 0
+      }
+      return 0
     },
     enabled: !!profile?.id,
   })

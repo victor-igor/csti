@@ -7,6 +7,12 @@ import { parseApiError } from '@/lib/errorUtils'
 import type { ISolicitacao, SolicitacaoStatus } from '@/types/domain'
 import type { CreateSolicitacaoFormData } from './solicitacaoSchemas'
 
+// Referência estável para o caso "prestador sem especialidade definida".
+// Nunca usar `?? []` DENTRO de um selector Zustand: cria um array novo a cada
+// render, o useSyncExternalStore detecta mudança no snapshot e entra em loop
+// infinito ("Maximum update depth exceeded").
+const EMPTY_ESPECIALIDADE: string[] = []
+
 export function useCreateSolicitacao() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -96,15 +102,25 @@ export function useGetSolicitacao(id: string) {
 }
 
 export function useListSolicitacoesParaPrestador() {
+  const especialidade = useAuthStore((s) => s.profile?.especialidade) ?? EMPTY_ESPECIALIDADE
+
   return useQuery({
-    queryKey: ['solicitacoes', 'prestador', 'pendentes'],
+    queryKey: ['solicitacoes', 'prestador', 'pendentes', especialidade],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('solicitacoes_orcamento')
         .select('*, profiles!cliente_id(nome)')
         .eq('status', 'aguardando_orcamento')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
+
+      // Filtra pelas categorias que o prestador atende
+      // Se não tiver especialidade definida, mostra tudo (prestador ainda configurando)
+      if (especialidade.length > 0) {
+        query = query.in('categoria', especialidade)
+      }
+
+      const { data, error } = await query
       if (error) throw error
       return (data ?? []).map((row) => {
         const { profiles, ...rest } = row as typeof row & { profiles: { nome: string } | null }

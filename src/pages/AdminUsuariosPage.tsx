@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import type { IProfile, Role } from '@/types/domain'
 import { formatDisplayPhone, parseStoredPhone, buildStoredPhone } from '@/lib/phoneUtils'
 import { PhoneInput } from '@/components/molecules/PhoneInput'
+import { CATEGORIAS, CATEGORIA_LABEL } from '@/features/solicitacao/solicitacaoSchemas'
 import { useAuthStore } from '@/store/authStore'
 
 const ROLE_BADGE: Record<Role, React.ReactNode> = {
@@ -75,7 +76,7 @@ export default function AdminUsuariosPage() {
       nome: string
       role: Role
       telefone: string | null
-      especialidade: string | null
+      especialidade: string[] | null
     }) => {
       const { data, error } = await supabase.functions.invoke('admin-criar-usuario', {
         body: {
@@ -406,6 +407,32 @@ export default function AdminUsuariosPage() {
   )
 }
 
+function EspecialidadeSelect({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const toggle = (cat: string) =>
+    onChange(value.includes(cat) ? value.filter((c) => c !== cat) : [...value, cat])
+  return (
+    <div className="flex flex-wrap gap-2">
+      {CATEGORIAS.map((cat) => {
+        const active = value.includes(cat)
+        return (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => toggle(cat)}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              active
+                ? 'bg-primary text-white border-primary'
+                : 'bg-white text-neutral-600 border-neutral-300 hover:border-primary/50'
+            }`}
+          >
+            {CATEGORIA_LABEL[cat]}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 interface EditUserFormProps {
   user: IProfile
   isPending: boolean
@@ -415,7 +442,7 @@ interface EditUserFormProps {
     nome: string
     role: Role
     telefone: string | null
-    especialidade: string | null
+    especialidade: string[] | null
   }) => void
 }
 
@@ -425,7 +452,9 @@ function EditUserForm({ user, isPending, currentUserRole, onCancel, onSubmit }: 
   const parsedPhone = parseStoredPhone(user.telefone)
   const [phoneDial, setPhoneDial] = useState(parsedPhone.dial)
   const [phoneNumber, setPhoneNumber] = useState(parsedPhone.number)
-  const [especialidade, setEspecialidade] = useState(user.especialidade ?? '')
+  const [especialidade, setEspecialidade] = useState<string[]>(
+    Array.isArray(user.especialidade) ? user.especialidade : [],
+  )
 
   const inputCls =
     'w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors'
@@ -440,7 +469,7 @@ function EditUserForm({ user, isPending, currentUserRole, onCancel, onSubmit }: 
       nome,
       role,
       telefone: buildStoredPhone(phoneDial, phoneNumber),
-      especialidade: role === 'prestador' ? especialidade.trim() || null : null,
+      especialidade: role === 'prestador' ? (especialidade.length ? especialidade : null) : null,
     })
   }
 
@@ -484,14 +513,8 @@ function EditUserForm({ user, isPending, currentUserRole, onCancel, onSubmit }: 
 
       {role === 'prestador' && (
         <div>
-          <label className="block text-xs font-medium text-neutral-500 mb-1">Especialidade</label>
-          <input
-            type="text"
-            value={especialidade}
-            onChange={(e) => setEspecialidade(e.target.value)}
-            className={inputCls}
-            placeholder="Ex: Hardware, Redes, Suporte"
-          />
+          <label className="block text-xs font-medium text-neutral-500 mb-1">Áreas de atuação</label>
+          <EspecialidadeSelect value={especialidade} onChange={setEspecialidade} />
         </div>
       )}
 
@@ -518,7 +541,7 @@ interface CreateUserFormProps {
     nome: string
     role: Role
     telefone: string | null
-    especialidade: string | null
+    especialidade: string[] | null
   }) => void
 }
 
@@ -530,7 +553,7 @@ function CreateUserForm({ isPending, currentUserRole, onCancel, onSubmit }: Crea
   const [role, setRole] = useState<Role>('cliente')
   const [phoneDial, setPhoneDial] = useState('+55')
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [especialidade, setEspecialidade] = useState('')
+  const [especialidade, setEspecialidade] = useState<string[]>([])
 
   const inputCls =
     'w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors'
@@ -553,13 +576,17 @@ function CreateUserForm({ isPending, currentUserRole, onCancel, onSubmit }: Crea
       toast.error('As senhas não conferem')
       return
     }
+    if (role === 'prestador' && especialidade.length === 0) {
+      toast.error('Selecione ao menos uma área de atuação')
+      return
+    }
     onSubmit({
       nome,
       email,
       senha,
       role,
       telefone: buildStoredPhone(phoneDial, phoneNumber),
-      especialidade: role === 'prestador' ? especialidade.trim() || null : null,
+      especialidade: role === 'prestador' ? especialidade : null,
     })
   }
 
@@ -642,15 +669,8 @@ function CreateUserForm({ isPending, currentUserRole, onCancel, onSubmit }: Crea
 
       {role === 'prestador' && (
         <div>
-          <label className="block text-xs font-medium text-neutral-500 mb-1">Especialidade</label>
-          <input
-            type="text"
-            value={especialidade}
-            onChange={(e) => setEspecialidade(e.target.value)}
-            className={inputCls}
-            placeholder="Ex: Hardware, Redes, Suporte"
-            required
-          />
+          <label className="block text-xs font-medium text-neutral-500 mb-1">Áreas de atuação</label>
+          <EspecialidadeSelect value={especialidade} onChange={setEspecialidade} />
         </div>
       )}
 

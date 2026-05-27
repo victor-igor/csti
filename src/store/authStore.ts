@@ -7,19 +7,65 @@ import { track, trackError } from '@/lib/analytics'
 interface AuthState {
   user: User | null
   profile: IProfile | null
+  profileError: string | null
   session: Session | null
   setSession: (user: User, profile: IProfile | null, session: Session) => void
   setProfile: (profile: IProfile) => void
+  setProfileError: (error: string) => void
   clearSession: () => void
+  retryProfileLoad: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Profile fetch timed out')), ms)
+    ),
+  ])
+
+function fetchProfileInBackground(userId: string) {
+  const profileStart = performance.now()
+  void withTimeout(
+    Promise.resolve(
+      supabase.from('profiles').select('*').eq('id', userId).single()
+    ),
+    10_000
+  )
+    .then(({ data, error }) => {
+      if (error) {
+        console.error('[authStore] profile fetch failed:', error.message, error.code)
+        trackError('profile_load_failed', error, { code: error.code })
+        useAuthStore.getState().setProfileError(error.message || 'Falha ao carregar perfil')
+        return
+      }
+      if (data) {
+        useAuthStore.getState().setProfile(data as IProfile)
+        track('profile_loaded', { time_ms: Math.round(performance.now() - profileStart) })
+      }
+    })
+    .catch((err) => {
+      console.error('[authStore] profile fetch threw:', err)
+      trackError('profile_load_failed', err)
+      useAuthStore.getState().setProfileError(err?.message || 'Falha ao carregar perfil')
+    })
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
+  profileError: null,
   session: null,
-  setSession: (user, profile, session) => set({ user, profile, session }),
-  setProfile: (profile) => set({ profile }),
-  clearSession: () => set({ user: null, profile: null, session: null }),
+  setSession: (user, profile, session) => set({ user, profile, profileError: null, session }),
+  setProfile: (profile) => set({ profile, profileError: null }),
+  setProfileError: (error) => set({ profileError: error }),
+  clearSession: () => set({ user: null, profile: null, profileError: null, session: null }),
+  retryProfileLoad: () => {
+    const { user } = get()
+    if (!user) return
+    set({ profileError: null })
+    fetchProfileInBackground(user.id)
+  },
 }))
 
 // Singleton listener — runs once on module load.
@@ -33,25 +79,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   if (session?.user) {
     useAuthStore.getState().setSession(session.user, null, session)
     track('session_ready', { event })
-
-    const profileStart = performance.now()
-    void Promise.resolve(
-      supabase.from('profiles').select('*').eq('id', session.user.id).single()
-    ).then(({ data, error }) => {
-        if (error) {
-          console.error('[authStore] profile fetch failed:', error.message, error.code)
-          trackError('profile_load_failed', error, { code: error.code })
-          return
-        }
-        if (data) {
-          useAuthStore.getState().setProfile(data as IProfile)
-          track('profile_loaded', { time_ms: Math.round(performance.now() - profileStart) })
-        }
-      })
-      .catch((err) => {
-        console.error('[authStore] profile fetch threw:', err)
-        trackError('profile_load_failed', err)
-      })
+    fetchProfileInBackground(session.user.id)
   } else {
     if (event === 'SIGNED_OUT') track('logout')
     useAuthStore.getState().clearSession()

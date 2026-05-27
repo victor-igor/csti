@@ -5,13 +5,13 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
-  v_role role_enum;
+  v_role public.role_enum;
 BEGIN
   -- Se for criado via service_role ou por um administrador/super_admin autenticado, aceita a role enviada
   IF (auth.role() = 'service_role') OR (auth.uid() IS NOT NULL AND EXISTS (
     SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
   )) THEN
-    v_role := COALESCE((NEW.raw_user_meta_data->>'role')::role_enum, 'cliente');
+    v_role := COALESCE((NEW.raw_user_meta_data->>'role')::public.role_enum, 'cliente');
     -- Admins autenticados comuns não podem criar super_admins
     IF auth.role() <> 'service_role' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin') AND v_role = 'super_admin' THEN
       v_role := 'cliente';
@@ -30,7 +30,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- 2. ATUALIZAR TRIGGER protect_profile_role

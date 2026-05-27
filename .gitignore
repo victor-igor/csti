@@ -31,3 +31,5 @@ dist-ssr
 # Agent/planning artifacts (não sincronizar com remoto)
 .claude/
 .planning/
+node-compile-cache/
+test_flow.js

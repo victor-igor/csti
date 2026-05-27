@@ -56,7 +56,7 @@ export function useGetOrdemServico(id: string) {
             cliente:profiles!ordens_servico_cliente_id_fkey(id, nome, telefone)
           `)
           .eq('id', id)
-          .single(),
+          .maybeSingle(),
         supabase
           .from('status_historico')
           .select('status_novo, created_at, usuario_id')
@@ -65,8 +65,9 @@ export function useGetOrdemServico(id: string) {
           .order('created_at', { ascending: true }),
       ])
       if (osResult.error) throw osResult.error
+      if (!osResult.data) throw new Error('Ordem de serviço não encontrada ou acesso negado')
       const os = osResult.data as typeof osResult.data & {
-        prestador: { id: string; nome: string; telefone: string | null; especialidade: string | null } | null
+        prestador: { id: string; nome: string; telefone: string | null; especialidade: string[] | null } | null
         cliente: { id: string; nome: string; telefone: string | null } | null
       }
       return {

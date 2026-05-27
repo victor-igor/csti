@@ -281,8 +281,8 @@ function PrestadorDashboard() {
       {/* 4 StatCards — pipeline */}
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <StatCard label="Disponíveis p/ Orçar"  value={data?.solicitacoesDisponiveis} to="/prestador/solicitacoes" />
-        <StatCard label="Aguardando Resposta"    value={data?.aguardandoResposta}       to="/orcamentos" />
-        <StatCard label="Aceitos este mês"       value={data?.aceitosEsteMes}           to="/orcamentos" />
+        <StatCard label="Aguardando Resposta"    value={data?.aguardandoResposta}       to="/prestador/orcamentos" />
+        <StatCard label="Aceitos este mês"       value={data?.aceitosEsteMes}           to="/prestador/orcamentos" />
         <StatCard label="OS Ativas"              value={data?.osAtivas}                 to="/ordens-servico" />
       </div>
 

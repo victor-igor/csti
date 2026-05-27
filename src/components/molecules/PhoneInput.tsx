@@ -40,7 +40,13 @@ export function PhoneInput({
             <button
               key={c.code}
               type="button"
-              onClick={() => onDialChange(c.dial)}
+              onClick={() => {
+                onDialChange(c.dial)
+                // Reformat existing digits with the new country's mask
+                if (number) {
+                  onNumberChange(formatPhoneByDial(number.replace(/\D/g, ''), c.dial))
+                }
+              }}
               className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md text-sm hover:bg-neutral-50 transition-colors text-left"
             >
               <span className="text-base leading-none">{c.flag}</span>

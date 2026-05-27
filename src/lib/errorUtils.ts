@@ -9,11 +9,14 @@ export function parseApiError(error: unknown): string {
 
   // Supabase/Postgres errors são objetos com code/message
   if (typeof error === 'object') {
-    const e = error as { code?: string; message?: string }
+    const e = error as { code?: string; message?: string; details?: string; detail?: string }
 
-    // Email duplicado / unique violation
+    // Unique constraint violation — detecta qual campo causou o conflito
     if (e.code === '23505') {
-      return 'Este e-mail já está cadastrado'
+      const hint = `${e.message ?? ''} ${e.details ?? ''} ${e.detail ?? ''}`.toLowerCase()
+      if (hint.includes('telefone')) return 'Este telefone já está cadastrado por outro usuário'
+      if (hint.includes('email'))    return 'Este e-mail já está cadastrado'
+      return 'Este valor já está em uso por outro cadastro'
     }
 
     // Sem permissão / RLS

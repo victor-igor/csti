@@ -44,33 +44,25 @@ export function useRecusarOrcamento() {
   return useMutation({
     mutationFn: async ({
       orcamentoId,
-      solicitacaoId,
+      solicitacaoId: _solicitacaoId,
       motivo,
     }: {
       orcamentoId: string
       solicitacaoId: string
       motivo?: string
     }) => {
-      const { error: orcErr } = await supabase
-        .from('orcamentos')
-        .update({
-          status: 'recusado',
-          ...(motivo?.trim() ? { observacoes: `[Motivo da recusa: ${motivo.trim()}]` } : {}),
-        })
-        .eq('id', orcamentoId)
-      if (orcErr) throw orcErr
-
-      const { error: solErr } = await supabase
-        .from('solicitacoes_orcamento')
-        .update({ status: 'aguardando_orcamento' })
-        .eq('id', solicitacaoId)
-      if (solErr) throw solErr
-
-      return solicitacaoId
+      // RPC atômica: marca orçamento como recusado + reverte solicitação
+      const { data: solId, error } = await supabase.rpc('recusar_orcamento', {
+        p_orcamento_id: orcamentoId,
+        p_motivo: motivo ?? null,
+      })
+      if (error) throw error
+      return (solId ?? _solicitacaoId) as string
     },
     onSuccess: (solicitacaoId: string) => {
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       toast.success('Orçamento recusado.')
       navigate(`/solicitacoes/${solicitacaoId}`)
     },
@@ -179,37 +171,22 @@ export function useDeleteOrcamento() {
   return useMutation({
     mutationFn: async ({
       orcamentoId,
-      solicitacaoId,
+      solicitacaoId: _solicitacaoId,
     }: {
       orcamentoId: string
       solicitacaoId: string
     }) => {
-      const { error: orcErr } = await supabase
-        .from('orcamentos')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', orcamentoId)
-      if (orcErr) throw orcErr
-
-      // Reverter status da solicitação se não restarem orçamentos ativos
-      const { data: orcamentos, error: countErr } = await supabase
-        .from('orcamentos')
-        .select('id')
-        .eq('solicitacao_id', solicitacaoId)
-        .is('deleted_at', null)
-      if (countErr) throw countErr
-
-      if (orcamentos.length === 0) {
-        const { error: solErr } = await supabase
-          .from('solicitacoes_orcamento')
-          .update({ status: 'aguardando_orcamento' })
-          .eq('id', solicitacaoId)
-        if (solErr) throw solErr
-      }
+      // RPC atômica: soft delete + reverte solicitação se necessário
+      const { error } = await supabase.rpc('deletar_orcamento_prestador', {
+        p_orcamento_id: orcamentoId,
+      })
+      if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
-      toast.success('Orçamento excluído com sucesso')
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast.success('Orçamento excluído.')
       navigate('/prestador/orcamentos')
     },
     onError: (error: Error) => {
@@ -224,26 +201,21 @@ export function useEnviarOrcamento() {
   return useMutation({
     mutationFn: async ({
       orcamentoId,
-      solicitacaoId,
+      solicitacaoId: _solicitacaoId,
     }: {
       orcamentoId: string
       solicitacaoId: string
     }) => {
-      const { error: orcErr } = await supabase
-        .from('orcamentos')
-        .update({ status: 'enviado' })
-        .eq('id', orcamentoId)
-      if (orcErr) throw orcErr
-
-      const { error: solErr } = await supabase
-        .from('solicitacoes_orcamento')
-        .update({ status: 'orcamento_enviado' })
-        .eq('id', solicitacaoId)
-      if (solErr) throw solErr
+      // RPC atômica: atualiza orcamento + solicitacao em uma transação segura
+      const { error } = await supabase.rpc('enviar_orcamento', {
+        p_orcamento_id: orcamentoId,
+      })
+      if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] })
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       toast.success('Orçamento enviado ao cliente')
     },
     onError: (error: Error) => {
@@ -261,8 +233,9 @@ export function useGetOrcamento(id: string) {
         .select('*, itens_orcamento(*), ordens_servico(id, numero)')
         .is('deleted_at', null)
         .eq('id', id)
-        .single()
+        .maybeSingle()
       if (error) throw error
+      if (!data) throw new Error('Orçamento não encontrado ou acesso negado')
       return data as IOrcamentoComItens
     },
     enabled: !!id,

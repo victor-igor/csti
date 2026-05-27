@@ -105,11 +105,18 @@ Deno.serve(async (req) => {
     // Aguardamos um momento para garantir que o trigger executou.
     await new Promise((r) => setTimeout(r, 300))
 
+    // especialidade é uma coluna TEXT[] — normaliza para array (aceita string legada)
+    const especialidadeArr = Array.isArray(especialidade)
+      ? especialidade
+      : especialidade
+        ? [especialidade]
+        : null
+
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
         telefone: telefone ?? null,
-        especialidade: role === 'prestador' ? (especialidade ?? null) : null,
+        especialidade: role === 'prestador' ? especialidadeArr : null,
         status_aprovacao: 'aprovado',
         updated_at: new Date().toISOString(),
       })

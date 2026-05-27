@@ -268,7 +268,7 @@ export type Database = {
           desativado_em: string | null
           documento: string | null
           email: string
-          especialidade: string | null
+          especialidade: string[] | null
           id: string
           nome: string
           role: Database["public"]["Enums"]["role_enum"]
@@ -282,7 +282,7 @@ export type Database = {
           desativado_em?: string | null
           documento?: string | null
           email: string
-          especialidade?: string | null
+          especialidade?: string[] | null
           id: string
           nome: string
           role: Database["public"]["Enums"]["role_enum"]
@@ -296,7 +296,7 @@ export type Database = {
           desativado_em?: string | null
           documento?: string | null
           email?: string
-          especialidade?: string | null
+          especialidade?: string[] | null
           id?: string
           nome?: string
           role?: Database["public"]["Enums"]["role_enum"]
