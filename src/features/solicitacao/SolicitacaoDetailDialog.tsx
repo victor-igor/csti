@@ -14,6 +14,7 @@ import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { Button } from '@/components/ui/button'
 import { EditSolicitacaoForm } from './components/EditSolicitacaoForm'
+import { TimelineMensagens } from './components/TimelineMensagens'
 
 export default function SolicitacaoDetailDialog() {
   const { id } = useParams<{ id: string }>()
@@ -123,6 +124,9 @@ export default function SolicitacaoDetailDialog() {
                             <StatusTimeline historico={solicitacao.status_historico ?? []} />
                           </div>
                         )}
+
+                        {/* Chat de negociação cliente ↔ prestador */}
+                        <TimelineMensagens solicitacaoId={solicitacao.id} />
                       </div>
 
                       {/* Coluna lateral */}
