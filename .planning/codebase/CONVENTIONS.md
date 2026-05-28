@@ -1,172 +1,95 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-05-09
+**Analysis Date:** 2025-05-15
 
 ## Naming Patterns
 
 **Files:**
-- React components: PascalCase with descriptive suffix — `LoginPage.tsx`, `SolicitacaoCard.tsx`, `GlobalErrorBoundary.tsx`
-- Pages: `PascalCase` ending in `Page` — `DashboardPage.tsx`, `SolicitacaoDetailPage.tsx`
-- Hooks: camelCase starting with `use` — `useSolicitacao.ts`, `useBreadcrumb.ts`, `usePerfil.ts`
-- Schemas: camelCase ending in `Schemas` — `solicitacaoSchemas.ts`, `authSchemas.ts`, `orcamentoSchemas.ts`
-- Stores: camelCase ending in `Store` — `authStore.ts`
-- Utilities: camelCase — `dateUtils.ts`, `queryClient.ts`, `constants.ts`, `utils.ts`
-- Types: camelCase or `supabase.ts` / `domain.ts` — no suffix required for type-only files
+- **React Components:** PascalCase with descriptive names — `SolicitacaoCard.tsx`, `StatusBadge.tsx`, `AppShell.tsx`.
+- **Pages:** PascalCase with `Page` suffix — `DashboardPage.tsx`, `SolicitacaoDetailPage.tsx`.
+- **Hooks:** camelCase starting with `use` — `useSolicitacao.ts`, `useAuthStore.ts`.
+- **Schemas:** camelCase with `Schemas` suffix — `solicitacaoSchemas.ts`.
+- **Utilities:** camelCase — `dateUtils.ts`, `errorUtils.ts`.
+- **Types:** Usually `domain.ts` or `supabase.ts`.
 
-**Functions/Hooks:**
-- React components: PascalCase functions (exported default or named)
-- Custom hooks: `useCamelCase()` — always start with `use`
-- Utility functions: camelCase — `formatDate()`, `getGreeting()`
-- Mutation/query functions in hooks: descriptive verbs — `useCreateSolicitacao`, `useListSolicitacoes`, `useGetSolicitacao`
+**Functions:**
+- **Components:** PascalCase named exports preferred — `export function Button()`.
+- **Hooks:** camelCase starting with `use`.
+- **Utility functions:** camelCase with descriptive verbs — `formatCurrency()`, `parseApiError()`.
 
 **Variables:**
-- camelCase for all identifiers
-- Constants in UPPER_SNAKE_CASE for truly static values — `CATEGORIAS` array in `solicitacaoSchemas.ts`
+- **Local variables:** camelCase.
+- **Constants:** UPPER_SNAKE_CASE for global/static constants — `STATUS_CONFIG` in `src/lib/constants.ts`.
 
-**Types/Interfaces:**
-- Interfaces prefixed with `I` — `ISolicitacao`, `IOrdemServico` (from `src/types/domain.ts`)
-- Zod inferred types as `FormData` suffix — `CreateSolicitacaoFormData`, `CreateAuthFormData`
-- Enums/union types as PascalCase — `SolicitacaoStatus`
+**Types:**
+- **Interfaces:** Often prefixed with `I` for domain entities — `ISolicitacao`, `IOrcamento`.
+- **Zod Inferred Types:** Suffix `FormData` — `CreateSolicitacaoFormData`.
+- **Enums/Unions:** PascalCase — `SolicitacaoStatus`, `Role`.
 
 ## Code Style
 
 **Formatting:**
-- No dedicated `.prettierrc` detected — Vite default + ESLint formatting rules
-- Single quotes for imports (TypeScript/ESLint default)
-- 2-space indentation (consistent across all observed files)
+- **Tool:** Prettier (default Vite settings) + ESLint.
+- **Indentation:** 2 spaces.
+- **Quotes:** Single quotes preferred for strings and imports.
+- **Semicolons:** Omitted where possible (standard Modern JS style).
 
 **Linting:**
-- Config: `eslint.config.js` (flat config format)
-- Rules: `@eslint/js` recommended + `typescript-eslint` recommended + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`
-- TypeScript strict-equivalent flags: `noUnusedLocals: true`, `noUnusedParameters: true`, `noFallthroughCasesInSwitch: true`
-- `erasableSyntaxOnly: true` — no `enum`, no `namespace`, no `declare`
-
-## TypeScript Configuration
-
-**Strict mode:** Not `strict: true` explicitly, but equivalent enforced via:
-- `noUnusedLocals: true`
-- `noUnusedParameters: true`
-- `noFallthroughCasesInSwitch: true`
-- `verbatimModuleSyntax: true` — requires `import type` for type-only imports
-- Target: `ES2023`
-
-**Path Aliases:**
-- `@/*` maps to `./src/*` — always use `@/` for absolute imports from `src/`
-- Example: `import { supabase } from '@/lib/supabase'`
+- **Tool:** ESLint 10.x.
+- **Config:** `eslint.config.js` (Flat config).
+- **Key Rules:** `@eslint/js/recommended`, `typescript-eslint/recommended`, `react-hooks/recommended`.
 
 ## Import Organization
 
-**Order (observed pattern):**
-1. External packages — `react`, `@tanstack/react-query`, `react-router-dom`, `vitest`
-2. Internal absolute imports (`@/`) — `@/lib/supabase`, `@/store/authStore`, `@/types/domain`
-3. Relative imports — `../solicitacaoSchemas`, `./SolicitacaoCard`
+**Order:**
+1. External libraries (e.g., `react`, `lucide-react`, `@tanstack/react-query`).
+2. Internal absolute imports using `@/` alias (e.g., `@/components/...`, `@/lib/...`).
+3. Relative imports for local files.
 
-**Type-only imports:**
-- Use `import type` when importing only types (enforced by `verbatimModuleSyntax`)
-- Example: `import type { ISolicitacao, SolicitacaoStatus } from '@/types/domain'`
-
-## Zod Schema Pattern
-
-**Schema definition (`src/features/*/[feature]Schemas.ts`):**
-```typescript
-import { z } from 'zod'
-
-export const CATEGORIAS = ['hardware', 'software'] as const
-
-export const CreateSolicitacaoSchema = z.object({
-  titulo: z.string().min(3, 'Mínimo 3 caracteres').max(100, 'Máximo 100 caracteres'),
-  categoria: z.enum(CATEGORIAS, { error: 'Categoria inválida' }),
-})
-
-export type CreateSolicitacaoFormData = z.infer<typeof CreateSolicitacaoSchema>
-```
-
-**Rules:**
-- Each feature has its own `[feature]Schemas.ts` file in `src/features/[feature]/`
-- Schema name: `Create[Entity]Schema`, `Update[Entity]Schema`
-- Inferred type exported as `[Action][Entity]FormData`
-- Validation messages in Portuguese (pt-BR)
-
-## TanStack Query Hook Pattern
-
-**Location:** `src/features/[feature]/use[Feature].ts`
-
-**Structure:**
-```typescript
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
-
-// Query hook — list
-export function useListSolicitacoes(filters?: { status?: SolicitacaoStatus }) {
-  return useQuery({
-    queryKey: ['solicitacoes', filters],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('...').select('*')
-      if (error) throw error
-      return data as ISolicitacao[]
-    },
-  })
-}
-
-// Mutation hook
-export function useCreateSolicitacao() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (data: CreateFormData) => { ... },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] })
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao criar')
-    },
-  })
-}
-```
-
-**Query key convention:** `['entityName', filters?]` — array with entity name first
-
-**Enabled pattern:** Use `enabled: !!id` to prevent queries with empty IDs
+**Path Aliases:**
+- `@/` maps to `src/` directory — defined in `tsconfig.json` and `vite.config.ts`.
 
 ## Error Handling
 
-**Supabase errors:**
-- Destructure `{ data, error }` from every Supabase call
-- `if (error) throw error` — always throw, never swallow
-- Mutations catch errors in `onError` callback via `toast.error()`
-
-**Form errors:**
-- Zod `.safeParse()` for validation — check `result.success` before using `result.data`
-- Inline validation messages in Portuguese
-
-## Toast Notifications
-
-**Library:** `sonner`
-
 **Patterns:**
-- `toast.error(message)` — on mutation failure in `onError`
-- `toast.success(message)` — on mutation success when needed
+- **API/Supabase:** Destructure `{ data, error }` and throw on error: `if (error) throw error`.
+- **Mutations:** Use `onError` callback in TanStack Query to display toasts via `sonner`.
+- **Global:** `GlobalErrorBoundary` wraps the application in `src/App.tsx`.
+- **Utility:** `parseApiError` in `src/lib/errorUtils.ts` centralizes error message formatting.
 
 ## Logging
 
-- No dedicated logging library detected
-- `console.error` used in error boundaries and error recovery
-- Errors from Supabase are thrown and handled at the hook level
+**Framework:** `console` (native).
+
+**Patterns:**
+- `console.error` used in error boundaries and critical failure points.
+- No production logging service detected.
 
 ## Comments
 
-- Inline comments used sparingly for non-obvious logic
-- No mandatory JSDoc requirement observed
-- Test descriptions in Portuguese (pt-BR) — e.g., `'retorna lista quando supabase retorna dados'`
+**When to Comment:**
+- Use comments to explain non-obvious logic or performance optimizations (e.g., stable references in `useSolicitacao.ts`).
+- TODO/FIXME comments are used to track pending improvements.
+
+**JSDoc/TSDoc:**
+- Sparingly used; mostly rely on TypeScript types for documentation.
+
+## Function Design
+
+**Size:** Most components and hooks are kept small, but some pages like `AdminUsuariosPage.tsx` exceed 600 lines.
+
+**Parameters:** Prefer object destructuring for props and complex function arguments to improve readability.
+
+**Return Values:** Hooks typically return TanStack Query result objects or custom state/methods.
 
 ## Module Design
 
 **Exports:**
-- Named exports preferred — `export function useListSolicitacoes()`
-- Default exports for React page components — `export default LoginPage`
-- No barrel `index.ts` files observed — import directly from module file
+- Named exports for most functions and components.
+- Default exports for Pages (to facilitate `lazy` loading in `App.tsx`).
 
-**Barrel Files:** Not used. Import directly: `import { useListSolicitacoes } from '@/features/solicitacao/useSolicitacao'`
+**Barrel Files:** Not used; direct imports are preferred to avoid circular dependencies and improve tree-shaking.
 
 ---
 
-*Convention analysis: 2026-05-09*
+*Convention analysis: 2025-05-15*

@@ -1,140 +1,246 @@
+<!-- refreshed: 2025-05-15 -->
 # Architecture
 
-**Analysis Date:** 2026-05-09
+**Analysis Date:** 2025-05-15
+
+## System Overview
+
+```mermaid
+graph TD
+    UI[UI Layer - React SPA] --> Feature[Feature Layer - Domain Logic]
+    Feature --> State[State Layer - TanStack Query/Zustand]
+    State --> Supabase[Backend Layer - Supabase]
+    
+    subgraph "Frontend"
+        UI
+        Feature
+        State
+    end
+    
+    subgraph "Backend"
+        Supabase
+        Supabase --> DB[(PostgreSQL)]
+        Supabase --> Auth[Auth Service]
+        Supabase --> RPC[[RPC Functions]]
+    end
+```
+
+## Component Responsibilities
+
+| Component | Responsibility | File |
+|-----------|----------------|------|
+| `App` | Root router and provider setup | `src/App.tsx` |
+| `authStore` | Global auth state and profile management | `src/store/authStore.ts` |
+| `useAuthStore` | Zustand hook for auth state | `src/store/authStore.ts` |
+| `AppShell` | Main authenticated layout shell | `src/components/layout/AppShell.tsx` |
+| `ProtectedRoute` | Authentication gate for routes | `src/components/guards/ProtectedRoute.tsx` |
+| `RoleGuard` | Role-based access control gate | `src/components/guards/RoleGuard.tsx` |
+| `useOrcamento` | Budget domain logic and API calls | `src/features/orcamento/useOrcamento.ts` |
+| `useSolicitacao` | Request domain logic and API calls | `src/features/solicitacao/useSolicitacao.ts` |
+
+## Data Model (ERD)
+
+```mermaid
+erDiagram
+    profiles ||--o{ solicitacoes_orcamento : "cria"
+    profiles ||--o{ orcamentos : "provê"
+    solicitacoes_orcamento ||--o{ orcamentos : "recebe"
+    solicitacoes_orcamento ||--o{ mensagens_solicitacao : "contém"
+    orcamentos ||--o{ itens_orcamento : "possui"
+    orcamentos ||--o| ordens_servico : "gera"
+    solicitacoes_orcamento ||--o| ordens_servico : "vincula"
+
+    profiles {
+        uuid id PK
+        string email
+        string nome
+        string role "cliente | prestador | admin"
+    }
+    solicitacoes_orcamento {
+        uuid id PK
+        uuid cliente_id FK
+        string equipamento
+        string status "aberta | aprovado | cancelado"
+        string urgencia
+    }
+    orcamentos {
+        uuid id PK
+        uuid solicitacao_id FK
+        uuid prestador_id FK
+        decimal valor_total
+        string status "rascunho | enviado | aceito | recusado"
+    }
+    itens_orcamento {
+        uuid id PK
+        uuid orcamento_id FK
+        string descricao
+        decimal preco_unitario
+        int quantidade
+    }
+    ordens_servico {
+        uuid id PK
+        uuid orcamento_id FK
+        uuid solicitacao_id FK
+        string status "aberta | em_andamento | concluida"
+    }
+```
 
 ## Pattern Overview
 
-**Overall:** Feature-based SPA with role-based access control
+**Overall:** Feature-based SPA with role-based access control (RBAC) and Atomic Design.
 
 **Key Characteristics:**
-- Features are self-contained modules under `src/features/` with their own pages, hooks, and schemas
-- Role-based routing enforced at the route level via `RoleGuard` (`cliente` vs `prestador`)
-- Global auth state managed via Zustand store, synced with Supabase's `onAuthStateChange` singleton listener
-- All protected pages render inside `AppShell`, which provides the persistent layout (TopBar, Sidebar, BottomNav)
-- Data fetching via TanStack Query; all queries/mutations live inside feature-level hooks
+- **Encapsulated Features**: Domains like `orcamento`, `solicitacao`, and `ordem-servico` are self-contained under `src/features/`.
+- **Atomic Design**: Generic UI components are organized into `atoms`, `molecules`, and `organisms` under `src/components/`.
+- **Server State Management**: TanStack Query (React Query) is used for all server-side data synchronization and caching.
+- **RPC-First Mutations**: Complex operations are offloaded to Supabase PostgreSQL functions (RPCs) to ensure atomicity and security.
+
+## Component Interaction
+
+```mermaid
+graph TD
+    View[React View] --> Hook[Feature Hook - useFeature]
+    Hook --> Store[Auth Store - Zustand]
+    Hook --> Query[TanStack Query]
+    Query --> Supabase[Supabase Client]
+    Supabase --> RPC[RPC Functions]
+    Supabase --> DB[(PostgreSQL)]
+    
+    style RPC fill:#f9f,stroke:#333,stroke-width:2px
+```
 
 ## Layers
 
 **Auth Layer:**
-- Purpose: Session management and role enforcement
-- Location: `src/store/authStore.ts`, `src/components/guards/`
-- Contains: Zustand store, `ProtectedRoute`, `RoleGuard`
-- Depends on: Supabase client (`src/lib/supabase.ts`)
-- Used by: `App.tsx` (route wrappers), feature hooks (reads profile/role)
+- Purpose: Session management and role enforcement.
+- Location: `src/store/authStore.ts`, `src/components/guards/`.
+- Contains: Zustand store, `ProtectedRoute`, `RoleGuard`.
+- Depends on: Supabase client (`src/lib/supabase.ts`).
+- Used by: `App.tsx` (route wrappers), feature hooks.
 
-**Routing Layer:**
-- Purpose: Declare all routes, apply auth and role guards
-- Location: `src/App.tsx`
-- Contains: React Router v6 `<Routes>` tree with nested `<Route>` guards
-- Depends on: `ProtectedRoute`, `RoleGuard`, `AppShell`, lazy-loaded feature pages
-- Used by: Root render (`src/main.tsx`)
+**Logic Layer (Hooks):**
+- Purpose: Encapsulate domain logic and server state operations.
+- Location: `src/features/**/use*.ts`, `src/hooks/`.
+- Contains: `useQuery`, `useMutation` implementations.
+- Depends on: `src/lib/supabase.ts`, `src/store/authStore.ts`.
+- Used by: Page and organism components.
 
-**Layout Layer:**
-- Purpose: Persistent shell for all authenticated pages
-- Location: `src/components/layout/`
-- Contains: `AppShell.tsx`, `TopBar.tsx`, `Sidebar.tsx`, `BottomNav.tsx`, `MobileDrawer.tsx`, `useNavLinks.ts`
-- Depends on: `useSidebar` hook, React Router `<Outlet>`
-- Used by: `App.tsx` (wraps all protected routes)
-
-**Feature Layer:**
-- Purpose: Domain-specific pages, hooks, and validation schemas
-- Location: `src/features/{auth,solicitacao,orcamento,ordem-servico,perfil,notificacoes}/`
-- Contains: Page components, `use{Feature}.ts` hooks, `{feature}Schemas.ts` (Zod)
-- Depends on: `src/lib/supabase.ts`, `src/types/domain.ts`, shared components
-- Used by: `App.tsx` (lazy imports)
-
-**Shared Component Layer:**
-- Purpose: Reusable UI primitives and composites
-- Location: `src/components/{atoms,molecules,organisms,ui,pdf}/`
-- Contains: `Button`, `LoadingSkeleton`, `StatusBadge`, `EmptyState`, `ErrorState`, `DataTable`, `OrcamentoCard`, `SolicitacaoCard`, etc.
-- Depends on: `src/lib/utils.ts`, Tailwind
-- Used by: Feature pages
-
-**Data / Types Layer:**
-- Purpose: Domain types derived from Supabase schema and shared constants
-- Location: `src/types/domain.ts`, `src/types/supabase.ts`, `src/lib/constants.ts`
-- Contains: `Role`, `ISolicitacao`, `IOrcamento`, `IOrdemServico`, `IProfile`, status union types
-- Depends on: Auto-generated `supabase.ts` types
-- Used by: All layers above
+**UI Layer:**
+- Purpose: Present data and capture user interaction.
+- Location: `src/features/**/Pages.tsx`, `src/components/`.
+- Contains: React components, Tailwind styling.
+- Depends on: Logic layer hooks, shared components.
 
 ## Data Flow
 
-**Authenticated User Action (e.g., creating a solicitacao):**
+### Budget Approval Flow (Robust)
 
-1. User navigates to `/solicitacoes/nova` (guarded by `RoleGuard allowedRoles=['cliente']`)
-2. `SolicitacaoFormPage` renders inside `AppShell > Outlet`
-3. Form validated by Zod schema (`solicitacaoSchemas.ts`)
-4. Submission calls mutation in `useSolicitacao.ts` → Supabase insert
-5. TanStack Query invalidates relevant query keys
-6. `sonner` toast confirms result; router navigates to detail page
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Cliente (UI)
+    participant H as useOrcamento Hook
+    participant Q as TanStack Query
+    participant S as Supabase (RPC)
+    participant DB as Database
 
-**Auth State Flow:**
+    C->>H: aprovarOrcamento(orcamentoId)
+    H->>S: rpc('aprovar_orcamento', { p_orcamento_id: orcamentoId })
+    
+    rect rgb(240, 240, 240)
+        Note over S, DB: Transação Atômica (PostgreSQL)
+        S->>DB: UPDATE orcamentos SET status = 'aceito'
+        S->>DB: UPDATE solicitacoes SET status = 'aprovado'
+        S->>DB: INSERT INTO ordens_servico (...)
+    end
+    
+    DB-->>S: Success (os_id)
+    S-->>H: { data: os_id }
+    
+    H->>Q: invalidateQueries(['orcamentos'])
+    H->>Q: invalidateQueries(['solicitacoes'])
+    H->>Q: invalidateQueries(['ordens_servico'])
+    
+    H->>C: Notificar Sucesso (Toast)
+    H->>C: Redirecionar para /ordens-servico/:id
+```
 
-1. `supabase.auth.onAuthStateChange` fires (singleton in `authStore.ts`)
-2. Fetches `profiles` row for the user
-3. Calls `useAuthStore.getState().setSession(user, profile, session)`
-4. `ProtectedRoute` reads `session` from store — redirects to `/login` if null
-5. `RoleGuard` reads `profile.role` — redirects to `/dashboard` if role not allowed
+### Service Lifecycle (Activity Diagram)
+
+```mermaid
+graph TD
+    Start((Inicio)) --> CreateReq[Cliente cria Solicitação]
+    CreateReq --> WaitProvider[Aguardando Orçamentos]
+    WaitProvider --> SubmitBudget[Prestador envia Orçamento]
+    SubmitBudget --> Decision{Cliente Aprova?}
+    Decision -- Não --> Reject[Orçamento Recusado]
+    Reject --> WaitProvider
+    Decision -- Sim --> Approve[Orçamento Aceito]
+    Approve --> CreateOS[Sistema cria Ordem de Serviço]
+    CreateOS --> ExecuteOS[Execução do Serviço]
+    ExecuteOS --> FinishOS[Finalização do Serviço]
+    FinishOS --> End((Fim))
+```
+
+### Auth State Flow
+
+```mermaid
+graph TD
+    A[Supabase Auth Listener] -->|onAuthStateChange| B(Update authStore Session)
+    B --> C{User Logged In?}
+    C -->|Yes| D[Fetch Profile in Background]
+    C -->|No| E[Clear Session & Profile]
+    D --> F(Update authStore Profile)
+    F --> G[Re-render Protected Routes]
+```
 
 **State Management:**
-- Auth: Zustand (`useAuthStore`) — single global store
-- Server state: TanStack Query — per-feature query hooks
-- UI state (sidebar expanded): `useSidebar` hook (local/hook-level)
+- **Auth**: Zustand (`useAuthStore`) for persistent session and profile.
+- **Server State**: TanStack Query for caching domain entities (`orcamentos`, `solicitacoes`, etc.).
+- **Local UI State**: `useState` or specialized Zustand stores (e.g., `perfilModalStore`).
 
 ## Key Abstractions
 
-**ProtectedRoute:**
-- Purpose: Gate all authenticated routes
-- Location: `src/components/guards/ProtectedRoute.tsx`
-- Pattern: Reads `session` from Zustand; renders `<Outlet>` or redirects to `/login`
+**Custom Hooks (useFeature):**
+- Purpose: Centralize all API interactions for a feature.
+- Examples: `src/features/orcamento/useOrcamento.ts`.
 
-**RoleGuard:**
-- Purpose: Gate role-specific routes (`cliente` or `prestador`)
-- Location: `src/components/guards/RoleGuard.tsx`
-- Pattern: Reads `profile.role` from Zustand; renders `<Outlet>` or redirects to `/dashboard`
-
-**AppShell:**
-- Purpose: Persistent authenticated layout
-- Location: `src/components/layout/AppShell.tsx`
-- Pattern: `TopBar + Sidebar + <main><Outlet /></main> + BottomNav`; sidebar width is responsive via `useSidebar`
-
-**Feature Hook (use{Feature}.ts):**
-- Purpose: Encapsulate all Supabase queries/mutations for a domain
-- Examples: `src/features/solicitacao/useSolicitacao.ts`, `src/features/orcamento/useOrcamento.ts`
-- Pattern: TanStack Query `useQuery` / `useMutation` wrapping Supabase calls; returns typed data
-
-**Domain Types:**
-- Purpose: Single source of truth for all entity shapes
-- Location: `src/types/domain.ts`
-- Pattern: `type IEntity = Tables<'table_name'>` — derived directly from generated Supabase types
+**Route Guards:**
+- Purpose: declarative access control.
+- Examples: `src/components/guards/RoleGuard.tsx`.
 
 ## Entry Points
 
-**Application Bootstrap:**
+**Main Entry:**
 - Location: `src/main.tsx`
-- Triggers: Browser loads `index.html` → Vite serves `main.tsx`
-- Responsibilities: Renders `<App />` into DOM
+- Responsibilities: Renders the React application and sets up the root provider.
 
-**Route Tree:**
+**Router Entry:**
 - Location: `src/App.tsx`
-- Triggers: Every navigation event
-- Responsibilities: Lazy-loads pages, applies `GlobalErrorBoundary`, `QueryClientProvider`, `BrowserRouter`, auth/role guards, `AppShell`
+- Responsibilities: Defines the component-based routing table and wraps routes in guards and layouts.
+
+## Architectural Constraints
+
+- **Single Entry Point**: All routes must be declared in `src/App.tsx`.
+- **Atomic Commits**: Data mutations involving multiple tables must use Supabase RPCs to ensure database integrity.
+- **Role Isolation**: Business logic must respect the user role fetched from the `profiles` table.
+
+## Anti-Patterns
+
+### Logic in Components
+**What happens:** Placing complex Supabase queries or data transformation directly inside JSX components.
+**Why it's wrong:** Harder to test and reuse; breaks the separation of concerns.
+**Do this instead:** Move logic to a custom hook in `src/features/{domain}/use{Domain}.ts`.
 
 ## Error Handling
 
-**Strategy:** Error boundary at root + per-component error states
+**Strategy:** Centralized error boundary for crashes, toast notifications for API failures.
 
 **Patterns:**
-- `GlobalErrorBoundary` (`src/components/GlobalErrorBoundary.tsx`) wraps entire app — catches unhandled render errors
-- Feature pages use `ErrorState` atom component for query error display
-- Toast notifications via `sonner` for mutation errors/successes
-
-## Cross-Cutting Concerns
-
-**Logging:** Console only — no structured logging service detected
-**Validation:** Zod schemas co-located per feature (`{feature}Schemas.ts`)
-**Authentication:** Supabase Auth + Zustand store; role from `profiles` table
+- `GlobalErrorBoundary`: Catches React rendering errors.
+- `sonner`: Used for user-facing success/error feedback during mutations.
+- `parseApiError`: Utility to transform Supabase/PostgREST errors into readable messages.
 
 ---
 
-*Architecture analysis: 2026-05-09*
+*Architecture analysis: 2025-05-15*

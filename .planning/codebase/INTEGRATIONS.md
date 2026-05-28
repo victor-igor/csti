@@ -1,100 +1,95 @@
 # External Integrations
 
-**Analysis Date:** 2026-05-09
+**Analysis Date:** 2025-05-24
 
 ## APIs & External Services
 
 **Backend-as-a-Service:**
-- Supabase - Primary and sole backend (database, auth, realtime, storage)
-  - SDK/Client: `@supabase/supabase-js` 2.105.1
-  - Client singleton: `src/lib/supabase.ts`
-  - Auth env var: `VITE_SUPABASE_ANON_KEY`
-  - URL env var: `VITE_SUPABASE_URL`
-  - Usage: Remote-only via MCP (no local Supabase instance)
-  - Generated types: `src/types/supabase.ts` (auto-generated from schema)
+- Supabase - Provides Authentication, PostgreSQL Database, and Edge Functions.
+  - SDK/Client: `@supabase/supabase-js`
+  - Auth: Handled via `VITE_SUPABASE_ANON_KEY` and session persistence in `src/lib/supabase.ts`.
 
 ## Data Storage
 
 **Databases:**
-- Supabase (PostgreSQL)
-  - Connection: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
-  - Client: `supabase` singleton from `src/lib/supabase.ts`, typed with `Database` from `src/types/supabase.ts`
-  - Tables known from domain types: `profiles`, `solicitacoes`, `orcamentos`, `itens_orcamento`, `ordens_servico`
-  - Migrations: `src/migrations/` (applied via Supabase MCP)
+- PostgreSQL (Supabase)
+  - Connection: via Supabase Client (`src/lib/supabase.ts`)
+  - Client: Supabase-js (direct queries and RPC calls)
 
 **File Storage:**
-- Supabase Storage (available via the Supabase client, not explicitly configured beyond client setup)
+- Supabase Storage (configured in migrations for potential future use).
 
 **Caching:**
-- TanStack Query in-memory cache (`src/lib/queryClient.ts`)
-  - staleTime: 5 minutes
-  - No persistence layer (cache resets on page reload)
+- TanStack Query (React Query) for in-memory caching and state synchronization.
+- LocalStorage for persisting Auth sessions and Onboarding state.
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Supabase Auth (built into `@supabase/supabase-js`)
-  - Implementation: `src/features/auth/useAuth.ts` (hooks), `src/store/authStore.ts` (state)
-  - Session listener: singleton `supabase.auth.onAuthStateChange` in `src/store/authStore.ts`
-  - Profile sync: on auth state change, fetches from `profiles` table and stores in Zustand
-  - Pages: `src/features/auth/LoginPage.tsx`, `src/features/auth/RegisterPage.tsx`
-  - Schemas: `src/features/auth/authSchemas.ts` (Zod)
-  - Session shape: `{ user: User | null, profile: IProfile | null, session: Session | null }`
-  - Auth guards: `src/components/guards/` directory
+- Supabase Auth
+  - Implementation: Managed via `useAuth` hook and `authStore.ts`.
+  - **Password Recovery**:
+    - Request: `supabase.auth.resetPasswordForEmail` in `src/features/auth/RecuperarSenhaPage.tsx`.
+    - Redefine: `supabase.auth.updateUser({ password })` in `src/features/auth/RedefinirSenhaPage.tsx`.
 
-## Monitoring & Observability
+## Feature Logic Mapping
 
-**Error Tracking:**
-- Not detected (no Sentry, Datadog, or similar)
+### Onboarding System
+- **Library**: `react-joyride`
+- **State Management**: `useOnboardingStore` in `src/hooks/useOnboarding.ts`.
+- **Tour Steps**: `tourStepsByRole` in `src/features/onboarding/tourSteps.ts`.
+- **Integration**: `OnboardingTour.tsx` (src/features/onboarding/) monitors route changes and uses a `MutationObserver` (`waitForElement`) to trigger steps when target elements appear in the DOM.
 
-**Error Boundaries:**
-- `src/components/GlobalErrorBoundary.tsx` - React error boundary for UI crash containment
+### Admin/User Management
+- **Primary Page**: `src/pages/AdminUsuariosPage.tsx`
+- **CRUD Operations**:
+  - **Create**: Invokes Edge Function `admin-criar-usuario` via `supabase.functions.invoke`.
+  - **Read**: Direct select from `profiles` table.
+  - **Update**: Direct update to `profiles` table.
+  - **Deactivate/Reactivate**: RPCs `admin_desativar_usuario` and `admin_reativar_usuario`.
+  - **Delete**: RPC `admin_deletar_usuario` for permanent removal of account and associated data.
 
-**Logs:**
-- Browser console only — no structured logging library detected
+### Notification System
+- **Frontend Logic**: `src/features/notificacoes/useNotificacoes.ts` handles fetching and marking as read.
+- **Backend Logic**: Notifications are generated via PostgreSQL triggers and functions (defined in `supabase/migrations/`) during key events (e.g., budget approval in `aprovar_orcamento` RPC).
+- **Real-time**: Currently uses React Query invalidation; database-level insertions are ready for Supabase Realtime integration.
 
-## CI/CD & Deployment
+### Dashboard Data Providers
+- **Cliente**: `DashboardPage.tsx` fetches `solicitacoes_orcamento`, `orcamentos` (sent), `ordens_servico` (active), and `status_historico`.
+- **Prestador**: `DashboardPage.tsx` fetches available `solicitacoes_orcamento` (status: `aguardando_orcamento`), sent/accepted `orcamentos`, active `ordens_servico`, and calculates metrics from the last 6 months of quotes.
+- **Admin**: `DashboardPage.tsx` provides global counts for all major entities (`profiles`, `solicitacoes_orcamento`, `orcamentos`, `ordens_servico`).
 
-**Hosting:**
-- Not explicitly configured in codebase (static SPA output to `dist/`)
+## Data Dictionary (Supabase Tables)
 
-**CI Pipeline:**
-- Not detected (no GitHub Actions, CircleCI, etc. config files found)
+| Table | Description | Key Columns |
+|-------|-------------|-------------|
+| `profiles` | User profiles linked to Auth.users | `id`, `nome`, `email`, `role`, `especialidade`, `telefone` |
+| `solicitacoes_orcamento` | Service requests from clients | `id`, `numero`, `cliente_id`, `titulo`, `descricao`, `status`, `categoria` |
+| `orcamentos` | Quotes submitted by providers | `id`, `numero`, `solicitacao_id`, `prestador_id`, `status`, `prazo_estimado_dias` |
+| `itens_orcamento` | Line items for a specific quote | `id`, `orcamento_id`, `descricao`, `quantidade`, `valor_unitario`, `tipo` |
+| `ordens_servico` | Service orders from accepted quotes | `id`, `numero`, `orcamento_id`, `cliente_id`, `prestador_id`, `status` |
+| `notificacoes` | System notifications for users | `id`, `usuario_id`, `tipo`, `titulo`, `mensagem`, `lida` |
+| `mensagens_solicitacao` | Chat messages for service requests | `id`, `solicitacao_id`, `usuario_id`, `mensagem` |
+| `status_historico` | Audit log of status transitions | `id`, `tabela_nome`, `registro_id`, `status_anterior`, `status_novo` |
 
-## Environment Configuration
+## CRUD Services & Endpoints Mapping
 
-**Required env vars:**
-- `VITE_SUPABASE_URL` - Supabase project endpoint URL
-- `VITE_SUPABASE_ANON_KEY` - Supabase public anon key (safe for browser)
+### Authentication & Profiles
+- `src/features/auth/useAuth.ts`: `signIn`, `signUp`, `signOut` actions.
+- `src/features/perfil/usePerfil.ts`: `useGetProfile`, `useUpdateProfile`.
 
-**Secrets location:**
-- `.env.local` (gitignored, not committed)
-- `.env.example` present as template
+### Service Requests (Solicitações)
+- `src/features/solicitacao/useSolicitacao.ts`:
+  - `useCreateSolicitacao`, `useListSolicitacoes`, `useGetSolicitacao`, `useUpdateSolicitacao`, `useCancelSolicitacao`, `useDeleteSolicitacao`.
 
-**Note:** Only `VITE_`-prefixed vars are exposed to the browser bundle by Vite. No server-side secrets.
+### Quotes (Orçamentos)
+- `src/features/orcamento/useOrcamento.ts`:
+  - `useCreateOrcamento`, `useUpdateOrcamento`, `useEnviarOrcamento` (RPC), `useAprovarOrcamento` (RPC), `useRecusarOrcamento` (RPC), `useDeleteOrcamento` (RPC).
 
-## Webhooks & Callbacks
-
-**Incoming:**
-- Not detected (no webhook endpoints — this is a pure client-side SPA)
-
-**Outgoing:**
-- Not detected
-
-## PDF Generation (Client-Side)
-
-**Library:** jsPDF 4.2.1
-- Entry point: `src/components/pdf/PdfGenerator.ts`
-- Function: `generateOrcamentoPdf(orcamento, itens, prestador)`
-- Output: In-browser PDF download, no server involved
-- Locale: `pt-BR` currency formatting (BRL)
-
-## Font CDN
-
-**Self-hosted via npm packages:**
-- `@fontsource-variable/geist` - Geist variable font (bundled, no CDN)
-- `@fontsource/inter` - Inter font (bundled, no CDN)
+### Service Orders (Ordens de Serviço)
+- `src/features/ordem-servico/useOrdemServico.ts`:
+  - `useListOrdensServico`, `useGetOrdemServico`, `useUpdateStatusOS`.
 
 ---
 
-*Integration audit: 2026-05-09*
+*Integration audit: 2025-05-24*
