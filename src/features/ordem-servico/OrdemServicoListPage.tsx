@@ -12,7 +12,6 @@ import { useAuthStore } from '@/store/authStore'
 import { relativeDate } from '@/lib/dateUtils'
 import type { OSStatus } from '@/types/domain'
 import { useListOrdensServico } from './useOrdemServico'
-import { useEffect } from 'react'
 
 const STATUS_FILTERS: { label: string; value: OSStatus | '' }[] = [
   { label: 'Todos',        value: '' },

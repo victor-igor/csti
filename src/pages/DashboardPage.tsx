@@ -467,7 +467,6 @@ function AdminDashboard() {
 // ─── DashboardPage ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
 
   const greeting = greetingByHour()

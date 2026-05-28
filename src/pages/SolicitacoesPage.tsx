@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, Outlet } from 'react-router-dom'
 import { Pencil, XCircle, Trash2 } from 'lucide-react'
 import { ListPageShell } from '@/components/molecules/ListPageShell'
@@ -11,7 +11,6 @@ import { LoadingSkeleton } from '@/components/atoms/LoadingSkeleton'
 import { EmptyState } from '@/components/atoms/EmptyState'
 import { ErrorState } from '@/components/atoms/ErrorState'
 import { useListSolicitacoes, useCancelSolicitacao, useDeleteSolicitacao } from '@/features/solicitacao/useSolicitacao'
-import { useAuthStore } from '@/store/authStore'
 import type { SolicitacaoStatus, ISolicitacao } from '@/types/domain'
 
 const PAGE_SIZE = 10
