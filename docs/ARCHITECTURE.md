@@ -1,5 +1,4 @@
 <!-- generated-by: gsd-doc-writer -->
-
 # Arquitetura — OrçaFácil
 
 ## Visão Geral do Sistema
@@ -8,9 +7,41 @@ OrçaFácil é uma SPA (Single Page Application) React que conecta **clientes** 
 
 A arquitetura segue o modelo **BFF-less**: o frontend conversa diretamente com o Supabase através do SDK `@supabase/supabase-js`. Toda a autorização é imposta no banco de dados via Row Level Security (RLS), eliminando a necessidade de um servidor intermediário de API.
 
+```mermaid
+graph TD
+    UI[UI Layer - React SPA] --> Feature[Feature Layer - Domain Logic]
+    Feature --> State[State Layer - TanStack Query/Zustand]
+    State --> Supabase[Backend Layer - Supabase]
+    
+    subgraph "Frontend"
+        UI
+        Feature
+        State
+    end
+    
+    subgraph "Backend"
+        Supabase
+        Supabase --> DB[(PostgreSQL)]
+        Supabase --> Auth[Auth Service]
+        Supabase --> RPC[[RPC Functions]]
+    end
+```
+
 ---
 
-## Diagrama de Alto Nível
+## Pattern Overview
+
+**Overall:** Feature-based SPA with role-based access control (RBAC) and Atomic Design.
+
+**Key Characteristics:**
+- **Encapsulated Features**: Domains like `orcamento`, `solicitacao`, and `ordem-servico` are self-contained under `src/features/`.
+- **Atomic Design**: Generic UI components are organized into `atoms`, `molecules`, and `organisms` under `src/components/`.
+- **Server State Management**: TanStack Query (React Query) is used for all server-side data synchronization and caching.
+- **RPC-First Mutations**: Complex operations are offloaded to Supabase PostgreSQL functions (RPCs) to ensure atomicity and security.
+
+---
+
+## Diagrama de Componentes (Alto Nível)
 
 ```mermaid
 graph TD
@@ -27,7 +58,7 @@ graph TD
     subgraph "Camada de Estado"
         I[Zustand — authStore]
         J[Zustand — perfilModalStore]
-        K[TanStack React Query — server cache]
+        K[TanStack Query — server cache]
         L[react-hook-form — form state]
     end
 
@@ -48,6 +79,146 @@ graph TD
 
 ---
 
+## Camadas de Responsabilidade
+
+| Componente | Responsabilidade | Localização |
+|-----------|----------------|------|
+| `App` | Root router and provider setup | `src/App.tsx` |
+| `authStore` | Global auth state and profile management | `src/store/authStore.ts` |
+| `AppShell` | Main authenticated layout shell | `src/components/layout/AppShell.tsx` |
+| `ProtectedRoute` | Authentication gate for routes | `src/components/guards/ProtectedRoute.tsx` |
+| `RoleGuard` | Role-based access control gate | `src/components/guards/RoleGuard.tsx` |
+| `useOrcamento` | Budget domain logic and API calls | `src/features/orcamento/useOrcamento.ts` |
+| `useSolicitacao` | Request domain logic and API calls | `src/features/solicitacao/useSolicitacao.ts` |
+
+---
+
+## Fluxo de Dados e Interações
+
+### 1. Aprovação de Orçamento (Transação Atômica)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Cliente (UI)
+    participant H as useOrcamento Hook
+    participant Q as TanStack Query
+    participant S as Supabase (RPC)
+    participant DB as Database
+
+    C->>H: aprovarOrcamento(orcamentoId)
+    H->>S: rpc('aprovar_orcamento', { p_orcamento_id: orcamentoId })
+    
+    rect rgb(240, 240, 240)
+        Note over S, DB: Transação Atômica (PostgreSQL)
+        S->>DB: UPDATE orcamentos SET status = 'aceito'
+        S->>DB: UPDATE solicitacoes SET status = 'aprovado'
+        S->>DB: INSERT INTO ordens_servico (...)
+    end
+    
+    DB-->>S: Success (os_id)
+    S-->>H: { data: os_id }
+    
+    H->>Q: invalidateQueries(['orcamentos'])
+    H->>Q: invalidateQueries(['solicitacoes'])
+    H->>Q: invalidateQueries(['ordens_servico'])
+    
+    H->>C: Notificar Sucesso (Toast)
+    H->>C: Redirecionar para /ordens-servico/:id
+```
+
+### 2. Ciclo de Vida do Serviço
+
+```mermaid
+graph TD
+    Start((Inicio)) --> CreateReq[Cliente cria Solicitação]
+    CreateReq --> WaitProvider[Aguardando Orçamentos]
+    WaitProvider --> SubmitBudget[Prestador envia Orçamento]
+    SubmitBudget --> Decision{Cliente Aprova?}
+    Decision -- Não --> Reject[Orçamento Recusado]
+    Reject --> WaitProvider
+    Decision -- Sim --> Approve[Orçamento Aceito]
+    Approve --> CreateOS[Sistema cria Ordem de Serviço]
+    CreateOS --> ExecuteOS[Execução do Serviço]
+    ExecuteOS --> FinishOS[Finalização do Serviço]
+    FinishOS --> End((Fim))
+```
+
+### 3. Gerenciamento de Estado de Autenticação
+
+```mermaid
+graph TD
+    A[Supabase Auth Listener] -->|onAuthStateChange| B(Update authStore Session)
+    B --> C{User Logged In?}
+    C -->|Yes| D[Fetch Profile in Background]
+    C -->|No| E[Clear Session & Profile]
+    D --> F(Update authStore Profile)
+    F --> G[Re-render Protected Routes]
+```
+
+---
+
+## Modelo de Dados (ERD)
+
+```mermaid
+erDiagram
+    profiles ||--o{ solicitacoes_orcamento : "cria"
+    profiles ||--o{ orcamentos : "provê"
+    solicitacoes_orcamento ||--o{ orcamentos : "recebe"
+    solicitacoes_orcamento ||--o{ mensagens_solicitacao : "contém"
+    orcamentos ||--o{ itens_orcamento : "possui"
+    orcamentos ||--o| ordens_servico : "gera"
+    solicitacoes_orcamento ||--o| ordens_servico : "vincula"
+
+    profiles {
+        uuid id PK
+        string email
+        string nome
+        string role "cliente | prestador | admin"
+    }
+    solicitacoes_orcamento {
+        uuid id PK
+        uuid cliente_id FK
+        string equipamento
+        string status "aberta | aprovado | cancelado"
+        string urgencia
+    }
+    orcamentos {
+        uuid id PK
+        uuid solicitacao_id FK
+        uuid prestador_id FK
+        decimal valor_total
+        string status "rascunho | enviado | aceito | recusado"
+    }
+    itens_orcamento {
+        uuid id PK
+        uuid orcamento_id FK
+        string descricao
+        decimal preco_unitario
+        int quantidade
+    }
+    ordens_servico {
+        uuid id PK
+        uuid orcamento_id FK
+        uuid solicitacao_id FK
+        string status "aberta | em_andamento | concluida"
+    }
+```
+
+### Dicionário de Dados (Principais Tabelas)
+
+| Tabela | Descrição | Colunas Chave |
+|-------|-------------|-------------|
+| `profiles` | Perfis de usuário vinculados ao Auth.users | `id`, `nome`, `email`, `role`, `especialidade`, `telefone` |
+| `solicitacoes_orcamento` | Pedidos de serviço criados por clientes | `id`, `numero`, `cliente_id`, `titulo`, `descricao`, `status`, `categoria` |
+| `orcamentos` | Orçamentos enviados por prestadores | `id`, `numero`, `solicitacao_id`, `prestador_id`, `status`, `prazo_estimado_dias` |
+| `itens_orcamento` | Itens de um orçamento específico | `id`, `orcamento_id`, `descricao`, `quantidade`, `valor_unitario`, `tipo` |
+| `ordens_servico` | Ordens de serviço geradas após aceite | `id`, `numero`, `orcamento_id`, `cliente_id`, `prestador_id`, `status` |
+| `notificacoes` | Notificações do sistema para usuários | `id`, `usuario_id`, `tipo`, `titulo`, `mensagem`, `lida` |
+| `status_historico` | Log de auditoria de transições de status | `id`, `tabela_nome`, `registro_id`, `status_anterior`, `status_novo` |
+
+---
+
 ## Estrutura de Diretórios (`src/`)
 
 ```
@@ -55,8 +226,6 @@ src/
 ├── main.tsx                     # Ponto de entrada — monta StrictMode + App
 ├── App.tsx                      # Roteamento, providers globais, lazy-loading
 ├── index.css                    # Tailwind CSS v4 — tokens e variáveis globais
-│
-├── assets/                      # Imagens e recursos estáticos
 │
 ├── features/                    # Módulos de negócio (feature-slice)
 │   ├── auth/                    # Autenticação: login, cadastro, hooks de auth
@@ -67,315 +236,80 @@ src/
 │   └── solicitacao/             # CRUD de solicitações de orçamento
 │
 ├── components/
-│   ├── ui/                      # Componentes shadcn/ui (gerados via CLI shadcn)
-│   ├── atoms/                   # Primitivos sem dependência de domínio
-│   ├── molecules/               # Composições de atoms + lógica local
-│   ├── organisms/               # Blocos complexos (tabelas, cards de lista)
+│   ├── ui/                      # Componentes shadcn/ui (primitivos)
+│   ├── atoms/                   # Primitivos sem dependência de domínio (Button, Badge)
+│   ├── molecules/               # Composições (PhoneInput, InfoRow, FilterBar)
+│   ├── organisms/               # Blocos complexos (DataTable, SolicitacaoCard)
 │   ├── layout/                  # AppShell, Sidebar, TopBar, BottomNav
 │   ├── guards/                  # ProtectedRoute, RoleGuard
 │   └── pdf/                     # Geração de PDF com jsPDF
 │
-├── hooks/                       # Hooks compartilhados (useBreadcrumb, useSidebar)
 ├── lib/                         # Utilitários e clientes singleton
 │   ├── supabase.ts              # createClient — cliente Supabase tipado
 │   ├── queryClient.ts           # QueryClient + persister localStorage
-│   ├── analytics.ts             # track() / trackError()
-│   ├── constants.ts             # Constantes de domínio
-│   ├── dateUtils.ts             # Formatadores de data
-│   ├── errorUtils.ts            # parseApiError()
-│   ├── greeting.ts              # Saudação contextual por horário
-│   ├── metricsUtils.ts          # Cálculos de métricas do dashboard
-│   ├── phoneUtils.ts            # COUNTRIES, formatBRPhone, parseStoredPhone
-│   └── utils.ts                 # cn() e helpers gerais
-│
-├── pages/                       # Páginas genéricas (não vinculadas a uma única feature)
-│   ├── DashboardPage.tsx
-│   ├── OrcamentosPage.tsx
-│   ├── SolicitacoesPage.tsx
-│   ├── PerfilPage.tsx
-│   ├── NotificacoesPage.tsx
-│   ├── LoginPage.tsx            # Alias — renderiza features/auth/LoginPage
-│   ├── RegisterPage.tsx
-│   └── OnboardingWelcome.tsx
+│   └── phoneUtils.ts            # Utilitários de telefone e máscaras
 │
 ├── store/                       # Stores Zustand globais
 │   ├── authStore.ts             # Sessão, usuário e perfil
 │   └── perfilModalStore.ts      # Estado de abertura do PerfilModal
 │
 └── types/                       # Tipos TypeScript
-    ├── domain.ts                # Role, ISolicitacao, IOrcamento, IOrdemServico…
-    └── supabase.ts              # Tipos gerados pelo Supabase CLI (Database)
+    ├── domain.ts                # Role, ISolicitacao, IOrcamento...
+    └── supabase.ts              # Tipos gerados pelo Supabase CLI
 ```
 
 ---
 
-## Arquitetura Feature-Slice
+## Stack Tecnológica
 
-Cada módulo em `src/features/` é autônomo e segue a convenção:
-
-```
-features/<nome>/
-├── <NomePage>.tsx           # Componente de página principal (lazy-loaded em App.tsx)
-├── <Nome>FormDialog.tsx     # Formulários modais quando aplicável
-├── <Nome>DetailPage.tsx     # Página de detalhe
-├── use<Nome>.ts             # Hooks React Query para operações CRUD
-├── <nome>Schemas.ts         # Schemas Zod para validação de formulários
-├── components/              # Componentes internos (apenas neste feature)
-│   └── __tests__/
-└── __tests__/               # Testes unitários e de integração do feature
-```
-
-**Regra:** componentes dentro de `features/<nome>/components/` são privados ao feature. Nunca importar de um feature para outro — compartilhar apenas via `src/components/` ou `src/lib/`.
-
----
-
-## Camadas de Componentes
-
-A hierarquia garante que dependências sempre fluam de cima para baixo:
-
-```
-ui (shadcn/ui)
-    ↓
-atoms           → Primitivos reutilizáveis sem conhecimento de domínio
-    ↓              Ex: LoadingSkeleton, StatusBadge, CurrencyDisplay
-molecules       → Composições de atoms + lógica local
-    ↓              Ex: PhoneInput, InfoRow, FormField, FilterBar
-organisms       → Blocos de UI complexos, podem chamar hooks de domínio
-    ↓              Ex: SolicitacaoCard, OrcamentoCard, DataTable
-layout          → Estrutura global da aplicação
-    ↓              Ex: AppShell, Sidebar, TopBar, BottomNav
-guards          → Controle de acesso declarativo
-                   Ex: ProtectedRoute, RoleGuard
-```
-
-### Componentes Obrigatórios (convenção do projeto)
-
-| Componente | Localização | Uso |
-|---|---|---|
-| `<PhoneInput>` | `molecules/PhoneInput` | Sempre usar para campos telefone — nunca recriar inline |
-| `<InfoRow>` | `molecules/InfoRow` | Exibição read-only de label/valor em telas de configuração |
-| `phoneUtils` | `lib/phoneUtils` | `parseStoredPhone`, `buildStoredPhone`, `COUNTRIES` |
-| `usePerfilModal` | `store/perfilModalStore` | Abrir PerfilModal — nunca navegar para `/perfil` diretamente |
-
-O padrão de telas de configuração é **read-only por padrão + edit mode**: dados exibidos como `<InfoRow>`, ativando formulário somente ao clicar "Editar".
-
-### shadcn/ui (`components/ui/`)
-
-Configurado em `components.json` com:
-- **Estilo:** `base-nova`
-- **Base color:** `neutral`
-- **CSS variables:** ativado
-- **Icon library:** `lucide`
-- **Alias:** `@/components/ui`
-
-Componentes são adicionados via `npx shadcn add <componente>` e não devem ser editados manualmente.
-
----
-
-## Estratégia de Estado
-
-### 1. Zustand — Estado do cliente
-
-| Store | Responsabilidade |
+| Camada | Tecnologias |
 |---|---|
-| `authStore` | Sessão Supabase, objeto `User`, `IProfile`, `clearSession` |
-| `perfilModalStore` | `isOpen`, `open()`, `close()` do modal de perfil |
-
-O `authStore` registra um listener singleton via `supabase.auth.onAuthStateChange` que atualiza o store em tempo real. Por design, a sessão é liberada imediatamente no evento `SIGNED_IN` e o perfil é buscado em background para evitar bounce no `ProtectedRoute`.
-
-### 2. TanStack React Query v5 — Cache do servidor
-
-- **staleTime:** 5 minutos (dados considerados frescos por 5 min sem refetch)
-- **retry:** 1 tentativa em caso de erro
-- **refetchOnWindowFocus:** desabilitado
-- **Persistência:** `createSyncStoragePersister` grava o cache no `localStorage` via `PersistQueryClientProvider`
-
-Convenção de query keys:
-```ts
-['solicitacoes']           // lista
-['solicitacoes', id]       // item único
-['solicitacoes', 'prestador', 'pendentes']  // lista filtrada por papel
-['orcamentos', 'cliente']
-['orcamentos', 'prestador']
-['orcamentos', id]
-['ordens-servico']
-['ordens-servico', id]
-```
-
-### 3. react-hook-form + Zod — Estado de formulários
-
-Cada feature mantém seus schemas em `<nome>Schemas.ts`. Os resolvers são configurados com `@hookform/resolvers/zod`. Formulários nunca persistem estado no Zustand — são locais ao componente.
+| **Linguagens** | TypeScript, SQL (PL/pgSQL), CSS3 |
+| **Frontend** | React 19, Vite, Tailwind CSS 4 |
+| **Estado/Dados** | TanStack Query v5, Zustand, React Hook Form, Zod |
+| **Backend (BaaS)**| Supabase (Auth, PostgreSQL, RPC, Edge Functions) |
+| **UI/UX** | shadcn/ui, Lucide React, Sonner (toasts), React Joyride (onboarding) |
+| **Testes** | Vitest, Testing Library, Playwright |
+| **Utilidades** | jsPDF (geração de PDF), Recharts (gráficos) |
 
 ---
 
-## Camada de Dados — Supabase
+## Roteamento e Acesso
 
-### Inicialização do cliente
+Definido em `src/App.tsx`. Todas as páginas são **lazy-loaded**.
 
-```ts
-// src/lib/supabase.ts
-export const supabase = createClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-  { auth: { persistSession: true, autoRefreshToken: true, storage: localStorage } }
-)
-```
-
-### Modelo de dados (migrations em `supabase/migrations/`)
-
-| Tabela | Descrição |
-|---|---|
-| `profiles` | Usuários do sistema (id = auth.users.id), com campo `role: 'cliente' | 'prestador'` |
-| `solicitacoes_orcamento` | Solicitações abertas pelo cliente, numeradas como `SOL-YYYY-NNNN` |
-| `orcamentos` | Orçamentos criados pelo prestador para uma solicitação, numerados `ORC-YYYY-NNNN` |
-| `itens_orcamento` | Linhas do orçamento; `valor_total` é coluna gerada (`quantidade × valor_unitario`) |
-| `ordens_servico` | Criadas atomicamente ao aprovar um orçamento, numeradas `OS-YYYY-NNNN` |
-| `status_historico` | Audit trail de mudanças de status, populado por triggers |
-
-### Row Level Security (RLS)
-
-RLS está habilitado em todas as tabelas. Regras principais:
-
-- **profiles:** usuário acessa apenas seu próprio registro
-- **solicitacoes_orcamento:** cliente tem CRUD completo nas próprias; prestador tem SELECT apenas nas solicitações para as quais tem um orçamento
-- **orcamentos:** prestador tem CRUD completo nos próprios; cliente tem SELECT nos orçamentos de suas solicitações
-- **itens_orcamento:** herdado via `orcamento_id` — mesmas regras de prestador/cliente
-- **ordens_servico:** SELECT por `cliente_id` ou `prestador_id`; INSERT exclusivo via `SECURITY DEFINER` (função `aprovar_orcamento`)
-- **status_historico:** SELECT apenas para registros relacionados ao usuário autenticado
-
-### Função RPC atômica: `aprovar_orcamento`
-
-A aprovação de orçamento é a única operação com múltiplas escritas que precisa ser atômica. Ela é implementada como função PostgreSQL `SECURITY DEFINER`:
-
-```sql
--- supabase/migrations/20260429000003_aprovar_orcamento_fn.sql
-CREATE OR REPLACE FUNCTION aprovar_orcamento(p_orcamento_id UUID)
-RETURNS UUID AS $$
-BEGIN
-  -- 1. Valida e bloqueia row do orçamento (FOR UPDATE)
-  -- 2. Atualiza orcamentos → status = 'aceito'
-  -- 3. Atualiza solicitacoes_orcamento → status = 'aprovado'
-  -- 4. Insere registro em ordens_servico
-  -- Retorna o UUID da OS criada
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-```
-
-Chamada no frontend via `supabase.rpc('aprovar_orcamento', { p_orcamento_id })`.
-
----
-
-## Roteamento
-
-Definido em `src/App.tsx` com `react-router-dom v7`. Todas as páginas são **lazy-loaded** com `React.lazy` + `<Suspense>` para code-splitting automático.
-
-### Árvore de rotas
+### Árvore de Rotas (Simplificada)
 
 ```
-/login                              → LoginPage (público)
-/cadastro                           → RegisterPage (público)
+/login                              → Público
+/cadastro                           → Público
 
-[ProtectedRoute — requer session]
-  [OnboardingWelcome + AppShell]
-    /                               → redirect → /dashboard
-    /dashboard                      → DashboardPage
-    /notificacoes                   → NotificacoesPage
-    /orcamentos/*                   → OrcamentosPage
-    /ordens-servico                 → OrdemServicoListPage
-    /ordens-servico/:id             → OrdemServicoDetailPage
-    /perfil                         → PerfilPage
+[ProtectedRoute — Requer Sessão]
+  /dashboard                        → Dashboard Principal
+  /perfil                           → Modal de Perfil (Zustand controlled)
+  
+  [RoleGuard — role: 'cliente']
+    /solicitacoes                   → Gestão de Solicitações
+    /orcamentos/:id/revisar         → Revisão de Proposta
 
-    [RoleGuard — role: 'cliente']
-      /solicitacoes                 → SolicitacoesPage
-        /solicitacoes/nova          → SolicitacaoFormDialog (outlet)
-        /solicitacoes/:id           → SolicitacaoDetailDialog (outlet)
-      /orcamentos/:id/revisar       → OrcamentoReviewPage
-
-    [RoleGuard — role: 'prestador']
-      /prestador/solicitacoes       → SolicitacaoListPrestadorPage
-        /prestador/solicitacoes/:id → SolicitacaoDetailDialog (outlet)
-      /prestador/orcamentos/novo/:solicitacaoId → OrcamentoFormPage
-      /prestador/orcamentos/:id                → OrcamentoDetailPage
-      /prestador/orcamentos/:id/editar         → OrcamentoFormPage
-
-* → redirect → /dashboard
+  [RoleGuard — role: 'prestador']
+    /prestador/solicitacoes         → Marketplace de Demandas
+    /prestador/orcamentos/novo      → Elaboração de Proposta
 ```
 
 ---
 
-## Fluxo de Autenticação
+## Integrações Externas
 
-```
-1. Usuário preenche login → useAuth().login() → supabase.auth.signInWithPassword()
-2. Supabase dispara onAuthStateChange(SIGNED_IN, session)
-3. authStore.setSession(user, null, session)   ← UI liberada imediatamente
-4. Background: supabase.from('profiles').select('*').eq('id', user.id)
-5. authStore.setProfile(data)                  ← perfil disponível para RoleGuard
-6. ProtectedRoute detecta session → renderiza rotas protegidas
-7. RoleGuard lê profile.role → permite ou redireciona
+### Supabase
+- **Auth**: Gerenciado via `authStore.ts` e `useAuth`.
+- **Database**: PostgreSQL acessado via `supabase-js` com Row Level Security (RLS) habilitado em todas as tabelas.
+- **RPC**: Funções atômicas como `aprovar_orcamento` para garantir integridade.
 
-Logout:
-1. supabase.auth.signOut()
-2. onAuthStateChange(SIGNED_OUT)
-3. authStore.clearSession() → ProtectedRoute redireciona para /login
-```
+### Sistema de Onboarding
+- **Biblioteca**: `react-joyride`.
+- **Funcionamento**: Monitora mudanças de rota e usa `MutationObserver` para disparar tours guiados baseados no papel do usuário (`cliente` ou `prestador`).
 
-**Cadastro** (`useAuth().register()`):
-1. `supabase.auth.signUp()` cria o usuário em `auth.users`
-2. Trigger `trg_handle_new_user` insere um perfil mínimo em `profiles`
-3. `supabase.from('profiles').upsert()` completa os dados do perfil com `nome`, `role`, `telefone`
-4. Navega para `/login` com mensagem de confirmação
-
----
-
-## Geração de PDF
-
-Localização: `src/components/pdf/`
-
-| Arquivo | Responsabilidade |
-|---|---|
-| `PdfGenerator.ts` | Função `generateOrcamentoPdf(orcamento, itens, prestador)` — usa jsPDF diretamente |
-| `PdfDownloadButton.tsx` | Botão que chama `generateOrcamentoPdf` e dispara `doc.save()` |
-
-O PDF gerado inclui:
-- Cabeçalho com dados do prestador (nome, especialidade, telefone)
-- Tabela de itens (descrição, quantidade, valor unitário, total)
-- Total geral em BRL (`Intl.NumberFormat pt-BR`)
-- Marca d'água "PENDENTE DE APROVAÇÃO" quando `status === 'enviado'`
-
-Não há dependência de servidor — a geração ocorre inteiramente no browser.
-
----
-
-## Build e Bundling
-
-Configurado em `vite.config.ts` com `@vitejs/plugin-react` e `@tailwindcss/vite`. O alias `@` aponta para `src/`.
-
-**Chunks manuais para otimização de cache:**
-
-| Chunk | Conteúdo |
-|---|---|
-| `vendor-react` | react, react-dom, react-router-dom |
-| `vendor-query` | @tanstack/react-query + persist |
-| `vendor-supabase` | @supabase/supabase-js |
-| `vendor-ui` | lucide-react, @base-ui/react, @radix-ui/* |
-| `vendor-forms` | react-hook-form, @hookform/resolvers, zod |
-
-**Variáveis de ambiente necessárias:**
-
-| Variável | Descrição |
-|---|---|
-| `VITE_SUPABASE_URL` | URL do projeto Supabase |
-| `VITE_SUPABASE_ANON_KEY` | Chave anônima pública do Supabase |
-
----
-
-## Testes
-
-| Ferramenta | Escopo |
-|---|---|
-| **Vitest** + jsdom | Testes unitários e de componentes — `npm test` |
-| **@testing-library/react** | Renderização e interações em testes unitários |
-| **Playwright** | Testes end-to-end — `npm run test:e2e` |
-
-Cada feature e camada de componente mantém seus testes em `__tests__/` ao lado dos arquivos que testam. Configuração em `vite.config.ts` (seção `test`) e setup global em `vitest.setup.ts`.
+### Geração de PDF
+- **Biblioteca**: `jsPDF`.
+- **Fluxo**: Geração puramente client-side em `src/components/pdf/PdfGenerator.ts`.
