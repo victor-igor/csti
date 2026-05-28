@@ -1,5 +1,5 @@
 <!-- generated-by: gsd-doc-writer -->
-# Testes — OrçaFácil
+# Testes — CSTI
 
 Guia de referência para escrever, rodar e entender os testes do projeto.
 
@@ -130,7 +130,7 @@ npx vitest --coverage --reporter=html
 
 ## Testes Manuais
 
-O arquivo `CHECKLIST-TESTES-OrcaFacil.md` contém um roteiro detalhado para testes manuais de regressão, cobrindo fluxos de:
+O arquivo `CHECKLIST-TESTES-CSTI.md` contém um roteiro detalhado para testes manuais de regressão, cobrindo fluxos de:
 - Cadastro e Login
 - Criação de Solicitação
 - Envio e Aprovação de Orçamento

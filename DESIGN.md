@@ -1,4 +1,4 @@
-# DESIGN.md — OrçaFácil Design System
+# DESIGN.md — CSTI Design System
 
 Padrões de UI para garantir consistência em todas as telas. Baseado na spec Stripe (`stripedesign.md`) e nos tokens definidos em `src/index.css`.
 

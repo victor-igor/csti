@@ -1,5 +1,5 @@
 <!-- generated-by: gsd-doc-writer -->
-# Guia de Primeiros Passos — OrçaFácil
+# Guia de Primeiros Passos — CSTI
 
 Do clone até a tela inicial rodando localmente.
 

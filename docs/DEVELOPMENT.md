@@ -1,5 +1,5 @@
 <!-- generated-by: gsd-doc-writer -->
-# Guia de Desenvolvimento — OrçaFácil
+# Guia de Desenvolvimento — CSTI
 
 Referência para desenvolvedores sobre workflow, padrões de código, componentes obrigatórios e convenções do projeto.
 

@@ -33,3 +33,10 @@ dist-ssr
 .planning/
 node-compile-cache/
 test_flow.js
+squads/
+supabase/.temp/
+AUDIT-REPORT.md
+DESIGN-REVIEW.md
+UI-REVIEW.md
+UX-PERSONA-REVIEW.md
+CHECKLIST-TESTES-OrcaFacil.md

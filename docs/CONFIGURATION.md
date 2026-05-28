@@ -1,7 +1,7 @@
 <!-- generated-by: gsd-doc-writer -->
-# Configuração — OrçaFácil
+# Configuração — CSTI
 
-Guia completo de configuração de ambiente e banco de dados para o projeto OrçaFácil.
+Guia completo de configuração de ambiente e banco de dados para o projeto CSTI.
 
 ---
 

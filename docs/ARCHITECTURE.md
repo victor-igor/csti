@@ -1,9 +1,9 @@
 <!-- generated-by: gsd-doc-writer -->
-# Arquitetura — OrçaFácil
+# Arquitetura — CSTI
 
 ## Visão Geral do Sistema
 
-OrçaFácil é uma SPA (Single Page Application) React que conecta **clientes** (empresas com equipamentos de TI para manutenção) a **prestadores** (técnicos de TI que elaboram orçamentos). O ciclo completo vai da abertura de uma solicitação de orçamento até a criação de uma Ordem de Serviço, com aprovação atômica via função RPC no Supabase.
+CSTI é uma SPA (Single Page Application) React que conecta **clientes** (empresas com equipamentos de TI para manutenção) a **prestadores** (técnicos de TI que elaboram orçamentos). O ciclo completo vai da abertura de uma solicitação de orçamento até a criação de uma Ordem de Serviço, com aprovação atômica via função RPC no Supabase.
 
 A arquitetura segue o modelo **BFF-less**: o frontend conversa diretamente com o Supabase através do SDK `@supabase/supabase-js`. Toda a autorização é imposta no banco de dados via Row Level Security (RLS), eliminando a necessidade de um servidor intermediário de API.
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Redesenhar Sidebar, TopBar e BottomNav do OrçaFácil para nível de produção — logo, active pill sólido, perfil do usuário logado, badges de contagem, saudação contextual e notificações.
+**Goal:** Redesenhar Sidebar, TopBar e BottomNav do CSTI para nível de produção — logo, active pill sólido, perfil do usuário logado, badges de contagem, saudação contextual e notificações.
 
 **Architecture:** Oito tarefas sequenciais. Utilitários e hooks primeiro (`getGreeting`, `useNotificacoesNaoLidas`, `useNavLinks`), depois os três componentes visuais (Sidebar, TopBar, BottomNav), e por último o wiring no AppShell. `useSidebar` é uma Zustand store já existente — consumida diretamente, sem context adicional. `useAuthStore` já carrega o `profile` do usuário em background — é a fonte de dados para nome e role em todos os componentes de layout.
 
@@ -435,7 +435,7 @@ export function Sidebar() {
           OF
         </div>
         {isExpanded && (
-          <span className="font-semibold text-primary text-base truncate">OrçaFácil</span>
+          <span className="font-semibold text-primary text-base truncate">CSTI</span>
         )}
       </div>
 
@@ -843,7 +843,7 @@ Expected: build completo sem erros
 
 ## Critérios de Aceitação
 
-- [ ] Sidebar exibe logo "OF" no topo (collapsed: só ícone; expanded: ícone + "OrçaFácil")
+- [ ] Sidebar exibe logo "OF" no topo (collapsed: só ícone; expanded: ícone + "CSTI")
 - [ ] Active state é pill sólido `bg-primary` com texto/ícone brancos
 - [ ] Badges aparecem nos links com pendências > 0
 - [ ] Botão collapse funciona e `main` ajusta margem suavemente (240px ↔ 64px)

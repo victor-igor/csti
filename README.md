@@ -1,4 +1,4 @@
-# OrçaFácil
+# CSTI
 
 Sistema de orçamentos e ordens de serviço para manutenção de TI — conecta clientes e prestadores em um fluxo unificado de solicitação, aprovação e execução.
 

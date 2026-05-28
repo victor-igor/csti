@@ -1,14 +1,14 @@
 # UI/UX Redesign — Sidebar, TopBar e BottomNav
 
 **Data:** 2026-05-08
-**Escopo:** Redesign da navegação principal do OrçaFácil (Sidebar, TopBar, BottomNav, AppShell wiring)
+**Escopo:** Redesign da navegação principal do CSTI (Sidebar, TopBar, BottomNav, AppShell wiring)
 **Abordagem:** B — Redesign dos 3 componentes com dados dinâmicos
 
 ---
 
 ## Contexto e Problema
 
-O layout atual do OrçaFácil tem falhas críticas de UX:
+O layout atual do CSTI tem falhas críticas de UX:
 
 - TopBar quase vazia (só nome do app + botão Sair)
 - Sidebar sem identidade visual, sem logo, sem perfil do usuário
@@ -41,7 +41,7 @@ O layout atual do OrçaFácil tem falhas críticas de UX:
 - Oculta em mobile (< md) — BottomNav cuida do mobile
 
 **Logo no topo:**
-- Ícone (ex: `Wrench` estilizado ou initials "OF" em `bg-primary text-white rounded-lg`) + texto "OrçaFácil" em `font-semibold text-primary`
+- Ícone (ex: `Wrench` estilizado ou initials "OF" em `bg-primary text-white rounded-lg`) + texto "CSTI" em `font-semibold text-primary`
 - Collapsed: só ícone
 - Expanded: ícone + texto
 

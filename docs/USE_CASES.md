@@ -1,7 +1,7 @@
 <!-- generated-by: gsd-doc-writer -->
-# Casos de Uso - OrcaFacil
+# Casos de Uso - CSTI
 
-Este documento descreve os principais Casos de Uso (UC) do sistema OrcaFacil, detalhando os fluxos, atores e regras de negócio associadas.
+Este documento descreve os principais Casos de Uso (UC) do sistema CSTI, detalhando os fluxos, atores e regras de negócio associadas.
 
 ## Atores
 
@@ -21,7 +21,7 @@ useCaseDiagram
     actor Admin
     actor Super_Admin
 
-    package "OrcaFacil" {
+    package "CSTI" {
         usecase UC01 as "Solicitar Orçamento"
         usecase UC02 as "Enviar Orçamento"
         usecase UC03 as "Aprovar Orçamento"
